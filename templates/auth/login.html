@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+</head>
+<body>
+    <h1>Login</h1>
+
+    {% if error %}
+        <p style="color:red;">{{ error }}</p>
+    {% endif %}
+
+    <form action="/login" method="POST">
+        <label>Benutzername:</label><br>
+        <input type="text" name="username" required><br><br>
+
+        <label>Passwort:</label><br>
+        <input type="password" name="password" required><br><br>
+
+        <button type="submit">Einloggen</button>
+    </form>
+
+    <p><a href="/register">Noch kein Konto? Hier registrieren</a></p>
+</body>
+</html>

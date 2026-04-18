@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neuen Beitrag erstellen</title>
+    <link rel="stylesheet" href="/static/theme.css">
+
+    <!-- Quill Editor -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+
+    <style>
+        #editor {
+            height: 400px;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="admin-header">
+            <h1>Neuen Beitrag erstellen</h1>
+            <p class="subtitle">Erstelle einen neuen Blog-Beitrag mit Text, Bildern und Formatierung</p>
+        </div>
+
+        <div class="form-card">
+            <form action="/admin/posts/create" method="POST" enctype="multipart/form-data" class="post-form" onsubmit="saveContent()">
+
+                <div class="form-group">
+                    <label for="title">Titel *</label>
+                    <input type="text" id="title" name="title" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="content">Inhalt *</label>
+
+                    <!-- Quill Editor -->
+                    <div id="editor"></div>
+
+                    <!-- Hidden field for HTML -->
+                    <textarea id="content" name="content" style="display:none"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="categories">Kategorien</label>
+                        <input type="text" id="categories" name="categories" class="form-input" placeholder="z.B. News, Technologie, Lifestyle">
+                        <small class="form-hint">Kommagetrennt</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tags">Tags</label>
+                        <input type="text" id="tags" name="tags" class="form-input" placeholder="z.B. python, web, tutorial">
+                        <small class="form-hint">Kommagetrennt</small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="attachments">Dateianhänge</label>
+                    <input type="file" id="attachments" name="attachments" class="form-input" multiple accept=".txt,.pdf,.png,.jpg,.jpeg,.gif,.zip,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.mp3,.mp4,.avi,.mov">
+                    <small class="form-hint">Erlaubte Formate: Dokumente, Bilder, Archive, Audio/Video (max. 10MB pro Datei)</small>
+                    <div id="file-preview" class="file-preview"></div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Beitrag erstellen</button>
+                    <a href="/admin/posts" class="btn btn-secondary">Abbrechen</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        var quill = new Quill('#editor', { theme: 'snow' });
+
+        function saveContent() {
+            document.getElementById('content').value = quill.root.innerHTML;
+        }
+    </script>
+</body>
+</html>

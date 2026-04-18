@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ settings.site_title if settings.site_title else 'LatinMagazine' }} - Startseite</title>
+    <link rel="stylesheet" href="/static/theme.css">
+    {% if active_theme %}
+        <link rel="stylesheet" href="/static/{{ active_theme }}">
+    {% endif %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="/" class="navbar-brand">{{ settings.site_title if settings.site_title else 'LatinMagazine' }}</a>
+            <div class="navbar-nav">
+                <a href="/">Home</a>
+                <a href="/feed">RSS Feed</a>
+                {% if session.user %}
+                    {% if auth.get_user_role(session.user) == 'administrator' %}
+                        <a href="/admin/posts">Admin</a>
+                    {% endif %}
+                    <a href="/logout">Logout</a>
+                {% else %}
+                    <a href="/login">Login</a>
+                    <a href="/register">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header style="text-align: center; margin-bottom: 3rem;">
+            <h1>{{ settings.site_title if settings.site_title else 'LatinMagazine' }}</h1>
+            {% if settings.site_description %}
+                <p class="subtitle">{{ settings.site_description }}</p>
+            {% endif %}
+            {% if session.user %}
+                <p style="color: var(--gray-600); margin-top: 1rem;">
+                    Welcome back, <strong>{{ session.user }}</strong>! {% if auth.get_user_role(session.user) == 'administrator' %}<a href="/admin/posts">Go to Admin</a>{% endif %}
+                </p>
+            {% endif %}
+        </header>
+
+        <div style="background: white; border-radius: 0.5rem; padding: 1.5rem; margin-bottom: 2rem; box-shadow: var(--shadow);">
+            <form action="/search" method="GET" style="display: flex; gap: 0.5rem;">
+                <input type="text" name="q" class="form-input" placeholder="Search posts..." required>
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
+            <a href="/" class="btn btn-primary btn-sm">All Posts</a>
+            {% for category in categories %}
+                <a href="/category/{{ category }}" class="btn btn-secondary btn-sm">{{ category }}</a>
+            {% endfor %}
+        </div>
+
+        <main>
+            {% if posts %}
+                <div style="display: grid; gap: 2rem;">
+                    {% for post in posts %}
+                        <article class="card">
+                            <div class="card-body">
+                                <h2 style="margin-top: 0;">
+                                    <a href="/post/{{ post.slug }}" style="color: var(--primary-color);">{{ post.title }}</a>
+                                </h2>
+                                <div class="text-muted" style="margin-bottom: 1rem; font-size: 0.95rem;">
+                                    By <strong>{{ post.author }}</strong> on <time>{{ post.created_at[:10] if post.created_at else 'Unknown' }}</time>
+                                </div>
+                                {% if post.categories or post.tags %}
+                                    <div style="margin-bottom: 1rem;">
+                                        {% for category in post.categories %}
+                                            <span style="display: inline-block; background: #10b981; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem; margin-right: 0.5rem; margin-bottom: 0.5rem;">
+                                                📁 {{ category }}
+                                            </span>
+                                        {% endfor %}
+                                        {% for tag in post.tags %}
+                                            <span style="display: inline-block; background: #9b59b6; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem; margin-right: 0.5rem; margin-bottom: 0.5rem;">
+                                                # {{ tag }}
+                                            </span>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <p style="color: var(--gray-700); line-height: 1.6;">
+                                    {{ post.content[:250] }}{% if post.content|length > 250 %}...{% endif %}
+                                </p>
+                                <a href="/post/{{ post.slug }}" class="btn btn-primary btn-sm">Read Full Article →</a>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <strong>No posts yet.</strong>
+                    {% if session.user %}
+                        <a href="/admin/posts/create">Create your first post</a>
+                    {% else %}
+                        <a href="/login">Login</a> to create your first post!
+                    {% endif %}
+                </div>
+            {% endif %}
+        </main>
+    </div>
+
+    <footer style="background: var(--gray-900); color: var(--gray-100); padding: 3rem var(--spacing-lg); margin-top: 4rem; text-align: center;">
+        <div class="container">
+            <p style="margin: 0;">&copy; 2024 {{ settings.site_title if settings.site_title else 'LatinMagazine' }}. Powered by Flask.</p>
+            <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem; color: var(--gray-400);">A modern, professional CMS built with Python and Flask</p>
+        </div>
+    </footer>
+</body>
+</html>

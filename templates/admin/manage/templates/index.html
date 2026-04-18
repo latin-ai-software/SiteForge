@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Template Verwaltung</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #0f172a;
+            color: #e5e7eb;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: #020617;
+            border-right: 1px solid #1f2937;
+            padding: 24px 20px;
+        }
+
+        .sidebar h1 {
+            font-size: 1.3rem;
+            margin: 0 0 1.5rem;
+            color: #f9fafb;
+        }
+
+        .sidebar nav a {
+            display: block;
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            border-radius: 6px;
+            color: #9ca3af;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .sidebar nav a.active,
+        .sidebar nav a:hover {
+            background: #111827;
+            color: #e5e7eb;
+        }
+
+        .main {
+            flex: 1;
+            padding: 24px 32px 40px;
+        }
+
+        .page-title {
+            font-size: 1.6rem;
+            margin: 0 0 1.5rem;
+            color: #f9fafb;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+            gap: 24px;
+        }
+
+        .card {
+            background: #020617;
+            border-radius: 10px;
+            border: 1px solid #1f2937;
+            padding: 18px 20px;
+            box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+        }
+
+        .card h2 {
+            margin: 0 0 0.75rem;
+            font-size: 1.05rem;
+            color: #e5e7eb;
+        }
+
+        .card p {
+            margin: 0.25rem 0 0.75rem;
+            font-size: 0.9rem;
+            color: #9ca3af;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            background: #111827;
+            color: #e5e7eb;
+            border: 1px solid #1f2937;
+        }
+
+        .tag span {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: #22c55e;
+            margin-right: 6px;
+        }
+
+        form {
+            margin-top: 0.5rem;
+        }
+
+        input[type="file"] {
+            display: block;
+            width: 100%;
+            padding: 7px 10px;
+            border-radius: 6px;
+            border: 1px solid #374151;
+            background: #020617;
+            color: #e5e7eb;
+            font-size: 0.9rem;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 7px 14px;
+            border-radius: 6px;
+            border: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+            background: #2563eb;
+            color: #f9fafb;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .list {
+            margin: 0.5rem 0 0;
+            padding: 0;
+            list-style: none;
+            font-size: 0.9rem;
+        }
+
+        .list li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 7px 0;
+            border-bottom: 1px solid #111827;
+        }
+
+        .list li:last-child {
+            border-bottom: none;
+        }
+
+        .sheet-name {
+            color: #e5e7eb;
+        }
+
+        .sheet-meta {
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+
+        .sheet-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .badge-active {
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            background: rgba(34,197,94,0.12);
+            color: #4ade80;
+            border: 1px solid rgba(34,197,94,0.4);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            border: 1px solid #374151;
+            color: #e5e7eb;
+        }
+
+        .btn-ghost:hover {
+            background: #111827;
+        }
+
+        .empty {
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <h1>LatinMagazine Admin</h1>
+        <nav>
+            <a href="/admin" class="active">Stylesheets</a>
+            <a href="/admin/posts">Beiträge</a>
+            <a href="/admin/users">Benutzer</a>
+        </nav>
+    </aside>
+
+    <main class="main">
+        <h1 class="page-title">Stylesheet Verwaltung</h1>
+
+        <div class="grid">
+            <section class="card">
+                <h2>Aktuelles Stylesheet</h2>
+                {% if active_theme %}
+                    <p>
+                        <span class="tag">
+                            <span></span>
+                            {{ active_theme }}
+                        </span>
+                    </p>
+                    <p>Dieses Stylesheet ist aktuell für das Frontend aktiv.</p>
+                {% else %}
+                    <p class="empty">Kein aktives Stylesheet gesetzt.</p>
+                {% endif %}
+
+                <h2 style="margin-top:1.5rem;">Neues Stylesheet hochladen</h2>
+                <p>Nur <code>.css</code>-Dateien werden akzeptiert.</p>
+                <form action="/admin/manage/templates/upload" method="POST" enctype="multipart/form-data">
+                    <input type="file" name="file" accept=".css" required>
+                    <button type="submit">Hochladen</button>
+                </form>
+            </section>
+
+            <section class="card">
+                <h2>Verfügbare Stylesheets</h2>
+                {% if stylesheets %}
+                    <ul class="list">
+                        {% for sheet in stylesheets %}
+                            <li>
+                                <div>
+                                    <div class="sheet-name">{{ sheet }}</div>
+                                    <div class="sheet-meta">
+                                        {% if sheet == active_theme %}
+                                            Aktuell aktiv
+                                        {% else %}
+                                            Inaktiv
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="sheet-actions">
+                                    {% if sheet != active_theme %}
+                                        <form action="/admin/manage/templates/activate/{{ sheet }}" method="POST">
+                                            <button type="submit" class="btn-ghost">Aktivieren</button>
+                                        </form>
+                                    {% else %}
+                                        <span class="badge-active">aktiv</span>
+                                    {% endif %}
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="empty">Keine Stylesheets gefunden.</p>
+                {% endif %}
+            </section>
+        </div>
+    </main>
+</div>
+</body>
+</html>

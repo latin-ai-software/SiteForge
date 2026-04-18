@@ -1,0 +1,37 @@
+/* Dunkler Hintergrund und helle Schrift */
+body {
+    background-color: #1a1a1a;
+    color: #e6e6e6;
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    line-height: 1.6;
+}
+
+/* Überschriften */
+h1, h2, h3 {
+    color: #ffffff;
+    margin-bottom: 10px;
+}
+
+/* Links */
+a {
+    color: #66aaff;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Post-Container */
+.post-container {
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    padding: 15px;
+    margin-top: 20px;
+}
+
+/* Listen */
+ul {
+    padding-left: 20px;
+}

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Posts in Kategorie: {{ category }}</title>
+
+    {% if active_theme %}
+        <link rel="stylesheet" href="/static/{{ active_theme }}">
+    {% endif %}
+</head>
+<body>
+    <h1>Posts in Kategorie: {{ category }}</h1>
+
+    {% if posts %}
+        <ul>
+            {% for post in posts %}
+                <li>
+                    <strong>{{ post.title }}</strong> by {{ post.author }}<br>
+                    <small>{{ post.created_at }}</small><br>
+                    <a href="/post/{{ post.slug }}">Read more</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Keine Posts in dieser Kategorie.</p>
+    {% endif %}
+
+    <p><a href="/">Zurück zur Startseite</a></p>
+</body>
+</html>

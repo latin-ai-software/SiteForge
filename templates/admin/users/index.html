@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Benutzer verwalten</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #0f172a;
+            color: #e5e7eb;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: #020617;
+            border-right: 1px solid #1f2937;
+            padding: 24px 20px;
+        }
+
+        .sidebar h1 {
+            font-size: 1.3rem;
+            margin: 0 0 1.5rem;
+            color: #f9fafb;
+        }
+
+        .sidebar nav a {
+            display: block;
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            border-radius: 6px;
+            color: #9ca3af;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .sidebar nav a.active,
+        .sidebar nav a:hover {
+            background: #111827;
+            color: #e5e7eb;
+        }
+
+        .main {
+            flex: 1;
+            padding: 24px 32px 40px;
+        }
+
+        .page-title {
+            font-size: 1.6rem;
+            margin: 0 0 1.5rem;
+            color: #f9fafb;
+        }
+
+        .card {
+            background: #020617;
+            border-radius: 10px;
+            border: 1px solid #1f2937;
+            padding: 18px 20px;
+            box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+            margin-bottom: 24px;
+        }
+
+        .card h2 {
+            margin: 0 0 0.75rem;
+            font-size: 1.05rem;
+            color: #e5e7eb;
+        }
+
+        .btn {
+            padding: 7px 14px;
+            border-radius: 6px;
+            border: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+            background: #2563eb;
+            color: #f9fafb;
+        }
+
+        .btn:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            border: 1px solid #374151;
+            color: #e5e7eb;
+        }
+
+        .btn-ghost:hover {
+            background: #111827;
+        }
+
+        .list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #111827;
+        }
+
+        .list li:last-child {
+            border-bottom: none;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .username {
+            font-size: 1rem;
+            color: #e5e7eb;
+            display: block;
+        }
+
+        .user-role {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            display: block;
+        }
+
+        .user-created {
+            font-size: 0.8rem;
+            color: #6b7280;
+            display: block;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .role-select {
+            padding: 4px 8px;
+            border: 1px solid #374151;
+            border-radius: 4px;
+            background: #111827;
+            color: #e5e7eb;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+
+<body>
+<div class="layout">
+
+    <aside class="sidebar">
+        <h1>LatinMagazine Admin</h1>
+        <nav>
+            <a href="/admin/manage/templates">Stylesheets</a>
+            <a href="/admin/posts">Beiträge</a>
+            <a href="/admin/users" class="active">Benutzer</a>
+            <a href="/admin/settings">Einstellungen</a>
+        </nav>
+    </aside>
+
+    <main class="main">
+        <h1 class="page-title">Benutzer verwalten</h1>
+
+        <section class="card">
+            <h2>Alle Benutzer</h2>
+
+            {% if users %}
+                <ul class="list">
+                    {% for user in users %}
+                        <li>
+                            <div class="user-info">
+                                <span class="username">{{ user.username }}</span>
+                                <span class="user-role">Rolle: {{ user.role }}</span>
+                                <span class="user-created">Erstellt: {{ user.created_at }}</span>
+                            </div>
+
+                            <div class="actions">
+                                <form action="/admin/users/update-role/{{ user.username }}" method="POST" style="display: inline;">
+                                    <select name="role" class="role-select" onchange="this.form.submit()">
+                                        <option value="subscriber" {% if user.role == "subscriber" %}selected{% endif %}>Subscriber</option>
+                                        <option value="contributor" {% if user.role == "contributor" %}selected{% endif %}>Contributor</option>
+                                        <option value="author" {% if user.role == "author" %}selected{% endif %}>Author</option>
+                                        <option value="editor" {% if user.role == "editor" %}selected{% endif %}>Editor</option>
+                                        <option value="administrator" {% if user.role == "administrator" %}selected{% endif %}>Administrator</option>
+                                    </select>
+                                </form>
+
+                                {% if user.username != "admin" %}
+                                <form action="/admin/users/delete/{{ user.username }}" method="POST" style="display: inline;">
+                                    <button class="btn-ghost">Löschen</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="empty">Keine Benutzer vorhanden.</p>
+            {% endif %}
+        </section>
+
+    </main>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,34 @@
+/* Grundlayout */
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    line-height: 1.6;
+}
+
+/* Überschriften */
+h1, h2, h3 {
+    margin-bottom: 10px;
+}
+
+/* Links */
+a {
+    color: #0066cc;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Post-Container */
+.post-container {
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin-top: 20px;
+    background: #fafafa;
+}
+
+/* Listen */
+ul {
+    padding-left: 20px;
+}

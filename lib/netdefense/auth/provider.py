@@ -1,0 +1,151 @@
+import os
+import json
+import hashlib
+import secrets
+from functools import wraps
+from flask import session, redirect, url_for, abort
+from datetime import datetime
+
+
+class AuthManager:
+    def __init__(self, base_path):
+        self.userfile = os.path.join(base_path, "data", "users.json")
+        os.makedirs(os.path.dirname(self.userfile), exist_ok=True)
+
+        if not os.path.exists(self.userfile):
+            with open(self.userfile, "w", encoding="utf-8") as f:
+                json.dump({}, f)
+
+    def _load(self):
+        with open(self.userfile, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    def _save(self, data):
+        with open(self.userfile, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4)
+
+    def _hash(self, password, salt):
+        return hashlib.sha256((password + salt).encode()).hexdigest()
+
+    # -------------------------
+    # Benutzerverwaltung
+    # -------------------------
+
+    def create_user(self, username, password, role="subscriber"):
+        users = self._load()
+
+        if username in users:
+            return False, "User exists"
+
+        salt = secrets.token_hex(16)
+        users[username] = {
+            "salt": salt,
+            "password": self._hash(password, salt),
+            "role": role,
+            "created_at": str(datetime.now())
+        }
+
+        self._save(users)
+        return True, "User created"
+
+    def delete_user(self, username):
+        users = self._load()
+
+        if username not in users:
+            return False, "User not found"
+
+        del users[username]
+        self._save(users)
+        return True, "User deleted"
+
+    def change_password(self, username, new_password):
+        users = self._load()
+
+        if username not in users:
+            return False, "User not found"
+
+        salt = secrets.token_hex(16)
+        users[username]["salt"] = salt
+        users[username]["password"] = self._hash(new_password, salt)
+
+        self._save(users)
+        return True, "Password changed"
+
+    # -------------------------
+    # Login / Logout
+    # -------------------------
+
+    def verify_login(self, username, password):
+        users = self._load()
+
+        if username not in users:
+            return False
+
+        salt = users[username]["salt"]
+        hashed = self._hash(password, salt)
+
+        return hashed == users[username]["password"]
+
+    def login(self, username):
+        session["user"] = username
+
+    def logout(self):
+        session.pop("user", None)
+
+    def current_user(self):
+        """Get the currently logged-in user from session"""
+        return session.get("user")
+
+    def get_user_role(self, username):
+        users = self._load()
+        return users.get(username, {}).get("role", "subscriber")
+
+    def update_user_role(self, username, role):
+        users = self._load()
+        if username not in users:
+            return False, "User not found"
+        users[username]["role"] = role
+        self._save(users)
+        return True, "Role updated"
+
+    # -------------------------
+    # Route‑Schutz
+    # -------------------------
+
+    def require_login(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            if "user" not in session:
+                return redirect(url_for("auth.login_page"))
+            return f(*args, **kwargs)
+        return wrapper
+
+    def require_admin(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            user = session.get("user")
+            if not user or self.get_user_role(user) != "administrator":
+                abort(403)
+            return f(*args, **kwargs)
+        return wrapper
+
+    def require_role(self, required_role):
+        def decorator(f):
+            @wraps(f)
+            def wrapper(*args, **kwargs):
+                user = session.get("user")
+                if not user:
+                    return redirect(url_for("auth.login_page"))
+                user_role = self.get_user_role(user)
+                role_hierarchy = {
+                    "administrator": 5,
+                    "editor": 4,
+                    "author": 3,
+                    "contributor": 2,
+                    "subscriber": 1
+                }
+                if role_hierarchy.get(user_role, 0) < role_hierarchy.get(required_role, 0):
+                    abort(403)
+                return f(*args, **kwargs)
+            return wrapper
+        return decorator

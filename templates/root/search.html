@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Suche: {{ query }}</title>
+
+    {% if active_theme %}
+        <link rel="stylesheet" href="/static/{{ active_theme }}">
+    {% endif %}
+</head>
+<body>
+    <h1>Suchergebnisse für: "{{ query }}"</h1>
+
+    <form action="/search" method="GET">
+        <input type="text" name="q" value="{{ query }}" placeholder="Suchen..." required>
+        <button type="submit">Suchen</button>
+    </form>
+
+    {% if posts %}
+        <p>{{ posts|length }} Ergebnisse gefunden:</p>
+        <ul>
+            {% for post in posts %}
+                <li>
+                    <strong>{{ post.title }}</strong> by {{ post.author }}<br>
+                    <small>{{ post.created_at }}</small><br>
+                    {% if post.categories %}
+                        Kategorien: {{ post.categories|join(", ") }}<br>
+                    {% endif %}
+                    {% if post.tags %}
+                        Tags: {{ post.tags|join(", ") }}<br>
+                    {% endif %}
+                    <a href="/post/{{ post.slug }}">Read more</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        {% if query %}
+            <p>Keine Ergebnisse für "{{ query }}" gefunden.</p>
+        {% endif %}
+    {% endif %}
+
+    <p><a href="/">Zurück zur Startseite</a></p>
+</body>
+</html>

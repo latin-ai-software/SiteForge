@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Post</title>
+
+    {% if active_theme %}
+        <link rel="stylesheet" href="/static/{{ active_theme }}">
+    {% endif %}
+
+    <style>
+        /* Kommentarleiste rechts */
+        #commentSidebar {
+            width: 250px;
+            height: 100vh;
+            border-left: 1px solid #ccc;
+            padding: 10px;
+            overflow-y: auto;
+            position: fixed;
+            top: 0;
+            right: 0;
+            background: #f5f5f5;
+            display: none;
+        }
+
+        /* Toggle-Button immer sichtbar */
+        #toggleBtn {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            cursor: pointer;
+            z-index: 9999; /* überlappt Sidebar */
+        }
+
+        /* Inhalt rückt etwas nach links, damit Sidebar nicht überlappt */
+        #contentArea {
+            margin-right: 20px;
+            padding-right: 20px;
+        }
+
+        /* Attachments styling */
+        .attachments {
+            margin-bottom: 20px;
+        }
+
+        .attachment {
+            margin-bottom: 10px;
+            padding: 8px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+
+        .attachment-link {
+            color: #0066cc;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .attachment-link:hover {
+            text-decoration: underline;
+        }
+
+        .attachment-info {
+            color: #666;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Button zum Ein-/Ausklappen -->
+    <button id="toggleBtn" onclick="toggleSidebar()">Mehr</button>
+
+    <!-- Kommentar-Sidebar -->
+    <div id="commentSidebar">
+        <h3>Post Info</h3>
+        <p><strong>Kategorien:</strong></p>
+        {% if post.categories %}
+            <ul>
+                {% for category in post.categories %}
+                    <li><a href="/category/{{ category }}">{{ category }}</a></li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Keine Kategorien</p>
+        {% endif %}
+
+        <p><strong>Tags:</strong></p>
+        {% if post.tags %}
+            <ul>
+                {% for tag in post.tags %}
+                    <li><a href="/tag/{{ tag }}">{{ tag }}</a></li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Keine Tags</p>
+        {% endif %}
+
+        <hr>
+
+        <h3>Kommentare</h3>
+
+        {% if post.attachments %}
+            <h4>Dateianhänge</h4>
+            <div class="attachments">
+                {% for attachment in post.attachments %}
+                    <div class="attachment">
+                        <a href="/uploads/{{ attachment.filename }}" target="_blank" class="attachment-link">
+                            📎 {{ attachment.original_name }}
+                        </a>
+                        <small class="attachment-info">
+                            ({{ "%.1f"|format(attachment.size / 1024 / 1024) }} MB, {{ attachment.mime_type }})
+                        </small>
+                    </div>
+                {% endfor %}
+            </div>
+            <hr>
+        {% endif %}
+
+        {% if top_level_comments %}
+            {% for comment in top_level_comments %}
+                <div class="comment">
+                    <p><strong>{{ comment.author }}</strong> <small>{{ comment.created_at }}</small></p>
+                    <p>{{ comment.content }}</p>
+                    <button onclick="replyToComment('{{ comment.id }}')">Antworten</button>
+
+                    {% if comment.id in replies %}
+                        <div class="replies">
+                            {% for reply in replies[comment.id] %}
+                                <div class="reply">
+                                    <p><strong>{{ reply.author }}</strong> <small>{{ reply.created_at }}</small></p>
+                                    <p>{{ reply.content }}</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>Noch keine Kommentare.</p>
+        {% endif %}
+
+        <hr>
+
+        <h4 id="commentFormTitle">Neuen Kommentar schreiben</h4>
+        <form id="commentForm" onsubmit="submitComment(event)">
+            <input type="hidden" id="parentId" name="parent_id" value="">
+            <div>
+                <label for="author">Name:</label><br>
+                <input type="text" id="author" name="author" required>
+            </div>
+            <div>
+                <label for="content">Kommentar:</label><br>
+                <textarea id="content" name="content" required></textarea>
+            </div>
+            <button type="submit">Senden</button>
+            <button type="button" onclick="cancelReply()" id="cancelBtn" style="display:none;">Abbrechen</button>
+        </form>
+    </div>
+
+    <!-- Post-Inhalt -->
+    <div id="contentArea">
+        <h1>{{ post.title }}</h1>
+        <p><small>By {{ post.author }} on {{ post.created_at }}</small></p>
+        {{ post.content|safe }}
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const bar = document.getElementById("commentSidebar");
+            bar.style.display = bar.style.display === "block" ? "none" : "block";
+        }
+
+        function replyToComment(commentId) {
+            document.getElementById("parentId").value = commentId;
+            document.getElementById("commentFormTitle").textContent = "Auf Kommentar antworten";
+            document.getElementById("cancelBtn").style.display = "inline";
+            document.getElementById("author").focus();
+        }
+
+        function cancelReply() {
+            document.getElementById("parentId").value = "";
+            document.getElementById("commentFormTitle").textContent = "Neuen Kommentar schreiben";
+            document.getElementById("cancelBtn").style.display = "none";
+        }
+
+        async function submitComment(event) {
+            event.preventDefault();
+
+            const formData = new FormData(document.getElementById("commentForm"));
+            const response = await fetch(window.location.pathname + "/comment", {
+                method: "POST",
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.status === "ok") {
+                alert("Kommentar hinzugefügt!");
+                location.reload(); // Simple refresh for now
+            } else {
+                alert("Fehler: " + result.error);
+            }
+        }
+    </script>
+
+</body>
+</html>

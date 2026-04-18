@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beitrag bearbeiten: {{ post.title }}</title>
+    <link rel="stylesheet" href="/static/theme.css">
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    <script>
+        tinymce.init({
+            selector: '#content',
+            plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+            toolbar: 'undo redo | formatselect | bold italic underline strikethrough | forecolor backcolor | align | bullist numlist outdent indent | link image media table | emoticons charmap | removeformat',
+            height: 400,
+            menubar: false,
+            content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; line-height: 1.6; }'
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="admin-header">
+            <h1>Beitrag bearbeiten</h1>
+            <p class="subtitle">{{ post.title }}</p>
+        </div>
+
+        <div class="form-card">
+            <form action="/admin/posts/edit/{{ post.id }}" method="POST" enctype="multipart/form-data" class="post-form" onsubmit="saveContent()">
+                <div class="form-group">
+                    <label for="title">Titel *</label>
+                    <input type="text" id="title" name="title" class="form-input" value="{{ post.title }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="content">Inhalt *</label>
+
+                    <!-- Quill Editor -->
+                    <div id="editor"></div>
+
+                    <!-- Hidden field for HTML -->
+                    <textarea id="content" name="content" style="display:none"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="categories">Kategorien</label>
+                        <input type="text" id="categories" name="categories" class="form-input" value="{{ post.categories|join(', ') }}" placeholder="z.B. News, Technologie, Lifestyle">
+                        <small class="form-hint">Kommagetrennt</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tags">Tags</label>
+                        <input type="text" id="tags" name="tags" class="form-input" value="{{ post.tags|join(', ') }}" placeholder="z.B. python, web, tutorial">
+                        <small class="form-hint">Kommagetrennt</small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="attachments">Dateianhänge</label>
+                    <input type="file" id="attachments" name="attachments" class="form-input" multiple accept=".txt,.pdf,.png,.jpg,.jpeg,.gif,.zip,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.mp3,.mp4,.avi,.mov">
+                    <small class="form-hint">Erlaubte Formate: Dokumente, Bilder, Archive, Audio/Video (max. 10MB pro Datei)</small>
+                    {% if post.attachments %}
+                        <div class="current-attachments">
+                            <p><strong>Aktuelle Anhänge:</strong></p>
+                            <ul>
+                                {% for attachment in post.attachments %}
+                                    <li>{{ attachment.original_name }} <a href="/uploads/{{ attachment.filename }}" target="_blank">📎</a></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    <div id="file-preview" class="file-preview"></div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Änderungen speichern</button>
+                    <a href="/admin/posts" class="btn btn-secondary">Abbrechen</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        var quill = new Quill('#editor', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'color': [] }, { 'background': [] }],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['link', 'image'],
+                    ['clean']
+                ]
+            }
+        });
+
+        // Set initial content
+        quill.root.innerHTML = `{{ post.content|tojson }}`;
+
+        function saveContent() {
+            document.getElementById('content').value = quill.root.innerHTML;
+        }
+    </script>
+</body>
+</html>
