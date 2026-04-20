@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Kommentar-Management - {{ settings.site_title }}</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #0f172a;
+            color: #e5e7eb;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: #020617;
+            border-right: 1px solid #1f2937;
+            padding: 24px 20px;
+        }
+
+        .sidebar h1 {
+            font-size: 1.3rem;
+            margin: 0 0 1.5rem;
+            color: #f9fafb;
+        }
+
+        .sidebar nav a {
+            display: block;
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            border-radius: 6px;
+            color: #9ca3af;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .sidebar nav a.active,
+        .sidebar nav a:hover {
+            background: #111827;
+            color: #e5e7eb;
+        }
+
+        .main {
+            flex: 1;
+            padding: 24px 32px 40px;
+        }
+
+        .page-title {
+            font-size: 1.6rem;
+            margin: 0 0 1.5rem;
+            color: #f9fafb;
+        }
+
+        .card {
+            background: #020617;
+            border-radius: 10px;
+            border: 1px solid #1f2937;
+            padding: 18px 20px;
+            box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+        }
+
+        .card h2 {
+            margin: 0 0 0.75rem;
+            font-size: 1.05rem;
+            color: #e5e7eb;
+        }
+
+        .comments-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .comment-item {
+            border: 1px solid #1f2937;
+            border-radius: 8px;
+            padding: 15px;
+            background: #020617;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .comment-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .comment-meta strong {
+            color: #e5e7eb;
+        }
+
+        .comment-date,
+        .comment-post {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .comment-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .comment-content {
+            margin: 10px 0;
+            line-height: 1.5;
+            color: #e5e7eb;
+        }
+
+        .comment-replies {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #1f2937;
+        }
+
+        .comment-replies h4 {
+            margin: 0 0 10px 0;
+            color: #e5e7eb;
+        }
+
+        .reply-item {
+            margin-left: 20px;
+            padding: 10px;
+            background: #111827;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .reply-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .reply-meta strong {
+            font-size: 14px;
+            color: #e5e7eb;
+        }
+
+        .reply-date {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .reply-content {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #e5e7eb;
+        }
+
+        .reply-actions {
+            margin-top: 5px;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 11px;
+        }
+    </style>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <h1>{{ settings.site_title or 'LatinMagazine' }} Admin</h1>
+        <nav>
+            <a href="/">Zur Seite</a>
+            <a href="/admin/manage/templates">Stylesheets</a>
+            <a href="/admin/posts">Beiträge</a>
+            <a href="/admin/users">Benutzer</a>
+            <a href="/admin/media">Medien</a>
+            <a href="/admin/analytics" class="active">Analytics</a>
+            <a href="/admin/settings">Einstellungen</a>
+        </nav>
+    </aside>
+
+    <main class="main">
+        <h1 class="page-title">Kommentar-Management</h1>
+        <a href="/admin/analytics" class="btn btn-secondary" style="margin-bottom: 20px;">← Zurück zu Analytics</a>
+
+        <div class="card">
+            <h2>Alle Kommentare</h2>
+
+            {% if comments %}
+            <div class="comments-list">
+                {% for comment in comments %}
+                <div class="comment-item" data-comment-id="{{ comment.id }}" data-post-id="{{ comment.post_id }}">
+                    <div class="comment-header">
+                        <div class="comment-meta">
+                            <strong>{{ comment.author }}</strong>
+                            <span class="comment-date">{{ comment.created_at }}</span>
+                            <span class="comment-post">zu Post: {{ comment.post_id }}</span>
+                        </div>
+                        <div class="comment-actions">
+                            <button class="btn btn-danger btn-sm delete-comment" data-comment-id="{{ comment.id }}" data-post-id="{{ comment.post_id }}">
+                                Löschen
+                            </button>
+                        </div>
+                    </div>
+                    <div class="comment-content">
+                        {{ comment.content | safe }}
+                    </div>
+                    {% if comment.replies %}
+                    <div class="comment-replies">
+                        <h4>Antworten:</h4>
+                        {% for reply in comment.replies %}
+                        <div class="reply-item">
+                            <div class="reply-meta">
+                                <strong>{{ reply.author }}</strong>
+                                <span class="reply-date">{{ reply.created_at }}</span>
+                            </div>
+                            <div class="reply-content">
+                                {{ reply.content | safe }}
+                            </div>
+                            <div class="reply-actions">
+                                <button class="btn btn-danger btn-sm delete-reply" data-comment-id="{{ reply.id }}" data-post-id="{{ comment.post_id }}">
+                                    Antwort löschen
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p style="color: #9ca3af;">Keine Kommentare vorhanden.</p>
+            {% endif %}
+        </div>
+    </main>
+</div>
+
+    <script>
+        // Delete comment functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.delete-comment').forEach(button => {
+                button.addEventListener('click', function() {
+                    const commentId = this.getAttribute('data-comment-id');
+                    const postId = this.getAttribute('data-post-id');
+
+                    if (confirm('Sind Sie sicher, dass Sie diesen Kommentar löschen möchten?')) {
+                        fetch('/admin/analytics/comments/delete', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: `post_id=${encodeURIComponent(postId)}&comment_id=${encodeURIComponent(commentId)}`
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'ok') {
+                                // Remove the comment from the DOM
+                                this.closest('.comment-item').remove();
+                                alert('Kommentar erfolgreich gelöscht.');
+                            } else {
+                                alert('Fehler beim Löschen des Kommentars: ' + data.error);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('Fehler beim Löschen des Kommentars.');
+                        });
+                    }
+                });
+            });
+
+            // Delete reply functionality
+            document.querySelectorAll('.delete-reply').forEach(button => {
+                button.addEventListener('click', function() {
+                    const commentId = this.getAttribute('data-comment-id');
+                    const postId = this.getAttribute('data-post-id');
+
+                    if (confirm('Sind Sie sicher, dass Sie diese Antwort löschen möchten?')) {
+                        fetch('/admin/analytics/comments/delete', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: `post_id=${encodeURIComponent(postId)}&comment_id=${encodeURIComponent(commentId)}`
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'ok') {
+                                // Remove the reply from the DOM
+                                this.closest('.reply-item').remove();
+                                alert('Antwort erfolgreich gelöscht.');
+                            } else {
+                                alert('Fehler beim Löschen der Antwort: ' + data.error);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('Fehler beim Löschen der Antwort.');
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+
+    <style>
+        .comments-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .comment-item {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            background: white;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .comment-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .comment-meta strong {
+            color: #333;
+        }
+
+        .comment-date,
+        .comment-post {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .comment-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .comment-content {
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+
+        .comment-replies {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .comment-replies h4 {
+            margin: 0 0 10px 0;
+            color: #666;
+        }
+
+        .reply-item {
+            margin-left: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .reply-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .reply-meta strong {
+            font-size: 14px;
+        }
+
+        .reply-date {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .reply-content {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .reply-actions {
+            margin-top: 5px;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 11px;
+        }
+    </style>
+</body>
+</html>

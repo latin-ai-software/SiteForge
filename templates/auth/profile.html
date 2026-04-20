@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ settings.site_title if settings.site_title else 'LatinMagazine' }} - Startseite</title>
+    <link rel="stylesheet" href="/static/theme.css">
+    {% if active_theme %}
+        <link rel="stylesheet" href="/static/{{ active_theme }}">
+    {% endif %}
+
+    {% if settings.enable_analytics and settings.analytics_tracking_id %}
+    {% if settings.analytics_provider == 'google' %}
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ settings.analytics_tracking_id }}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '{{ settings.analytics_tracking_id }}');
+    </script>
+    {% endif %}
+    {% endif %}
+
+    {% if settings.embed_favicon_in_html and settings.favicon_filename %}
+    <link rel="icon" href="/static/favicon.ico">
+    {% endif %}
+    <style>
+        .cookie-banner {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(15, 23, 42, 0.96);
+            color: #f8fafc;
+            border-radius: 14px;
+            padding: 18px;
+            box-shadow: 0 18px 40px rgba(0,0,0,0.2);
+            z-index: 2000;
+            display: none;
+        }
+        .cookie-banner * {
+            color:white;
+        }
+        .cookie-banner button {
+            background: #2563eb;
+            border: none;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .card{
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+
+    <style>
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            nav.navbar .navbar-content {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            nav.navbar .navbar-nav {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 0.5rem;
+            }
+
+            .container {
+                padding: 1rem 1rem;
+            }
+
+            .cookie-banner {
+                left: 10px;
+                right: 10px;
+                padding: 12px;
+            }
+
+            .cookie-banner button {
+                width: 100%;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            {% if show_logo %}<img src="/static/favicon.ico" alt="site logo" width="140" height="128">{% endif %}
+            <a href="/" class="navbar-brand">{{ settings.site_title if settings.site_title else 'LatinMagazine' }}</a>
+            <div class="navbar-nav">
+                <a href="/">Home</a>
+                <a href="/feed">RSS Feed</a>
+                {% if session.user %}
+                    {% if auth.get_user_role(session.user) == 'administrator' %}
+                        <a href="/admin/posts">Admin</a>
+                    {% endif %}
+                    <a href="/profile/me">Profile</a>
+                    <a href="/logout">Logout</a>
+                {% else %}
+                    <a href="/login">Login</a>
+                    <a href="/register">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div id="cookieConsentBanner" class="cookie-banner">
+        <div id="cookieConsentMessage">
+            {% if settings.cookie_consent_message %}
+                {{ settings.cookie_consent_message|safe }}
+            {% else %}
+                <p>Diese Webseite verwendet Cookies für ein besseres Nutzererlebnis. Bitte akzeptieren Sie Cookies.</p>
+            {% endif %}
+        </div>
+        <button onclick="acceptCookies()">Cookies akzeptieren</button>
+    </div>
+
+    <div class="container">
+        <h1>Willkommen zu deinem Profil, {{ session.user }}!</h1>
+        <p>Hier kannst du deine Kontoeinstellungen anpassen und deine Aktivitäten einsehen.</p>
+
+        <section class="card">
+            <h2>Kontoinformationen</h2>
+            <p><strong>Benutzername:</strong> {{ session.user }}</p>
+            <p><strong>E-Mail:</strong> {{ user_data.email if user_data else '' }}</p>
+            <p><strong>Rolle:</strong> {{ auth.get_user_role(session.user) }}</p>
+        </section>
+
+        <section class="card">
+            <h2>E-Mail-Adresse ändern</h2>
+            <form method="POST">
+                <label for="email">Neue E-Mail-Adresse:</label>
+                <input type="email" id="email" name="email" value="{{ user_data.email if user_data else '' }}" required style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; margin-bottom: 10px;">
+                <button type="submit" style="background: #2563eb; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">E-Mail speichern</button>
+            </form>
+        </section>
+        {% if settings.allow_password_change %}
+        <section class="card">
+            <h2>Sicherheit</h2>
+            <p><a href="/change-password" style="color: #2563eb; text-decoration: none; font-weight: bold;">Passwort ändern</a></p>
+        </section>
+        {% endif %}
+
+        <section class="card">
+            <h2>Aktivitäten</h2>
+            {% if activities %}
+                <ul class="list">
+                    {% for activity in activities %}
+                        <li>
+                            <div class="user-info">
+                                <a href="/post/{{ activity.id }}" style="color: #60a5fa; text-decoration: none;">
+                                    <span class="username">{{ activity.title }}</span>
+                                </a>
+                                <!--<span class="user-created"></span>-->
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>Noch keine Aktivitäten.</p>
+            {% endif %}
+        </section>
+    </div>
+
+    <footer style="background: var(--gray-900); color: var(--gray-100); padding: 3rem var(--spacing-lg); margin-top: 4rem; text-align: center;">
+        <div class="container">
+            <p style="margin: 0;">&copy; 2024 {{ settings.site_title if settings.site_title else 'LatinMagazine' }}. Powered by Flask.</p>
+            <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem; color: var(--gray-400);">A modern, professional CMS built with Python and Flask</p>
+            {% if settings.imprint_enabled %}
+                <p style="margin: 0.5rem 0 0 0;">
+                    <a href="/static/imprint.html" target="_blank">Impressum</a>
+                </p>
+            {% endif %}
+        </div>
+    </footer>
+
+    <script>
+        function updateCookieBanner() {
+            const banner = document.getElementById('cookieConsentBanner');
+            const requireConsent = {{ 'true' if settings.require_cookie_consent else 'false' }};
+            const accepted = localStorage.getItem('cookieConsentAccepted') === 'true';
+            if (requireConsent && !accepted) {
+                banner.style.display = 'block';
+            } else {
+                banner.style.display = 'none';
+            }
+        }
+
+        function acceptCookies() {
+            localStorage.setItem('cookieConsentAccepted', 'true');
+            // Set analytics consent in session
+            fetch('/consent/analytics', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({consent: true})
+            }).then(() => {
+                updateCookieBanner();
+            });
+        }
+
+        updateCookieBanner();
+    </script>
+</body>
+</html>

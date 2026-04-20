@@ -1,9 +1,10 @@
 import os
-from flask import Blueprint, request, jsonify, render_template, current_app, abort, redirect, url_for, make_response
+from flask import Blueprint, request, jsonify, render_template, current_app, abort, redirect, url_for, make_response, session
 from ....netdefense.check import MalwareChecker
 from ....netdefense.auth.provider import AuthManager
 from ....data.post_manager import PostManager
 from ....data.comment_manager import CommentManager
+import json
 
 post_create_bp = Blueprint("post_create", __name__)
 security = MalwareChecker()
@@ -55,6 +56,13 @@ def get_post(slug):
     # Load comments
     top_level_comments, replies = comment_manager.get_comments(post["id"])
 
+    # Load settings
+    settings = {}
+    settings_file = os.path.join(current_app.root_path, "data", "settings.json")
+    if os.path.exists(settings_file):
+        with open(settings_file, "r", encoding="utf-8") as f:
+            settings = json.load(f)
+
     # Aktives Stylesheet laden
     active_theme_path = os.path.join(current_app.root_path, "data", "active_theme.txt")
     active_theme = None
@@ -66,21 +74,26 @@ def get_post(slug):
                            post=post,
                            top_level_comments=top_level_comments,
                            replies=replies,
-                           active_theme=active_theme)
+                           active_theme=active_theme,
+                           settings=settings,
+                           auth=auth)
 
 # POST: Kommentar hinzufügen
 @post_create_bp.route("/post/<slug>/comment", methods=["POST"])
+@auth.require_login
 def add_comment(slug):
     post = post_manager.get_post(slug)
     if not post:
         return jsonify({"error": "Post not found"}), 404
 
-    author = request.form.get("author")
+    author = auth.current_user() or session.get("user")
     content = request.form.get("content")
     parent_id = request.form.get("parent_id")
 
-    if not author or not content:
-        return jsonify({"error": "Author and content required"}), 400
+    if not author:
+        return jsonify({"error": "Login required to post comments"}), 403
+    if not content:
+        return jsonify({"error": "Content required"}), 400
 
     # Security check for content
     result = security.check_text(content)

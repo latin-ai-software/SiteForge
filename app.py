@@ -1,18 +1,24 @@
 import sys
-from flask import Flask, render_template, send_from_directory
+import importlib.util
+from flask import Flask, render_template, send_from_directory, Response
+import json
 import lib.netdefense.check
 from lib.routes.create.post.index import post_create_bp
 from lib.routes.root.index import root_bp
 from lib.routes.admin.manage.templates.index import admin_templates_bp
 from lib.routes.admin.manage.posts.index import admin_posts_bp
 from lib.routes.admin.manage.users.index import admin_users_bp
+from lib.routes.admin.manage.analytics.index import admin_analytics_bp
 from lib.routes.admin.manage.settings.index import admin_settings_bp
+from lib.routes.admin.manage.media.index import admin_media_bp
 from lib.routes.root.auth import auth_bp
 from lib.netdefense.auth.provider import AuthManager
 import os
 
 app = Flask(__name__)
 app.secret_key = "irgendein_langes_random_secret_das_wirklich_gar_keiner_kompromittier_dabei_bin_ich_mir_sicher_vertrau_mir"
+from updater.update_loop import start_update_loop
+start_update_loop()
 
 app.register_blueprint(post_create_bp)
 app.register_blueprint(root_bp)
@@ -20,13 +26,219 @@ app.register_blueprint(admin_templates_bp)
 app.register_blueprint(admin_posts_bp)
 app.register_blueprint(admin_users_bp)
 app.register_blueprint(admin_settings_bp)
+app.register_blueprint(admin_media_bp)
 app.register_blueprint(auth_bp)
+app.register_blueprint(admin_analytics_bp)
 
-# Route for serving uploaded files
-@app.route('/uploads/<filename>')
+# Global variable to track loaded plugins
+loaded_plugins = set()
+available_plugins = set()
+
+# Load optional plugins from plugins/ directory
+
+def load_plugins(application):
+    global loaded_plugins, available_plugins
+    plugins_dir = os.path.join(application.root_path, "plugins")
+    if not os.path.isdir(plugins_dir):
+        return
+
+    # Load settings to check enabled plugins
+    settings_file = os.path.join(application.root_path, "data", "settings.json")
+    settings = {}
+    if os.path.exists(settings_file):
+        with open(settings_file, "r", encoding="utf-8") as f:
+            settings = json.load(f)
+    enabled_plugins = settings.get("enabled_plugins", {})
+
+    for item in os.listdir(plugins_dir):
+        plugin_dir = os.path.join(plugins_dir, item)
+        if not os.path.isdir(plugin_dir) or item.startswith('_'):
+            continue
+
+        plugin_file = os.path.join(plugin_dir, f"{item}.py")
+        if not os.path.isfile(plugin_file):
+            continue
+
+        available_plugins.add(item)
+
+        # Check if plugin is enabled
+        if not enabled_plugins.get(item, False):
+            continue
+
+        spec = importlib.util.spec_from_file_location(f"plugins.{item}.{item}", plugin_file)
+        if not spec or not spec.loader:
+            continue
+
+        module = importlib.util.module_from_spec(spec)
+        try:
+            spec.loader.exec_module(module)
+        except Exception as e:
+            print(f"Plugin load failed for {item}: {e}")
+            continue
+
+        # Track loaded plugin
+        loaded_plugins.add(item)
+
+        if hasattr(module, 'plugin_blueprint'):
+            application.register_blueprint(module.plugin_blueprint)
+        if hasattr(module, 'git_http_blueprint'):
+            application.register_blueprint(module.git_http_blueprint)
+        if hasattr(module, 'init_plugin'):
+            try:
+                module.init_plugin(application)
+            except Exception as e:
+                print(f"Plugin init failed for {item}: {e}")
+
+    # Store available plugins on app
+    application.available_plugins = available_plugins
+
+load_plugins(app)
+
+def is_plugin_loaded(plugin_name):
+    return plugin_name in loaded_plugins
+
+def is_plugin_available(plugin_name):
+    return plugin_name in available_plugins
+
+# Make plugin check available to templates
+@app.context_processor
+def inject_plugin_check():
+    return dict(is_plugin_loaded=is_plugin_loaded, is_plugin_available=is_plugin_available)
+
+# Analytics middleware
+@app.before_request
+def track_visitor():
+    from flask import request, session
+    import json
+    from datetime import datetime
+
+    # Skip tracking for admin routes, static files, and API calls
+    if request.path.startswith('/admin') or request.path.startswith('/static') or request.path.startswith('/uploads') or request.path.startswith('/consent'):
+        return
+
+    # Check if analytics is enabled
+    settings_file = os.path.join(app.root_path, 'data', 'settings.json')
+    if not os.path.exists(settings_file):
+        return
+
+    with open(settings_file, 'r', encoding='utf-8') as f:
+        settings = json.load(f)
+
+    # If analytics is enabled, cookie consent is automatically required
+    if not settings.get('enable_analytics', False) or not (settings.get('require_cookie_consent', False) or settings.get('enable_analytics', False)):
+        return
+
+    # Check if user has consented to analytics cookies (check both session and cookie)
+    has_consent = session.get('analytics_consent', False) or request.cookies.get('analytics_consent') == 'true'
+    if not has_consent:
+        return
+
+    # Track the visitor
+    analytics_file = os.path.join(app.root_path, 'data', 'analytics.json')
+    analytics = {"visitors": []}
+
+    if os.path.exists(analytics_file):
+        with open(analytics_file, 'r', encoding='utf-8') as f:
+            analytics = json.load(f)
+
+    visitor = {
+        "timestamp": datetime.now().isoformat(),
+        "ip": request.remote_addr,
+        "user_agent": request.headers.get('User-Agent', ''),
+        "path": request.path,
+        "method": request.method
+    }
+
+    analytics["visitors"].append(visitor)
+
+    # Keep only last 10000 visitors to prevent file from growing too large
+    if len(analytics["visitors"]) > 10000:
+        analytics["visitors"] = analytics["visitors"][-10000:]
+
+    with open(analytics_file, 'w', encoding='utf-8') as f:
+        json.dump(analytics, f, indent=4, default=str)
+
+    print(f"Analytics: Tracked visitor to {request.path}")  # Debug logging
+
+# Analytics consent endpoint
+@app.route('/consent/analytics', methods=['POST'])
+def analytics_consent():
+    from flask import request, session, jsonify, make_response
+    data = request.get_json()
+    if data and data.get('consent'):
+        session['analytics_consent'] = True
+        # Also set a cookie for client-side persistence
+        resp = make_response(jsonify({'status': 'ok'}))
+        resp.set_cookie('analytics_consent', 'true', max_age=365*24*60*60)  # 1 year
+        return resp
+    return jsonify({'status': 'ok'})
+
+# Route for serving uploaded files (admin only)
+@app.route('/data/uploads/<filename>')
 def uploaded_file(filename):
+    from flask import session, abort
+    
+    # Check if user is logged in and is an administrator
+    if 'user' not in session:
+        abort(403)  # Forbidden
+    
+    auth_manager = AuthManager(app.root_path)
+    if auth_manager.get_user_role(session['user']) != 'administrator':
+        abort(403)  # Forbidden
+    
     uploads_dir = os.path.join(app.root_path, 'data', 'uploads')
     return send_from_directory(uploads_dir, filename)
+
+# Legacy route for backward compatibility (public access, no auth)
+@app.route('/uploads/<filename>')
+def uploaded_file_legacy(filename):
+    uploads_dir = os.path.join(app.root_path, 'data', 'uploads')
+    return send_from_directory(uploads_dir, filename)
+
+
+@app.route('/favicon.ico')
+def favicon():
+    settings_file = os.path.join(app.root_path, 'data', 'settings.json')
+    favicon_filename = None
+    if os.path.exists(settings_file):
+        with open(settings_file, 'r', encoding='utf-8') as f:
+            settings = json.load(f)
+            favicon_filename = settings.get('favicon_filename')
+
+    if favicon_filename:
+        uploads_dir = os.path.join(app.root_path, 'data', 'uploads')
+        return send_from_directory(uploads_dir, favicon_filename)
+
+    fallback_path = os.path.join(app.static_folder, 'favicon.ico')
+    if os.path.exists(fallback_path):
+        return send_from_directory(app.static_folder, 'favicon.ico')
+
+    return '', 404
+
+
+@app.route('/robots.txt')
+def robots_txt():
+    settings_file = os.path.join(app.root_path, 'data', 'settings.json')
+    allow_robot_indexing = False
+    robot_user_agents = ''
+
+    if os.path.exists(settings_file):
+        with open(settings_file, 'r', encoding='utf-8') as f:
+            settings = json.load(f)
+            allow_robot_indexing = settings.get('allow_robot_indexing', False)
+            robot_user_agents = settings.get('robot_user_agents', '').strip()
+
+    if allow_robot_indexing:
+        agents = [line.strip() for line in robot_user_agents.splitlines() if line.strip()] or ['*']
+        lines = []
+        for agent in agents:
+            lines.append(f'User-agent: {agent}')
+            lines.append('Allow: /')
+        body = '\n'.join(lines) + '\n'
+    else:
+        body = 'User-agent: *\nDisallow: /\n'
+
+    return Response(body, mimetype='text/plain')
 
 
 def handle_cli():
@@ -79,4 +291,4 @@ def handle_cli():
 
 if __name__ == "__main__":
     handle_cli()
-    app.run(debug=True)
+    app.run(debug=True, port=443)

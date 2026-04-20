@@ -3,21 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <title>Post</title>
-
+    <link rel="stylesheet" href="/static/theme.css">
     {% if active_theme %}
+        
         <link rel="stylesheet" href="/static/{{ active_theme }}">
     {% endif %}
 
+    {% if settings.enable_analytics and settings.analytics_tracking_id %}
+    {% if settings.analytics_provider == 'google' %}
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ settings.analytics_tracking_id }}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '{{ settings.analytics_tracking_id }}');
+    </script>
+    {% endif %}
+    {% endif %}
+
+    {% if settings.embed_favicon_in_html and settings.favicon_filename %}
+    <link rel="icon" href="/uploads/{{ settings.favicon_filename }}">
+    {% endif %}
+
     <style>
+        nav.navbar {
+            width: 100%;
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        }
+
+        nav.navbar .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        nav.navbar .navbar-brand {
+            font-weight: bold;
+            color: #111827;
+            text-decoration: none;
+            margin-right: 24px;
+        }
+
+        nav.navbar .navbar-nav a {
+            margin-left: 16px;
+            color: #1f2937;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        nav.navbar .navbar-nav a:hover {
+            color: #2563eb;
+        } 
+
+        body {
+            margin: 0;
+            padding-top: 70px;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #ffffff;
+        }
+                /* Callouts */
+        .callout {
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .callout.info { background: #e8f4ff; border-left: 4px solid #2196f3; }
+        .callout.success { background: #e8ffe8; border-left: 4px solid #4caf50; }
+        .callout.warning { background: #fff8e1; border-left: 4px solid #ff9800; }
+        .callout.true {
+            background: #e6f7ff;
+            border-left: 4px solid #00bcd4;
+        }
+        /* Columns */
+        .columns > div {
+            padding: 10px;
+            border: 1px dashed #ccc;
+            min-height: 50px;
+        }
+        .btn-block {
+            display: inline-block;
+            padding: 10px 16px;
+            background: #007bff;
+            color: white;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .btn-block:hover {
+            background: #0056b3;
+            color: white;
+            text-decoration: none;
+        }
         /* Kommentarleiste rechts */
         #commentSidebar {
             width: 250px;
-            height: 100vh;
+            height: calc(100vh - 80px);
             border-left: 1px solid #ccc;
             padding: 10px;
             overflow-y: auto;
             position: fixed;
-            top: 0;
+            top: 80px;
             right: 0;
             background: #f5f5f5;
             display: none;
@@ -26,7 +123,7 @@
         /* Toggle-Button immer sichtbar */
         #toggleBtn {
             position: fixed;
-            top: 10px;
+            top: 90px;
             right: 10px;
             padding: 5px 10px;
             cursor: pointer;
@@ -37,6 +134,7 @@
         #contentArea {
             margin-right: 20px;
             padding-right: 20px;
+            margin-left: 20px;
         }
 
         /* Attachments styling */
@@ -65,9 +163,126 @@
             color: #666;
             margin-left: 10px;
         }
+
+        .cookie-banner {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: #111827;
+            color: #f9fafb;
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            z-index: 2000;
+            display: none;
+        }
+
+        .cookie-banner p {
+            margin: 0 0 10px;
+            line-height: 1.6;
+        }
+        .cookie-banner,
+        .cookie-banner * {
+            color: white !important;
+        }
+        .cookie-banner button {
+            background: #2563eb;
+            border: none;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
+
+    <style>
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            nav.navbar {
+                padding: 8px 16px;
+            }
+
+            nav.navbar .navbar-brand {
+                font-size: 1.2rem;
+            }
+
+            nav.navbar .navbar-nav a {
+                font-size: 0.9rem;
+                padding: 6px 8px;
+            }
+
+            #contentArea {
+                margin-left: 0;
+                padding: 20px 10px;
+            }
+
+            #commentSidebar {
+                width: 100%;
+                position: static;
+                height: auto;
+                display: none; /* Hide by default on mobile */
+            }
+
+            #toggleBtn {
+                display: block;
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                z-index: 1001;
+                background: #2563eb;
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 50px;
+                height: 50px;
+                font-size: 18px;
+                cursor: pointer;
+            }
+
+            .cookie-banner {
+                left: 10px;
+                right: 10px;
+                padding: 12px;
+            }
+
+            .cookie-banner button {
+                width: 100%;
+                margin-top: 10px;
+            }
+        }
     </style>
 </head>
 <body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="/" class="navbar-brand">{{ settings.site_title if settings.site_title else 'LatinMagazine' }}</a>
+            <div class="navbar-nav">
+                <a href="/">Home</a>
+                <a href="/feed">RSS Feed</a>
+                {% if session.user %}
+                    {% if auth.get_user_role(session.user) == 'administrator' %}
+                        <a href="/admin/posts">Admin</a>
+                    {% endif %}
+                    <a href="/logout">Logout</a>
+                {% else %}
+                    <a href="/login">Login</a>
+                    <a href="/register">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div id="cookieConsentBanner" class="cookie-banner">
+        <div id="cookieConsentMessage">
+            {% if settings.cookie_consent_message %}
+                {{ settings.cookie_consent_message|safe }}
+            {% else %}
+                <p>Diese Webseite verwendet Cookies, um Ihnen die beste Erfahrung zu bieten. Bitte akzeptieren Sie Cookies, um den Dienst vollständig nutzen zu können.</p>
+            {% endif %}
+        </div>
+        <button onclick="acceptCookies()">Cookies akzeptieren</button>
+    </div>
 
     <!-- Button zum Ein-/Ausklappen -->
     <button id="toggleBtn" onclick="toggleSidebar()">Mehr</button>
@@ -84,6 +299,14 @@
             </ul>
         {% else %}
             <p>Keine Kategorien</p>
+        {% endif %}
+
+        {% if post.git_repository %}
+            <p><strong>Git-Repository:</strong> <a href="/git/repos" target="_blank">{{ post.git_repository }}</a></p>
+        {% endif %}
+
+        {% if post.release_tag %}
+            <p><strong>Release / Tag:</strong> {{ post.release_tag }}</p>
         {% endif %}
 
         <p><strong>Tags:</strong></p>
@@ -144,19 +367,22 @@
         <hr>
 
         <h4 id="commentFormTitle">Neuen Kommentar schreiben</h4>
-        <form id="commentForm" onsubmit="submitComment(event)">
-            <input type="hidden" id="parentId" name="parent_id" value="">
-            <div>
-                <label for="author">Name:</label><br>
-                <input type="text" id="author" name="author" required>
-            </div>
-            <div>
-                <label for="content">Kommentar:</label><br>
-                <textarea id="content" name="content" required></textarea>
-            </div>
-            <button type="submit">Senden</button>
-            <button type="button" onclick="cancelReply()" id="cancelBtn" style="display:none;">Abbrechen</button>
-        </form>
+        {% if session.user %}
+            <form id="commentForm" onsubmit="submitComment(event)">
+                <input type="hidden" id="parentId" name="parent_id" value="">
+                <div>
+                    <p>Angemeldet als <strong>{{ session.user }}</strong>. Kommentare werden automatisch unter deinem Konto veröffentlicht.</p>
+                </div>
+                <div>
+                    <label for="content">Kommentar:</label><br>
+                    <textarea id="content" name="content" required></textarea>
+                </div>
+                <button type="submit">Senden</button>
+                <button type="button" onclick="cancelReply()" id="cancelBtn" style="display:none;">Abbrechen</button>
+            </form>
+        {% else %}
+            <p>Du musst <a href="/login">eingeloggt</a> sein, um einen Kommentar zu schreiben.</p>
+        {% endif %}
     </div>
 
     <!-- Post-Inhalt -->
@@ -176,7 +402,6 @@
             document.getElementById("parentId").value = commentId;
             document.getElementById("commentFormTitle").textContent = "Auf Kommentar antworten";
             document.getElementById("cancelBtn").style.display = "inline";
-            document.getElementById("author").focus();
         }
 
         function cancelReply() {
@@ -203,6 +428,33 @@
                 alert("Fehler: " + result.error);
             }
         }
+
+        function updateCookieBanner() {
+            const banner = document.getElementById('cookieConsentBanner');
+            const requireConsent = {{ 'true' if settings.require_cookie_consent else 'false' }};
+            const accepted = localStorage.getItem('cookieConsentAccepted') === 'true';
+            if (requireConsent && !accepted) {
+                banner.style.display = 'block';
+            } else {
+                banner.style.display = 'none';
+            }
+        }
+
+        function acceptCookies() {
+            localStorage.setItem('cookieConsentAccepted', 'true');
+            // Set analytics consent in session
+            fetch('/consent/analytics', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({consent: true})
+            }).then(() => {
+                updateCookieBanner();
+            });
+        }
+
+        updateCookieBanner();
     </script>
 
 </body>

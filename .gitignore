@@ -1,3 +1,5 @@
 .venv/
 data/
 hashes/
+__pycache__/
+static/git/

@@ -1,5 +1,5 @@
 import os
-from flask import Blueprint, render_template, request, jsonify, current_app, abort, session
+from flask import Blueprint, render_template, request, jsonify, current_app, abort, session, redirect, url_for
 from .....netdefense.auth.provider import AuthManager
 from .....data.post_manager import PostManager
 from .....data.file_manager import FileManager
@@ -21,7 +21,19 @@ def posts_dir():
 @admin_posts_bp.route("/create", methods=["GET"])
 @auth.require_role("author")
 def create_post_form():
-    return render_template("admin/posts/create.html")
+    git_plugin_available = 'git_repos' in current_app.blueprints
+    git_repos = []
+    user = auth.current_user()
+    if git_plugin_available:
+        # Load git repos for current user
+        import json
+        git_repos_file = os.path.join(BASE_PATH, "data", "git_repos.json")
+        if os.path.exists(git_repos_file):
+            with open(git_repos_file, "r", encoding="utf-8") as f:
+                repos_data = json.load(f)
+                user_repos = repos_data.get(user, {})
+                git_repos = list(user_repos.keys())
+    return render_template("admin/posts/create.html", git_plugin_available=git_plugin_available, git_repos=git_repos, user=user)
 
 
 # POST: Neuen Beitrag speichern
@@ -32,6 +44,8 @@ def create_post():
     content = request.form.get("content")
     categories = [cat.strip() for cat in request.form.get("categories", "").split(",") if cat.strip()]
     tags = [tag.strip() for tag in request.form.get("tags", "").split(",") if tag.strip()]
+    git_repository = request.form.get("git_repository", "").strip()
+    release_tag = request.form.get("release_tag", "").strip()
 
     if not title or not content:
         return jsonify({"error": "title und content erforderlich"}), 400
@@ -55,9 +69,18 @@ def create_post():
                     print(f"Failed to upload {file.filename}: {result}")
 
     author = auth.current_user() or session.get("user")
-    post_id = post_manager.create_post(title, content, author, categories=categories, tags=tags, attachments=attachments)
+    post_id = post_manager.create_post(
+        title,
+        content,
+        author,
+        categories=categories,
+        tags=tags,
+        attachments=attachments,
+        git_repository=git_repository,
+        release_tag=release_tag
+    )
 
-    return jsonify({"status": "ok", "post_id": post_id})
+    return redirect("/")
 
 
 # LISTE: Alle Beiträge anzeigen (HTML)
@@ -95,6 +118,8 @@ def save_post(post_id):
     content = request.form.get("content")
     categories = [cat.strip() for cat in request.form.get("categories", "").split(",") if cat.strip()]
     tags = [tag.strip() for tag in request.form.get("tags", "").split(",") if tag.strip()]
+    git_repository = request.form.get("git_repository", "").strip()
+    release_tag = request.form.get("release_tag", "").strip()
 
     if not title or not content:
         return jsonify({"error": "title und content erforderlich"}), 400
@@ -127,10 +152,19 @@ def save_post(post_id):
                     # Continue with other files but log the error
                     print(f"Failed to upload {file.filename}: {result}")
 
-    success = post_manager.update_post(post_id, title=title, content=content, categories=categories, tags=tags, attachments=attachments)
+    success = post_manager.update_post(
+        post_id,
+        title=title,
+        content=content,
+        categories=categories,
+        tags=tags,
+        attachments=attachments,
+        git_repository=git_repository,
+        release_tag=release_tag
+    )
 
     if success:
-        return jsonify({"status": "ok", "updated": post_id})
+        return redirect(url_for("admin_posts.admin_posts_index"))
     else:
         return jsonify({"error": "Post not found"}), 404
 
@@ -152,6 +186,6 @@ def delete_post(post_id):
     success = post_manager.delete_post(post_id)
 
     if success:
-        return jsonify({"status": "deleted", "post_id": post_id})
+        return redirect(url_for("admin_posts.admin_posts_index"))
     else:
         return jsonify({"error": "Post not found"}), 404

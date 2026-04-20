@@ -124,6 +124,42 @@
         .btn:hover {
             background: #1d4ed8;
         }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .layout {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #1f2937;
+                padding: 16px;
+            }
+
+            .sidebar nav {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .sidebar nav a {
+                margin-bottom: 0;
+            }
+
+            .main {
+                padding: 16px;
+            }
+
+            .card {
+                padding: 12px 16px;
+            }
+
+            .form-group textarea {
+                height: 80px;
+            }
+        }
     </style>
 </head>
 
@@ -131,11 +167,17 @@
 <div class="layout">
 
     <aside class="sidebar">
-        <h1>LatinMagazine Admin</h1>
+        <h1 id="start">LatinMagazine Admin</h1>
         <nav>
+            <a href="/">Zur Seite</a>
             <a href="/admin/manage/templates">Stylesheets</a>
             <a href="/admin/posts">Beiträge</a>
             <a href="/admin/users">Benutzer</a>
+            <a href="/admin/media">Medien</a>
+            <a href="/admin/analytics">Analytics</a>
+            {% if is_plugin_loaded('git_repos') %}
+            <a href="/admin/git">Git-Repos</a>
+            {% endif %}
             <a href="/admin/settings" class="active">Einstellungen</a>
         </nav>
     </aside>
@@ -143,7 +185,7 @@
     <main class="main">
         <h1 class="page-title">Einstellungen</h1>
 
-        <form id="settingsForm">
+        <form id="settingsForm" enctype="multipart/form-data">
             <section class="card">
                 <h2>Allgemeine Einstellungen</h2>
 
@@ -160,6 +202,25 @@
                 <div class="form-group">
                     <label for="posts_per_page">Posts pro Seite:</label>
                     <input type="number" id="posts_per_page" name="posts_per_page" value="{{ settings.posts_per_page or 10 }}">
+                </div>
+                <div class="form-group">
+                    <label for="domain">Domäne:</label>
+                    <input type="text" id="domain" name="domain" value="{{ settings.domain }}">
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="embed_favicon_in_html" name="embed_favicon_in_html" {% if settings.embed_favicon_in_html %}checked{% endif %}>
+                        <label for="embed_favicon_in_html">Favicon in HTML einbetten</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="favicon">Favicon hochladen:</label>
+                    <input type="file" id="favicon" name="favicon" accept="image/*">
+                    {% if settings.favicon_filename %}
+                    <p>Aktuelles Favicon: <br><img src="/static/favicon.ico" alt="{{ settings.favicon_original_name }}" width="64" height="64"></p>
+                    {% endif %}
                 </div>
             </section>
 
@@ -180,6 +241,107 @@
                     </div>
                 </div>
             </section>
+            <section class="card">
+                <h2>Impressum</h2>
+                <input type="checkbox" id="imprint_enabled" name="imprint_enabled" {% if settings.imprint_enabled %}checked{% endif %}>
+                        <label for="imprint_enabled">Impressum anzeigen</label>
+                <div class="form-group">
+                    <label for="imprint">Impressum (.html) hochladen:</label>
+                    <input type="file" id="imprint" name="imprint" accept=".html,text/html">
+                </div>
+
+                {% if settings.imprint_enabled %}
+                    <p>Aktuelles Impressum: 
+                        <a href="/static/imprint.html" target="_blank">anzeigen</a>
+                    </p>
+                {% else %}
+                    <p style="color: #888;">Noch kein Impressum hochgeladen.</p>
+                {% endif %}
+            </section>
+            <section class="card">
+                <h2>SEO & Robots</h2>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="allow_robot_indexing" name="allow_robot_indexing" {% if settings.allow_robot_indexing %}checked{% endif %}>
+                        <label for="allow_robot_indexing">Suchmaschinenindexierung erlauben</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="robot_user_agents">Zugelassene Robots (User-Agents):</label>
+                    <textarea id="robot_user_agents" name="robot_user_agents" placeholder="* oder Googlebot">{{ settings.robot_user_agents or '' }}</textarea>
+                    <small>Jede Zeile ein User-Agent. Wird nur verwendet, wenn Indexierung erlaubt ist.</small>
+                </div>
+            </section>
+            <section class="card">
+                <h2>Benutzerkontoverwaltung</h2>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="allow_password_change" name="allow_password_change" {% if settings.allow_password_change %}checked{% endif %}>
+                        <label for="allow_password_change">Passwortänderungen erlauben</label>
+                    </div>
+                </div>
+            </section>
+            <section class="card">
+                <h2>Cookie-Hinweis</h2>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="require_cookie_consent" name="require_cookie_consent" {% if settings.require_cookie_consent or settings.enable_analytics %}checked{% endif %}>
+                        <label for="require_cookie_consent">Cookie-Zustimmung erforderlich machen</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="cookie_consent_message">Cookie-Benachrichtigungstext:</label>
+                    <textarea id="cookie_consent_message" name="cookie_consent_message" rows="10" style="width: 100%; background: #111827; color: #e5e7eb; border: 1px solid #374151; border-radius: 4px; padding: 8px;">{{ settings.cookie_consent_message or '' }}</textarea>
+                    <small>Diese Nachricht wird sichtbar, wenn Cookie-Zustimmung aktiviert ist.</small>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>Analytics</h2>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="enable_analytics" name="enable_analytics" {% if settings.enable_analytics %}checked{% endif %}>
+                        <label for="enable_analytics">Analytics aktivieren (erfordert Cookie-Zustimmung)</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="analytics_provider">Analytics-Anbieter:</label>
+                    <select id="analytics_provider" name="analytics_provider">
+                        <option value="builtin" {% if settings.analytics_provider == 'builtin' or not settings.analytics_provider %}selected{% endif %}>Eingebaute Analytics</option>
+                        <option value="google" {% if settings.analytics_provider == 'google' %}selected{% endif %}>Google Analytics</option>
+                    </select>
+                    <small>Eingebaute Analytics sammeln grundlegende Besucherstatistiken. Google Analytics bietet erweiterte Funktionen.</small>
+                </div>
+
+                <div class="form-group" id="google_analytics_group" style="{% if settings.analytics_provider != 'google' %}display: none;{% endif %}">
+                    <label for="analytics_tracking_id">Google Analytics Tracking ID:</label>
+                    <input type="text" id="analytics_tracking_id" name="analytics_tracking_id" value="{{ settings.analytics_tracking_id or '' }}" placeholder="GA-XXXXXXXXX">
+                </div>
+
+                <div class="form-group">
+                    <label for="analytics_period_days">Analytics-Zeitraum (Tage):</label>
+                    <input type="number" id="analytics_period_days" name="analytics_period_days" value="{{ settings.analytics_period_days or 30 }}" min="1" max="365">
+                    <small>Zeitraum für Besucherstatistiken (1-365 Tage)</small>
+                </div>
+            <section class="card">
+                <h2>Plugins</h2>
+
+                {% for plugin in available_plugins %}
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="enable_{{ plugin }}" name="enable_{{ plugin }}" {% if settings.enabled_plugins and settings.enabled_plugins.get(plugin) %}checked{% endif %}>
+                        <label for="enable_{{ plugin }}">{{ plugin|title }} Plugin aktivieren</label>
+                    </div>
+                </div>
+                {% endfor %}
+            </section>
 
             <button type="submit" class="btn">Einstellungen speichern</button>
         </form>
@@ -188,11 +350,13 @@
 
 </div>
 
+
 <script>
 document.getElementById('settingsForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
     const formData = new FormData(this);
+
     const response = await fetch('/admin/settings', {
         method: 'POST',
         body: formData
@@ -201,7 +365,12 @@ document.getElementById('settingsForm').addEventListener('submit', async functio
     const result = await response.json();
 
     if (result.status === 'ok') {
-        alert('Einstellungen gespeichert!');
+        if (result.restart) {
+            alert('Einstellungen gespeichert. Der Dienst wird neu gestartet...');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            alert('Einstellungen gespeichert!');
+        }
     } else {
         alert('Fehler beim Speichern!');
     }

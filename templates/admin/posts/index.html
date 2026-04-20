@@ -177,9 +177,15 @@
     <aside class="sidebar">
         <h1>LatinMagazine Admin</h1>
         <nav>
+            <a href="/">Zur Seite</a>
             <a href="/admin/manage/templates">Stylesheets</a>
             <a href="/admin/posts" class="active">Beiträge</a>
             <a href="/admin/users">Benutzer</a>
+            <a href="/admin/media">Medien</a>
+            <a href="/admin/analytics">Analytics</a>
+            {% if is_plugin_loaded('git_repos') %}
+            <a href="/admin/git">Git-Repos</a>
+            {% endif %}
             <a href="/admin/settings">Einstellungen</a>
         </nav>
     </aside>

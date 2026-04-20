@@ -31,7 +31,7 @@ class AuthManager:
     # Benutzerverwaltung
     # -------------------------
 
-    def create_user(self, username, password, role="subscriber"):
+    def create_user(self, username, password, role="subscriber", email=""):
         users = self._load()
 
         if username in users:
@@ -42,6 +42,7 @@ class AuthManager:
             "salt": salt,
             "password": self._hash(password, salt),
             "role": role,
+            "email": email,
             "created_at": str(datetime.now())
         }
 
@@ -107,6 +108,46 @@ class AuthManager:
         users[username]["role"] = role
         self._save(users)
         return True, "Role updated"
+
+    def update_user_git_access(self, username, git_access):
+        users = self._load()
+        if username not in users:
+            return False, "User not found"
+        users[username]["git_access"] = bool(git_access)
+        self._save(users)
+        return True, "Git access updated"
+
+    def has_git_access(self, username):
+        if self.get_user_role(username) == "administrator":
+            return True
+        users = self._load()
+        return bool(users.get(username, {}).get("git_access", False))
+
+    def get_user(self, username):
+        """Get full user object including email and role"""
+        users = self._load()
+        if username not in users:
+            return None
+        return {
+            "username": username,
+            "role": users[username].get("role", "subscriber"),
+            "email": users[username].get("email", ""),
+            "created_at": users[username].get("created_at", "")
+        }
+
+    def update_email(self, username, email):
+        """Update user's email address"""
+        users = self._load()
+        if username not in users:
+            return False, "User not found"
+        users[username]["email"] = email
+        self._save(users)
+        return True, "Email updated"
+
+    def get_email(self, username):
+        """Get user's email address"""
+        users = self._load()
+        return users.get(username, {}).get("email", "")
 
     # -------------------------
     # Route‑Schutz

@@ -6,77 +6,363 @@
     <title>Neuen Beitrag erstellen</title>
     <link rel="stylesheet" href="/static/theme.css">
 
-    <!-- Quill Editor -->
+    <!-- Quill -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 
-    <style>
+        <style>
         #editor {
-            height: 400px;
+            height: 450px;
             background: white;
         }
+        .youtube-embed iframe {
+            width: 100%;
+            height: 400px;
+            border-radius: 8px;
+        }
+        /* Callouts */
+        .callout {
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .callout.info { background: #e8f4ff; border-left: 4px solid #2196f3; }
+        .callout.success { background: #e8ffe8; border-left: 4px solid #4caf50; }
+        .callout.warning { background: #fff8e1; border-left: 4px solid #ff9800; }
+
+        /* Columns */
+        .columns > div {
+            padding: 10px;
+            border: 1px dashed #ccc;
+            min-height: 50px;
+        }
+
+        /* Button */
+        .btn-block {
+            display: inline-block;
+            padding: 10px 16px;
+            background: #007bff;
+            color: white;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+
+        .youtube-embed iframe {
+            width: 100%;
+            height: 400px;
+            border-radius: 8px;
+        }
     </style>
+    <style>
+/* Toolbar Icons */
+/* Icons schwarz-weiß erzwingen */
+.ql-toolbar [class^="ql-"]::before {
+    color: #000;                 /* Schwarz */
+    font-family: "Segoe UI Symbol", "Noto Sans Symbols", sans-serif;
+    font-weight: normal;
+    -webkit-text-fill-color: #000; 
+    -webkit-text-stroke: 0;
+    filter: grayscale(100%);     /* Falls Browser Emojis trotzdem farbig rendert */
+}
+.ql-divider::before {
+    content: "—";
+    font-weight: bold;
+}
+
+.ql-callout-info::before {
+    content: "ℹ️";
+}
+
+.ql-callout-success::before {
+    content: "✔️";
+}
+
+.ql-callout-warning::before {
+    content: "⚠️";
+}
+
+.ql-columns-2::before {
+    content: "T2";
+    letter-spacing: 2px;
+}
+
+.ql-columns-3::before {
+    content: "T3";
+    letter-spacing: 2px;
+}
+
+.ql-button::before {
+    content: "🔘";
+}
+
+.ql-youtube::before {
+    content: "▶️";
+}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="admin-header">
-            <h1>Neuen Beitrag erstellen</h1>
-            <p class="subtitle">Erstelle einen neuen Blog-Beitrag mit Text, Bildern und Formatierung</p>
-        </div>
 
-        <div class="form-card">
-            <form action="/admin/posts/create" method="POST" enctype="multipart/form-data" class="post-form" onsubmit="saveContent()">
+<div class="container">
+    <div class="admin-header">
+        <h1>Neuen Beitrag erstellen</h1>
+        <p class="subtitle">Erstelle einen neuen Blog-Beitrag mit Text, Bildern und Formatierung</p>
+    </div>
 
-                <div class="form-group">
-                    <label for="title">Titel *</label>
-                    <input type="text" id="title" name="title" class="form-input" required>
-                </div>
+    <div class="form-card">
+        <form action="/admin/posts/create" method="POST" enctype="multipart/form-data" class="post-form" onsubmit="saveContent()">
 
-                <div class="form-group">
-                    <label for="content">Inhalt *</label>
+            <div class="form-group">
+                <label for="title">Titel *</label>
+                <input type="text" id="title" name="title" class="form-input" required>
+            </div>
 
-                    <!-- Quill Editor -->
-                    <div id="editor"></div>
+            <div class="form-group">
+                <label for="content">Inhalt *</label>
 
-                    <!-- Hidden field for HTML -->
-                    <textarea id="content" name="content" style="display:none"></textarea>
-                </div>
+                <!-- Quill Editor -->
+                <div id="editor"></div>
 
-                <div class="form-row">
+                <!-- Hidden field -->
+                <textarea id="content" name="content" style="display:none"></textarea>
+            </div>
+
+            <div class="form-row">
                     <div class="form-group">
                         <label for="categories">Kategorien</label>
-                        <input type="text" id="categories" name="categories" class="form-input" placeholder="z.B. News, Technologie, Lifestyle">
+                        <input type="text" id="categories" name="categories" class="form-input">
                         <small class="form-hint">Kommagetrennt</small>
                     </div>
 
                     <div class="form-group">
                         <label for="tags">Tags</label>
-                        <input type="text" id="tags" name="tags" class="form-input" placeholder="z.B. python, web, tutorial">
+                        <input type="text" id="tags" name="tags" class="form-input">
                         <small class="form-hint">Kommagetrennt</small>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="attachments">Dateianhänge</label>
-                    <input type="file" id="attachments" name="attachments" class="form-input" multiple accept=".txt,.pdf,.png,.jpg,.jpeg,.gif,.zip,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.mp3,.mp4,.avi,.mov">
-                    <small class="form-hint">Erlaubte Formate: Dokumente, Bilder, Archive, Audio/Video (max. 10MB pro Datei)</small>
-                    <div id="file-preview" class="file-preview"></div>
-                </div>
+            <div class="form-group">
+                <label for="attachments">Anhänge (Dateien)</label>
+                <input type="file" id="attachments" name="attachments" class="form-input" multiple>
+                <small class="form-hint">Wähle eine oder mehrere Dateien aus, die mit dem Beitrag hochgeladen werden sollen.</small>
+            </div>
 
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Beitrag erstellen</button>
-                    <a href="/admin/posts" class="btn btn-secondary">Abbrechen</a>
-                </div>
-            </form>
-        </div>
+            {% if git_plugin_available %}
+            <div class="form-group">
+                <label for="git_repository">Git-Repository (optional)</label>
+                <select id="git_repository" name="git_repository" class="form-input">
+                    <option value="">Kein Repository auswählen</option>
+                    {% for repo in git_repos %}
+                    <option value="{{ user }}/{{ repo }}">{{ repo }}</option>
+                    {% endfor %}
+                </select>
+                <small class="form-hint">Wähle ein Repository aus, um diesen Beitrag mit einem Repo zu verknüpfen.</small>
+            </div>
+
+            <div class="form-group">
+                <label for="release_tag">Release / Tag (optional)</label>
+                <input type="text" id="release_tag" name="release_tag" class="form-input" placeholder="z.B. v1.0.0">
+                <small class="form-hint">Optionaler Release- oder Tag-Name, der mit dem Beitrag verknüpft ist.</small>
+            </div>
+            {% endif %}
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Beitrag erstellen</button>
+                <a href="/admin/posts" class="btn btn-secondary">Abbrechen</a>
+            </div>
+        </form>
     </div>
+</div>
 
-    <script>
-        var quill = new Quill('#editor', { theme: 'snow' });
+<script>
+/* --------------------------
+   CUSTOM BLOTS
+--------------------------- */
 
-        function saveContent() {
-            document.getElementById('content').value = quill.root.innerHTML;
+// Divider
+const BlockEmbed = Quill.import('blots/block/embed');
+class DividerBlot extends BlockEmbed {}
+DividerBlot.blotName = 'divider';
+DividerBlot.tagName = 'hr';
+Quill.register(DividerBlot);
+
+// Callout
+class CalloutBlot extends BlockEmbed {
+    static create(type) {
+        let node = super.create();
+        node.setAttribute("class", "callout " + type);
+        node.innerHTML = "Callout Text…";
+        return node;
+    }
+}
+CalloutBlot.blotName = "callout";
+CalloutBlot.tagName = "div";
+Quill.register(CalloutBlot);
+
+// Columns
+class ColumnsBlot extends BlockEmbed {
+    static create(cols) {
+        let node = super.create();
+        node.classList.add("columns");
+        node.style.display = "grid";
+        node.style.gridTemplateColumns = cols;
+        node.innerHTML = "<div></div><div></div>";
+        return node;
+    }
+}
+ColumnsBlot.blotName = "columns";
+ColumnsBlot.tagName = "div";
+Quill.register(ColumnsBlot);
+
+// Button
+class ButtonBlot extends BlockEmbed {
+    static create(value) {
+        let node = super.create();
+        node.innerHTML = `<a class="btn-block" href="${value.href}" target="_blank">${value.text}</a>`;
+        return node;
+    }
+
+    static value(node) {
+        const link = node.querySelector("a");
+        return {
+            text: link.innerText,
+            href: link.getAttribute("href")
+        };
+    }
+}
+ButtonBlot.blotName = "button";
+ButtonBlot.tagName = "div";
+Quill.register(ButtonBlot);
+
+// YouTube
+class YouTubeBlot extends BlockEmbed {
+    static create(url) {
+        let node = super.create();
+        node.setAttribute("class", "youtube-embed");
+        node.innerHTML = `
+            <iframe 
+                src="${url}" 
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+                loading="lazy"
+                referrerpolicy="strict-origin-when-cross-origin"
+            ></iframe>`;
+        return node;
+    }
+
+    static value(node) {
+        return node.querySelector("iframe").getAttribute("src");
+    }
+}
+YouTubeBlot.blotName = "youtube";
+YouTubeBlot.tagName = "div";
+Quill.register(YouTubeBlot);
+
+
+/* --------------------------
+   QUILL INITIALIZATION
+--------------------------- */
+
+var quill = new Quill('#editor', {
+    theme: 'snow',
+    modules: {
+        toolbar: {
+            container: [
+                [{ 'font': [] }],
+                [{ 'size': ['small', false, 'large', 'huge'] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'color': [] }, { 'background': [] }],
+                [{ 'header': 1 }, { 'header': 2 }, { 'header': 3 }],
+                [{ 'align': [] }],
+                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                ['blockquote', 'code-block'],
+                ['link', 'image', 'video'],
+
+                // NEW BUTTONS
+                ['divider'],
+                ['callout-info', 'callout-success', 'callout-warning'],
+                ['columns-2', 'columns-3'],
+                ['button'],
+
+                ['clean'],
+                ['youtube']
+            ],
+
+            handlers: {
+                youtube: function () {
+                    const url = prompt("YouTube-Link eingeben:");
+                    if (!url) return;
+                    const embed = convertYouTube(url);
+                    const range = quill.getSelection();
+                            quill.insertEmbed(range.index, 'youtube', embed);
+                    input.click();
+
+                    input.onchange = async () => {
+                        const file = input.files[0];
+                        let formData = new FormData();
+                        formData.append("image", file);
+
+                        const res = await fetch("/upload-image", {
+                            method: "POST",
+                            body: formData
+                        });
+
+                        const data = await res.json();
+                        const range = quill.getSelection();
+                        quill.insertEmbed(range.index, 'image', data.url);
+                    };
+                },
+
+                divider: () => {
+                    const range = quill.getSelection();
+                    quill.insertEmbed(range.index, 'divider', true);
+                },
+
+                'callout-info': () => insertCallout('info'),
+                'callout-success': () => insertCallout('success'),
+                'callout-warning': () => insertCallout('warning'),
+
+                'columns-2': () => insertColumns("1fr 1fr"),
+                'columns-3': () => insertColumns("1fr 1fr 1fr"),
+
+                'button': () => {
+                    const text = prompt("Button-Text:");
+                    if (!text) return;
+
+                    const href = prompt("Button-Link (URL):", "https://");
+                    if (!href) return;
+
+                    const range = quill.getSelection();
+                    quill.insertEmbed(range.index, 'button', { text, href });
+                }
+            }
         }
-    </script>
+    }
+});
+
+/* --------------------------
+   HELPERS
+--------------------------- */
+
+function insertCallout(type) {
+    const range = quill.getSelection();
+    quill.insertEmbed(range.index, 'callout', type);
+}
+
+function insertColumns(cols) {
+    const range = quill.getSelection();
+    quill.insertEmbed(range.index, 'columns', cols);
+}
+
+function convertYouTube(url) {
+    const id = url.split("v=")[1]?.split("&")[0];
+    return "https://www.youtube.com/embed/" + id;
+}
+
+function saveContent() {
+    document.getElementById('content').value = quill.root.innerHTML;
+}
+</script>
+
 </body>
 </html>

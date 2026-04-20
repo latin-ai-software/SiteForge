@@ -1,0 +1,466 @@
+import os
+import json
+import subprocess
+from functools import wraps
+from datetime import datetime
+from flask import Blueprint, current_app, render_template, request, jsonify, redirect, url_for, session, abort, make_response
+from lib.netdefense.auth.provider import AuthManager
+
+plugin_blueprint = Blueprint(
+    "git_repos",
+    __name__,
+    url_prefix="/admin/git",
+    template_folder="templates"
+)
+
+# Separate blueprint for Git HTTP protocol endpoints (no admin prefix)
+git_http_blueprint = Blueprint(
+    "git_http",
+    __name__
+)
+
+BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+REPO_ROOT = os.path.join(BASE_PATH, "static", "git")
+REPO_DATA_FILE = os.path.join(BASE_PATH, "data", "git_repos.json")
+PR_DATA_FILE = os.path.join(BASE_PATH, "data", "git_prs.json")
+auth = AuthManager(BASE_PATH)
+
+os.makedirs(REPO_ROOT, exist_ok=True)
+
+
+def _ensure_json_file(path, default):
+    if not os.path.exists(path):
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(default, f, indent=4)
+
+
+def _load_json(path):
+    _ensure_json_file(path, [])
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _save_json(path, data):
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4, default=str)
+
+
+def require_git_access(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        user = session.get("user")
+        if not user:
+            return redirect(url_for("auth.login_page"))
+        if not auth.has_git_access(user):
+            abort(403)
+        return f(*args, **kwargs)
+    return wrapper
+
+
+def _run_git_command(repo_path, args):
+    try:
+        result = subprocess.run(
+            ["git"] + args,
+            cwd=repo_path,
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        return True, result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+        return False, e.stderr.strip() or e.stdout.strip()
+    except FileNotFoundError:
+        return False, "Git ist nicht installiert oder nicht im PATH verfügbar."
+
+
+def _load_repos():
+    _ensure_json_file(REPO_DATA_FILE, {})
+    with open(REPO_DATA_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _save_repos(data):
+    _save_json(REPO_DATA_FILE, data)
+
+
+def _load_prs():
+    _ensure_json_file(PR_DATA_FILE, [])
+    return _load_json(PR_DATA_FILE)
+
+
+def _save_prs(prs):
+    _save_json(PR_DATA_FILE, prs)
+
+
+@plugin_blueprint.route("/", methods=["GET"])
+@require_git_access
+def git_dashboard():
+    user = session.get("user")
+    repos = _load_repos()
+    prs = _load_prs()
+    repo_rows = []
+
+    user_repos = repos.get(user, {})
+    for name, repo in user_repos.items():
+        repo_path = os.path.join(REPO_ROOT, user, name)
+        remote = repo.get("remote", "")
+        branch = repo.get("branch", "")
+        clone_url = repo.get("clone_url", "")
+        repo_rows.append({
+            "name": name,
+            "path": repo_path,
+            "remote": remote,
+            "branch": branch,
+            "clone_url": clone_url
+        })
+    settings = {}
+    settings_file = os.path.join(current_app.root_path, "data", "settings.json")
+    if os.path.exists(settings_file):
+        with open(settings_file, "r", encoding="utf-8") as f:
+            settings = json.load(f)
+    return render_template("index.html", repos=repo_rows, prs=prs, settings= settings)
+
+
+@plugin_blueprint.route("/add", methods=["POST"])
+@require_git_access
+def add_repo():
+    repo_name = request.form.get("repo_name", "").strip()
+    repo_url = request.form.get("repo_url", "").strip()
+    branch = request.form.get("branch", "main").strip() or "main"
+
+    if not repo_name:
+        return jsonify({"error": "Repo-Name ist erforderlich."}), 400
+
+    user = session.get("user")
+    user_repo_dir = os.path.join(REPO_ROOT, user)
+    os.makedirs(user_repo_dir, exist_ok=True)
+
+    target_dir = os.path.join(user_repo_dir, repo_name)
+    if os.path.exists(target_dir):
+        return jsonify({"error": "Repository existiert bereits."}), 400
+
+    # Initialize empty git repo if no URL provided
+    if not repo_url:
+        success, result = _run_git_command(BASE_PATH, ["init", target_dir])
+        if not success:
+            return jsonify({"error": result}), 500
+
+        # Create initial commit
+        success, result = _run_git_command(target_dir, ["config", "user.name", user])
+        if success:
+            success, result = _run_git_command(target_dir, ["config", "user.email", f"{user}@localhost"])
+        if success:
+            # Create README
+            readme_path = os.path.join(target_dir, "README.md")
+            with open(readme_path, "w", encoding="utf-8") as f:
+                f.write(f"# {repo_name}\n\nRepository created by {user}\n")
+            success, result = _run_git_command(target_dir, ["add", "README.md"])
+        if success:
+            success, result = _run_git_command(target_dir, ["commit", "-m", "Initial commit"])
+    else:
+        # Clone existing repo
+        success, result = _run_git_command(BASE_PATH, ["clone", repo_url, target_dir])
+        if not success:
+            return jsonify({"error": result}), 500
+
+    repos = _load_repos()
+    if user not in repos:
+        repos[user] = {}
+
+    repos[user][repo_name] = {
+        "remote": repo_url or "",
+        "branch": branch,
+        "clone_url": f"{request.host_url.rstrip('/')}/git/{user}/{repo_name}",
+        "created_at": datetime.now().isoformat()
+    }
+    _save_repos(repos)
+
+    return jsonify({"status": "ok"})
+
+
+@plugin_blueprint.route("/pull", methods=["POST"])
+@require_git_access
+def pull_repo():
+    repo_name = request.form.get("repo_name")
+    if not repo_name:
+        return jsonify({"error": "Repo-Name erforderlich."}), 400
+
+    user = session.get("user")
+    repo_path = os.path.join(REPO_ROOT, user, repo_name)
+    if not os.path.isdir(repo_path):
+        return jsonify({"error": "Repository nicht gefunden."}), 404
+
+    success, result = _run_git_command(repo_path, ["pull"])
+    if not success:
+        return jsonify({"error": result}), 500
+
+    return jsonify({"status": "OK", "output": result})
+
+
+@plugin_blueprint.route("/commit", methods=["POST"])
+@require_git_access
+def commit_repo():
+    repo_name = request.form.get("repo_name")
+    message = request.form.get("commit_message", "Update from web").strip()
+    if not repo_name or not message:
+        return jsonify({"error": "Repo-Name und Commit-Nachricht erforderlich."}), 400
+
+    user = session.get("user")
+    repo_path = os.path.join(REPO_ROOT, user, repo_name)
+    if not os.path.isdir(repo_path):
+        return jsonify({"error": "Repository nicht gefunden."}), 404
+
+    success, output = _run_git_command(repo_path, ["add", "-A"])
+    if not success:
+        return jsonify({"error": output}), 500
+
+    success, output = _run_git_command(repo_path, ["commit", "-m", message])
+    if not success:
+        return jsonify({"error": output}), 500
+
+    success, result = _run_git_command(repo_path, ["push"])
+    if not success:
+        return jsonify({"error": result}), 500
+
+    return jsonify({"status": "OK", "output": result})
+
+
+@plugin_blueprint.route("/files/<repo_name>", methods=["GET"])
+@require_git_access
+def repo_files(repo_name):
+    user = session.get("user")
+    repo_path = os.path.join(REPO_ROOT, user, repo_name)
+    if not os.path.isdir(repo_path):
+        abort(404)
+
+    files = []
+    for root, dirs, filenames in os.walk(repo_path):
+        # Skip .git directory
+        if '.git' in dirs:
+            dirs.remove('.git')
+
+        for filename in filenames:
+            filepath = os.path.join(root, filename)
+            rel_path = os.path.relpath(filepath, repo_path)
+            files.append({
+                'name': filename,
+                'path': rel_path,
+                'size': os.path.getsize(filepath),
+                'modified': datetime.fromtimestamp(os.path.getmtime(filepath))
+            })
+
+    repos = _load_repos()
+    repo_info = repos.get(user, {}).get(repo_name, {})
+    settings = {}
+    settings_file = os.path.join(current_app.root_path, "data", "settings.json")
+    if os.path.exists(settings_file):
+        with open(settings_file, "r", encoding="utf-8") as f:
+            settings = json.load(f)
+    return render_template("files.html",
+                         repo_name=repo_name,
+                         files=files,
+                         repo_info=repo_info,
+                         settings=settings)
+
+
+@plugin_blueprint.route("/files/<repo_name>/upload", methods=["POST"])
+@require_git_access
+def upload_file(repo_name):
+    user = session.get("user")
+    repo_path = os.path.join(REPO_ROOT, user, repo_name)
+    if not os.path.isdir(repo_path):
+        return jsonify({"error": "Repository nicht gefunden."}), 404
+
+    if 'file' not in request.files:
+        return jsonify({"error": "Keine Datei ausgewählt."}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "Keine Datei ausgewählt."}), 400
+
+    filepath = os.path.join(repo_path, file.filename)
+    file.save(filepath)
+
+    # Auto-commit the uploaded file
+    success, result = _run_git_command(repo_path, ["add", file.filename])
+    if success:
+        success, result = _run_git_command(repo_path, ["commit", "-m", f"Upload file: {file.filename}"])
+
+    return jsonify({"status": "ok"})
+
+
+@plugin_blueprint.route("/files/<repo_name>/delete", methods=["POST"])
+@require_git_access
+def delete_file(repo_name):
+    user = session.get("user")
+    filename = request.form.get("filename")
+    if not filename:
+        return jsonify({"error": "Dateiname erforderlich."}), 400
+
+    repo_path = os.path.join(REPO_ROOT, user, repo_name)
+    filepath = os.path.join(repo_path, filename)
+
+    if not os.path.exists(filepath):
+        return jsonify({"error": "Datei nicht gefunden."}), 404
+
+    os.remove(filepath)
+
+    # Auto-commit the deletion
+    success, result = _run_git_command(repo_path, ["add", filename])
+    if success:
+        success, result = _run_git_command(repo_path, ["commit", "-m", f"Delete file: {filename}"])
+
+    return jsonify({"status": "ok"})
+
+
+@plugin_blueprint.route("/files/<repo_name>/tag", methods=["POST"])
+@require_git_access
+def create_tag(repo_name):
+    user = session.get("user")
+    tag_name = request.form.get("tag_name", "").strip()
+    tag_message = request.form.get("tag_message", "").strip()
+
+    if not tag_name:
+        return jsonify({"error": "Tag-Name ist erforderlich."}), 400
+
+    repo_path = os.path.join(REPO_ROOT, user, repo_name)
+    if not os.path.isdir(repo_path):
+        return jsonify({"error": "Repository nicht gefunden."}), 404
+
+    # Create annotated tag
+    if tag_message:
+        success, result = _run_git_command(repo_path, ["tag", "-a", tag_name, "-m", tag_message])
+    else:
+        success, result = _run_git_command(repo_path, ["tag", tag_name])
+
+    if not success:
+        return jsonify({"error": result}), 500
+
+    return jsonify({"status": "ok"})
+
+
+
+def pkt_line(data: bytes) -> bytes:
+    return f"{len(data)+4:04x}".encode() + data
+@git_http_blueprint.route("/git/<user>/<repo_name>/info/refs", methods=["GET"])
+def git_info_refs(user, repo_name):
+    repo_path = os.path.join(REPO_ROOT, user, repo_name)
+    if not os.path.isdir(repo_path):
+        abort(404)
+
+    service = request.args.get('service')
+    if service not in ['git-upload-pack', 'git-receive-pack']:
+        abort(400)
+
+    result = subprocess.run(
+        ['git', service.replace('git-', ''), '--advertise-refs', repo_path],
+        capture_output=True
+    )
+
+    if result.returncode != 0:
+        abort(500)
+
+    header = pkt_line(f"# service={service}\n".encode())
+    flush = b"0000"
+
+    response_data = header + flush + result.stdout
+
+    response = make_response(response_data)
+    response.headers['Content-Type'] = f'application/x-{service}-advertisement'
+    return response
+
+
+@git_http_blueprint.route("/git/<user>/<repo_name>/git-upload-pack", methods=["POST"])
+def git_upload_pack(user, repo_name):
+    repo_path = os.path.join(REPO_ROOT, user, repo_name)
+    if not os.path.isdir(repo_path):
+        abort(404)
+
+    import subprocess
+    result = subprocess.run(
+        ['git', 'upload-pack', '--stateless-rpc', repo_path],
+        input=request.get_data(),
+        capture_output=True
+    )
+    if result.returncode != 0:
+        abort(500)
+
+    response = make_response(result.stdout)
+    response.headers['Content-Type'] = 'application/x-git-upload-pack-result'
+    return response
+
+
+@git_http_blueprint.route("/git/<user>/<repo_name>/git-receive-pack", methods=["POST"])
+def git_receive_pack(user, repo_name):
+    repo_path = os.path.join(REPO_ROOT, user, repo_name)
+    if not os.path.isdir(repo_path):
+        abort(404)
+
+    import subprocess
+    result = subprocess.run(
+        ['git', 'receive-pack', '--stateless-rpc', repo_path],
+        input=request.get_data(),
+        capture_output=True
+    )
+    if result.returncode != 0:
+        abort(500)
+
+    response = make_response(result.stdout)
+    response.headers['Content-Type'] = 'application/x-git-receive-pack-result'
+    return response
+
+
+@git_http_blueprint.route("/git/test")
+def git_test():
+    return "Git endpoints are working"
+
+
+@git_http_blueprint.route("/git/repos", methods=["GET"])
+def public_repos():
+    repos_data = _load_repos()
+    all_repos = []
+    for user, user_repos in repos_data.items():
+        for repo_name, repo_info in user_repos.items():
+            all_repos.append({
+                'user': user,
+                'name': repo_name,
+                'remote': repo_info.get('remote', ''),
+                'branch': repo_info.get('branch', 'main'),
+                'clone_url': repo_info.get('clone_url', ''),
+                'created_at': repo_info.get('created_at', '')
+            })
+    settings = {}
+    settings_file = os.path.join(current_app.root_path, "data", "settings.json")
+    if os.path.exists(settings_file):
+        with open(settings_file, "r", encoding="utf-8") as f:
+            settings = json.load(f)
+    return render_template("public.html", repos=all_repos, settings=settings)
+
+
+@plugin_blueprint.route("/pr", methods=["POST"])
+@require_git_access
+def create_pr():
+    repo_name = request.form.get("repo_name")
+    title = request.form.get("pr_title", "").strip()
+    description = request.form.get("pr_description", "").strip()
+    source_branch = request.form.get("source_branch", "").strip()
+    target_branch = request.form.get("target_branch", "main").strip()
+
+    if not repo_name or not title or not source_branch:
+        return jsonify({"error": "Repo-Name, PR-Titel und Quellbranch sind erforderlich."}), 400
+
+    user = session.get("user")
+    prs = _load_prs()
+    prs.append({
+        "repo_name": f"{user}/{repo_name}",
+        "title": title,
+        "description": description,
+        "source_branch": source_branch,
+        "target_branch": target_branch,
+        "author": user,
+        "created_at": datetime.now().isoformat(),
+        "status": "open"
+    })
+    _save_prs(prs)
+
+    return jsonify({"status": "ok"})

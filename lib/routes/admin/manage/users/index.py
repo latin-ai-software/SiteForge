@@ -1,5 +1,5 @@
 import os
-from flask import Blueprint, render_template, request, jsonify, abort
+from flask import Blueprint, render_template, request, jsonify, abort, redirect,url_for
 from .....netdefense.auth.provider import AuthManager
 from .....data.user_manager import UserManager
 
@@ -27,7 +27,32 @@ def update_user_role(username):
 
     success, msg = user_manager.update_user_role(username, role)
     if success:
-        return jsonify({"status": "ok"})
+        return redirect(url_for("admin_users.admin_users_index"))
+    else:
+        return jsonify({"error": msg}), 400
+
+# POST: Benutzerpasswort ändern (Admin)
+@admin_users_bp.route("/change-password/<username>", methods=["POST"])
+@auth.require_admin
+def change_user_password(username):
+    new_password = request.form.get("password")
+    if not new_password or len(new_password) < 6:
+        return jsonify({"error": "Passwort muss mindestens 6 Zeichen lang sein"}), 400
+
+    success, msg = auth.change_password(username, new_password)
+    if success:
+        return redirect(url_for("admin_users.admin_users_index"))
+    else:
+        return jsonify({"error": msg}), 400
+
+# POST: Git-Zugriff aktualisieren
+@admin_users_bp.route("/update-git-access/<username>", methods=["POST"])
+@auth.require_admin
+def update_user_git_access(username):
+    git_access = request.form.get("git_access") == "on"
+    success, msg = user_manager.update_user_git_access(username, git_access)
+    if success:
+        return redirect(url_for("admin_users.admin_users_index"))
     else:
         return jsonify({"error": msg}), 400
 

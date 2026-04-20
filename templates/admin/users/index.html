@@ -150,6 +150,64 @@
             color: #e5e7eb;
             font-size: 0.8rem;
         }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: #020617;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 400px;
+            box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+        }
+
+        .modal-content h3 {
+            color: #e5e7eb;
+            margin-top: 0;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #374151;
+            border-radius: 4px;
+            background: #111827;
+            color: #e5e7eb;
+            box-sizing: border-box;
+        }
+
+        .modal-content input::placeholder {
+            color: #9ca3af;
+        }
+
+        .modal-content button {
+            margin-right: 10px;
+        }
+
+        .close {
+            color: #9ca3af;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #e5e7eb;
+        }
     </style>
 </head>
 
@@ -159,9 +217,15 @@
     <aside class="sidebar">
         <h1>LatinMagazine Admin</h1>
         <nav>
+            <a href="/">Zur Seite</a>
             <a href="/admin/manage/templates">Stylesheets</a>
             <a href="/admin/posts">Beiträge</a>
             <a href="/admin/users" class="active">Benutzer</a>
+            <a href="/admin/media">Medien</a>
+            <a href="/admin/analytics">Analytics</a>
+            {% if is_plugin_loaded('git_repos') %}
+            <a href="/admin/git">Git-Repos</a>
+            {% endif %}
             <a href="/admin/settings">Einstellungen</a>
         </nav>
     </aside>
@@ -193,6 +257,15 @@
                                     </select>
                                 </form>
 
+                                <form action="/admin/users/update-git-access/{{ user.username }}" method="POST" style="display: inline; margin-left: 10px;">
+                                    <label style="font-size:0.8rem; color:#9ca3af; display:flex; align-items:center; gap:4px;">
+                                        <input type="checkbox" name="git_access" onchange="this.form.submit()" {% if user.git_access %}checked{% endif %}>
+                                        Git-Zugriff
+                                    </label>
+                                </form>
+
+                                <button class="btn-ghost" onclick="openPasswordModal('{{ user.username }}')">Passwort</button>
+
                                 {% if user.username != "admin" %}
                                 <form action="/admin/users/delete/{{ user.username }}" method="POST" style="display: inline;">
                                     <button class="btn-ghost">Löschen</button>
@@ -210,5 +283,61 @@
     </main>
 
 </div>
+
+<!-- Password Change Modal -->
+<div id="passwordModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closePasswordModal()">&times;</span>
+        <h3>Passwort ändern für <span id="modalUsername"></span></h3>
+        <form id="passwordForm" method="POST">
+            <input type="password" name="password" placeholder="Neues Passwort" required>
+            <input type="password" name="confirm" placeholder="Passwort wiederholen" required>
+            <button type="submit" class="btn">Passwort ändern</button>
+            <button type="button" class="btn-ghost" onclick="closePasswordModal()">Abbrechen</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openPasswordModal(username) {
+        document.getElementById('modalUsername').textContent = username;
+        document.getElementById('passwordForm').action = `/admin/users/change-password/${username}`;
+        document.getElementById('passwordForm').password.value = '';
+        document.getElementById('passwordForm').confirm.value = '';
+        document.getElementById('passwordModal').style.display = 'block';
+    }
+
+    function closePasswordModal() {
+        document.getElementById('passwordModal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside of it
+    window.onclick = function(event) {
+        const modal = document.getElementById('passwordModal');
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    // Validate password form
+    document.getElementById('passwordForm').onsubmit = function(e) {
+        const password = document.querySelector('#passwordForm input[name="password"]').value;
+        const confirm = document.querySelector('#passwordForm input[name="confirm"]').value;
+        
+        if (password.length < 6) {
+            alert('Passwort muss mindestens 6 Zeichen lang sein');
+            e.preventDefault();
+            return false;
+        }
+        
+        if (password !== confirm) {
+            alert('Passwörter stimmen nicht überein');
+            e.preventDefault();
+            return false;
+        }
+        
+        return true;
+    }
+</script>
 </body>
 </html>

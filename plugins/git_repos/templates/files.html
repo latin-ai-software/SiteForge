@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Dateien: {{ repo_name }}</title>
+    <style>
+        body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0f172a; color: #e5e7eb; }
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background: #020617; border-right: 1px solid #1f2937; padding: 24px 20px; }
+        .sidebar h1 { font-size: 1.3rem; margin: 0 0 1.5rem; color: #f9fafb; }
+        .sidebar nav a { display: block; padding: 8px 10px; margin-bottom: 6px; border-radius: 6px; color: #9ca3af; text-decoration: none; font-size: 0.9rem; }
+        .sidebar nav a.active, .sidebar nav a:hover { background: #111827; color: #e5e7eb; }
+        .main { flex: 1; padding: 24px 32px 40px; }
+        .page-title { font-size: 1.6rem; margin: 0 0 1.5rem; color: #f9fafb; }
+        .card { background: #020617; border-radius: 10px; border: 1px solid #1f2937; padding: 18px 20px; box-shadow: 0 18px 40px rgba(0,0,0,0.45); margin-bottom: 24px; }
+        .card h2 { margin: 0 0 0.75rem; font-size: 1.05rem; color: #e5e7eb; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-size: 0.95rem; margin-bottom: 6px; }
+        .form-input, select, textarea { width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid #374151; background: #111827; color: #e5e7eb; }
+        .btn { padding: 10px 16px; border-radius: 6px; border: none; font-size: 0.95rem; cursor: pointer; background: #2563eb; color: #f9fafb; }
+        .btn:hover { background: #1d4ed8; }
+        .btn-danger { background: #dc2626; }
+        .btn-danger:hover { background: #b91c1c; }
+        .file-table { width: 100%; border-collapse: collapse; }
+        .file-table th, .file-table td { padding: 12px 10px; border-bottom: 1px solid #1f2937; }
+        .file-table th { text-align: left; color: #9ca3af; font-weight: 600; }
+        .file-table td { color: #e5e7eb; }
+        .file-actions { display: flex; gap: 8px; }
+        .metadata { background: #111827; padding: 12px; border-radius: 6px; margin-bottom: 16px; }
+        .metadata p { margin: 4px 0; }
+    </style>
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <h1>Git-Integration</h1>
+        <nav>
+            <a href="/">Zur Seite</a>
+            <a href="/admin/git">Übersicht</a>
+            <a href="/admin/git/files/{{ repo_name }}" class="active">Dateien</a>
+            <a href="/admin/git">Zurück</a>
+        </nav>
+    </aside>
+    <main class="main">
+        <h1 class="page-title">Dateien: {{ repo_name }}</h1>
+
+        <div class="card">
+            <h2>Repository-Informationen</h2>
+            <div class="metadata">
+                <p><strong>Name:</strong> {{ repo_name }}</p>
+                <p><strong>Clone-URL:</strong> {{ settings.domain }}{{ repo_info.clone_url }}</p>
+                {% if repo_info.remote %}
+                <p><strong>Remote:</strong> {{ repo_info.remote }}</p>
+                {% endif %}
+                <p><strong>Branch:</strong> {{ repo_info.branch }}</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Dateien hochladen</h2>
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="file">Datei auswählen</label>
+                    <input type="file" id="file" name="file" class="form-input" required>
+                </div>
+                <button type="submit" class="btn">Hochladen</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Dateien</h2>
+            {% if files %}
+                <table class="file-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Pfad</th>
+                            <th>Größe</th>
+                            <th>Geändert</th>
+                            <th>Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for file in files %}
+                            <tr>
+                                <td>{{ file.name }}</td>
+                                <td>{{ file.path }}</td>
+                                <td>{{ "%.1f"|format(file.size / 1024) }} KB</td>
+                                <td>{{ file.modified.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                <td class="file-actions">
+                                    <a href="/admin/git/files/{{ repo_name }}/download/{{ file.name }}" class="btn">Download</a>
+                                    <form action="/admin/git/files/{{ repo_name }}/delete" method="POST" style="display: inline;">
+                                        <input type="hidden" name="filename" value="{{ file.name }}">
+                                        <button type="submit" class="btn btn-danger">Löschen</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>Keine Dateien im Repository.</p>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <h2>Git-Operationen</h2>
+            <p>Dateiänderungen werden automatisch committed.</p>
+
+            <h3>Tag erstellen</h3>
+            <form id="createTagForm" style="margin-bottom: 16px;">
+                <div class="form-group">
+                    <label for="tag_name">Tag-Name</label>
+                    <input type="text" id="tag_name" name="tag_name" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="tag_message">Tag-Nachricht (optional)</label>
+                    <input type="text" id="tag_message" name="tag_message" class="form-input">
+                </div>
+                <button type="submit" class="btn">Tag erstellen</button>
+            </form>
+
+            <form action="/admin/git/pull" method="POST">
+                <input type="hidden" name="repo_name" value="{{ repo_name }}">
+                <button type="submit" class="btn">Pull</button>
+            </form>
+        </div>
+    </main>
+</div>
+
+<script>
+document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+
+    const response = await fetch('/admin/git/files/{{ repo_name }}/upload', {
+        method: 'POST',
+        body: formData
+    });
+
+    const result = await response.json();
+    if (result.status === 'ok') {
+        location.reload();
+    } else {
+        alert('Fehler: ' + result.error);
+    }
+});
+
+document.getElementById('createTagForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+
+    const response = await fetch('/admin/git/files/{{ repo_name }}/tag', {
+        method: 'POST',
+        body: formData
+    });
+
+    const result = await response.json();
+    if (result.status === 'ok') {
+        alert('Tag erfolgreich erstellt!');
+        this.reset();
+    } else {
+        alert('Fehler: ' + result.error);
+    }
+});
+</script>
+</body>
+</html>
