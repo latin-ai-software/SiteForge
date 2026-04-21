@@ -3,3 +3,4 @@ data/
 hashes/
 __pycache__/
 static/git/
+!/lib/data
