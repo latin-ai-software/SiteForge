@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>Template Verwaltung</title>
+    
+    <!-- Quill -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    
     <style>
         body {
             margin: 0;
@@ -189,6 +194,130 @@
             color: #6b7280;
             margin-top: 0.5rem;
         }
+
+        #editor {
+            height: 300px;
+            background: white;
+        }
+
+        .form-input-textarea {
+            width: 100%;
+            padding: 7px 10px;
+            border-radius: 6px;
+            border: 1px solid #374151;
+            background: #020617;
+            color: #e5e7eb;
+            font-size: 0.9rem;
+        }
+
+        .texts-grid {
+            display: grid;
+            grid-template-columns: 1fr 200px;
+            gap: 24px;
+        }
+
+        .text-item {
+            padding: 12px;
+            background: #111827;
+            border-left: 4px solid #374151;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .text-item:hover {
+            background: #1f2937;
+        }
+
+        .text-item.active {
+            border-left-color: #2563eb;
+            background: #1f2937;
+        }
+
+        .text-item-name {
+            flex: 1;
+            color: #e5e7eb;
+        }
+
+        .text-item-status {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-right: 10px;
+        }
+
+        .text-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .text-actions button {
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            background: #374151;
+        }
+
+        .text-actions button:hover {
+            background: #4b5563;
+        }
+
+        .text-actions .delete-btn {
+            background: #dc2626;
+        }
+
+        .text-actions .delete-btn:hover {
+            background: #b91c1c;
+        }
+
+        .text-actions .activate-btn {
+            background: #10b981;
+        }
+
+        .text-actions .activate-btn:hover {
+            background: #059669;
+        }
+
+        .editor-section {
+            flex: 1;
+        }
+
+        .quill-container {
+            background: #020617;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #1f2937;
+        }
+
+        #index-editor {
+            height: 400px;
+            background: white;
+            border-radius: 6px;
+        }
+
+        .ql-toolbar {
+            background: white;
+            border-radius: 6px 6px 0 0;
+        }
+
+        .text-info {
+            margin-bottom: 12px;
+            padding: 10px;
+            background: #111827;
+            border-radius: 6px;
+            color: #9ca3af;
+            font-size: 0.9rem;
+        }
+
+        .form-input {
+            padding: 7px 10px;
+            border-radius: 6px;
+            border: 1px solid #374151;
+            background: #020617;
+            color: #e5e7eb;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
@@ -268,7 +397,176 @@
                 {% endif %}
             </section>
         </div>
+
+        <section class="card" style="margin-top: 24px;">
+            <h2>Index Seite Texte</h2>
+            <p>Verwalte mehrere Texte für die Startseite. Aktiviere einen Text, um ihn anzuzeigen.</p>
+
+            <div class="texts-grid">
+                <div class="editor-section">
+                    <div class="text-info" id="text-info">
+                        Wähle einen Text aus der Liste auf der rechten Seite, um ihn zu bearbeiten.
+                    </div>
+
+                    <form action="/admin/manage/templates/save-index-text" method="POST" onsubmit="saveIndexText()" id="text-form" style="display: none;">
+                        <label for="text-name" style="display: block; margin-bottom: 10px; color: #e5e7eb;">
+                            Text Name
+                        </label>
+                        <input type="text" id="text-name" name="name" class="form-input" style="width: 100%; margin-bottom: 15px;" required>
+                        
+                        <input type="hidden" id="text-id" name="text_id" value="">
+                        
+                        <label for="index-editor" style="display: block; margin-bottom: 10px; color: #e5e7eb;">
+                            Text Inhalt
+                        </label>
+                        <div class="quill-container">
+                            <div id="index-editor"></div>
+                        </div>
+                        <textarea id="index-text-content" name="content" style="display:none;"></textarea>
+                        
+                        <button type="submit" style="margin-top: 15px; padding: 8px 16px; border-radius: 6px; border: none; font-size: 0.9rem; cursor: pointer; background: #2563eb; color: #f9fafb;" onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
+                            Text speichern
+                        </button>
+                        <button type="button" onclick="resetEditor()" style="margin-top: 15px; margin-left: 10px; padding: 8px 16px; border-radius: 6px; border: 1px solid #374151; font-size: 0.9rem; cursor: pointer; background: transparent; color: #e5e7eb;">
+                            Abbrechen
+                        </button>
+                    </form>
+
+                    <button onclick="createNewText()" style="margin-top: 15px; padding: 8px 16px; border-radius: 6px; border: none; font-size: 0.9rem; cursor: pointer; background: #10b981; color: #f9fafb;" id="create-btn" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">
+                        + Neuer Text
+                    </button>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 10px;" id="texts-list">
+                    <p style="color: #6b7280; text-align: center;">Keine Texte vorhanden</p>
+                </div>
+            </div>
+        </section>
     </main>
 </div>
+
+<script>
+// Initialize Quill editor for index text
+var indexQuill = new Quill('#index-editor', {
+    theme: 'snow',
+    modules: {
+        toolbar: [
+            [{ 'font': [] }],
+            [{ 'size': ['small', false, 'large', 'huge'] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'color': [] }, { 'background': [] }],
+            [{ 'header': 1 }, { 'header': 2 }, { 'header': 3 }],
+            [{ 'align': [] }],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            ['blockquote', 'code-block'],
+            ['link', 'image', 'video'],
+            ['clean']
+        ]
+    }
+});
+
+let currentTextId = null;
+let allTexts = [];
+
+// Load all texts on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadAllTexts();
+});
+
+function loadAllTexts() {
+    fetch('/admin/manage/templates/get-index-texts')
+        .then(response => response.json())
+        .then(data => {
+            allTexts = data.texts || [];
+            renderTextsList();
+        })
+        .catch(error => console.error('Error loading texts:', error));
+}
+
+function renderTextsList() {
+    const list = document.getElementById('texts-list');
+    
+    if (allTexts.length === 0) {
+        list.innerHTML = '<p style="color: #6b7280; text-align: center;">Keine Texte vorhanden</p>';
+        return;
+    }
+
+    list.innerHTML = allTexts.map(text => `
+        <div class="text-item ${text.active ? 'active' : ''}" onclick="editText('${text.id}')">
+            <div class="text-item-name">${text.name}</div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="text-item-status">${text.active ? '🟢 Aktiv' : '⚪ Inaktiv'}</div>
+                <div class="text-actions">
+                    ${!text.active ? `<button onclick="event.stopPropagation(); activateText('${text.id}')" class="activate-btn">Aktivieren</button>` : ''}
+                    <button onclick="event.stopPropagation(); deleteText('${text.id}')" class="delete-btn">Löschen</button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function editText(textId) {
+    const text = allTexts.find(t => t.id === textId);
+    if (!text) return;
+
+    currentTextId = textId;
+    document.getElementById('text-id').value = textId;
+    document.getElementById('text-name').value = text.name;
+    indexQuill.root.innerHTML = text.content;
+    
+    document.getElementById('text-info').style.display = 'none';
+    document.getElementById('text-form').style.display = 'block';
+    document.getElementById('create-btn').style.display = 'none';
+    
+    renderTextsList();
+}
+
+function createNewText() {
+    currentTextId = null;
+    document.getElementById('text-id').value = '';
+    document.getElementById('text-name').value = '';
+    indexQuill.root.innerHTML = '';
+    
+    document.getElementById('text-info').style.display = 'none';
+    document.getElementById('text-form').style.display = 'block';
+    document.getElementById('create-btn').style.display = 'none';
+}
+
+function resetEditor() {
+    currentTextId = null;
+    indexQuill.root.innerHTML = '';
+    
+    document.getElementById('text-info').style.display = 'block';
+    document.getElementById('text-form').style.display = 'none';
+    document.getElementById('create-btn').style.display = 'block';
+    
+    renderTextsList();
+}
+
+function saveIndexText() {
+    const textId = document.getElementById('text-id').value;
+    const name = document.getElementById('text-name').value;
+    document.getElementById('index-text-content').value = indexQuill.root.innerHTML;
+}
+
+function activateText(textId) {
+    fetch('/admin/manage/templates/activate-index-text/' + textId, { method: 'POST' })
+        .then(() => loadAllTexts())
+        .catch(error => console.error('Error activating text:', error));
+}
+
+function deleteText(textId) {
+    if (!confirm('Bist du sicher, dass du diesen Text löschen möchtest?')) return;
+    
+    fetch('/admin/manage/templates/delete-index-text/' + textId, { method: 'POST' })
+        .then(() => {
+            if (currentTextId === textId) {
+                resetEditor();
+            }
+            loadAllTexts();
+        })
+        .catch(error => console.error('Error deleting text:', error));
+}
+</script>
 </body>
 </html>

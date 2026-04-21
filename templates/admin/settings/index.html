@@ -222,6 +222,21 @@
                     <p>Aktuelles Favicon: <br><img src="/static/favicon.ico" alt="{{ settings.favicon_original_name }}" width="64" height="64"></p>
                     {% endif %}
                 </div>
+                <div class="form-group">
+                    <label for="header-background">Header-Hintergrund (JPG Datei):</label>
+                    <input type="file" id="header-background" name="header-background" accept=".jpg, .jpeg">
+                    {% if settings.header_background_filename %}
+                    <p>Aktueller Header-Hintergrund: <br><img src="/static/header-background.jpg"width="64" height="64"></p>
+                    {% endif %}
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="embed_favicon_in_html" name="embed_favicon_in_html" {% if settings.embed_favicon_in_html %}checked{% endif %}>
+                        <label for="embed_favicon_in_html">Favicon in HTML einbetten</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="header_background_enabled" name="header_background_enabled" {% if settings.header_background_enabled %}checked{% endif %}>
+                        <label for="header_background_enabled">Header-Hintergrund anzeigen</label>
+                    </div>
+                </div>
             </section>
 
             <section class="card">

@@ -300,8 +300,17 @@ label.required::after {
     background-color: var(--primary-dark);
     box-shadow: var(--shadow-md);
     transform: translateY(-1px);
+    color: white;
 }
-
+.title-main-index {
+    font-size: 3rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: var(--spacing-md);
+}
+.subtitle {
+    color: white;
+}
 .btn-primary:active:not(:disabled) {
     transform: translateY(0);
     box-shadow: var(--shadow-sm);

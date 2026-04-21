@@ -61,7 +61,8 @@ def save_settings():
         "embed_favicon_in_html": request.form.get("embed_favicon_in_html") == "on",
         "imprint_enabled": request.form.get("imprint_enabled") == "on",
         "allow_password_change": request.form.get("allow_password_change") == "on",
-        "domain": request.form.get("domain", "").strip()
+        "domain": request.form.get("domain", "").strip(),
+        "header_background_enabled": request.form.get("header_background_enabled") == "on"
     }
 
     # Handle enabled plugins dynamically
@@ -100,6 +101,18 @@ def save_settings():
         # In den Settings speichern wir nur den Namen, falls du ihn irgendwo anzeigen willst
         settings["favicon_filename"] = "favicon.ico"
         settings["favicon_original_name"] = favicon_file.filename
+    
+    favicon_file = request.files.get("header-background")
+    if favicon_file and favicon_file.filename:
+        # Zielpfad: static/favicon.ico
+        target_path = os.path.join(current_app.root_path, "static", "header-background.jpg")
+
+        # Datei speichern/überschreiben
+        favicon_file.save(target_path)
+
+        # In den Settings speichern wir nur den Namen, falls du ihn irgendwo anzeigen willst
+        settings["header_background_filename"] = "header-background.jpg"
+        settings["header_background_original_name"] = favicon_file.filename
 
     settings_file = os.path.join(current_app.root_path, "data", "settings.json")
     os.makedirs(os.path.dirname(settings_file), exist_ok=True)

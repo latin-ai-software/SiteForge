@@ -14,6 +14,7 @@ from lib.routes.admin.manage.media.index import admin_media_bp
 from lib.routes.root.auth import auth_bp
 from lib.netdefense.auth.provider import AuthManager
 import os
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = "irgendein_langes_random_secret_das_wirklich_gar_keiner_kompromittier_dabei_bin_ich_mir_sicher_vertrau_mir"
@@ -214,6 +215,11 @@ def favicon():
         return send_from_directory(app.static_folder, 'favicon.ico')
 
     return '', 404
+@app.template_filter("datetimeformat")
+def datetimeformat(value):
+    if not value:
+        return "Unbekannt"
+    return datetime.fromtimestamp(value).strftime("%d.%m.%Y, %H:%M")
 
 
 @app.route('/robots.txt')

@@ -50,6 +50,111 @@
             border-radius: 10px;
             cursor: pointer;
         }
+
+        .index-text-container {
+            display: grid;
+            grid-template-columns: 1fr 200px;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .index-text-content {
+            background: #f8f9fa;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            border-left: 4px solid var(--primary-color);
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .index-text-sidebar {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .index-text-sidebar h3 {
+            margin: 0 0 12px 0;
+            font-size: 0.95rem;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 8px;
+        }
+
+        .index-text-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .index-text-item {
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            background: #f9f9f9;
+            color: #333;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .index-text-item:hover {
+            background: #f0f0f0;
+            border-color: var(--primary-color);
+            transform: translateX(-2px);
+        }
+
+        .index-text-item.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        @media (max-width: 1024px) {
+            .index-text-container {
+                grid-template-columns: 1fr 160px;
+            }
+
+            .index-text-sidebar h3 {
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .index-text-container {
+                grid-template-columns: 1fr;
+            }
+
+            .index-text-sidebar {
+                position: static;
+                sticky: none;
+            }
+
+            .index-text-list {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            .index-text-item {
+                flex: 1;
+                min-width: 100px;
+            }
+        }
     </style>
 
     <style>
@@ -117,14 +222,14 @@
     </div>
 
     <div class="container">
-        <header style="text-align: center; margin-bottom: 3rem;">
-            <h1>{{ settings.site_title if settings.site_title else 'LatinMagazine' }}</h1>
+        <header style="text-align: center; margin-bottom: 3rem;{% if settings.header_background_enabled %} background: url('/static/header-background.jpg') no-repeat center/cover; padding: 4rem 2rem; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.5);{% endif %}">
+            <h1 class="title-main-index">{{ settings.site_title if settings.site_title else 'LatinMagazine' }}</h1>
             {% if settings.site_description %}
-                <p class="subtitle">{{ settings.site_description }}</p>
+                <p class="subtitle" style="color:white;">{{ settings.site_description }}</p>
             {% endif %}
             {% if session.user %}
-                <p style="color: var(--gray-600); margin-top: 1rem;">
-                    Welcome back, <strong>{{ session.user }}</strong>! {% if auth.get_user_role(session.user) == 'administrator' %}<a href="/admin/posts">Go to Admin</a>{% endif %}
+                <p style="color: white; margin-top: 1rem;">
+                    Welcome back, <strong>{{ session.user }}</strong>! {% if auth.get_user_role(session.user) == 'administrator' %}<a href="/admin/posts" style="color: red;">Go to Admin</a>{% endif %}
                 </p>
             {% endif %}
         </header>
@@ -136,8 +241,38 @@
             </form>
         </div>
 
+        {% if index_text %}
+        <div style="margin-bottom: 2rem;">
+            <div class="index-text-container">
+                <div class="index-text-content" id="index-text-display">
+                    <h2 style="margin-top: 0;">{{ active_text.name if active_text else 'Aktueller Text' }}</h2>
+                    <p>
+                        {{ index_text|striptags|truncate(300, True, '...') }}
+                    </p>
+                    {% if active_text_id %}
+                    <a href="/index-text/{{ active_text_id }}" class="btn btn-primary btn-sm">Mehr lesen →</a>
+                    {% endif %}
+                </div>
+                {% if index_texts and index_texts|length > 0 %}
+                <div class="index-text-sidebar">
+                    <h3>{{ index_texts|length }} Text{{ 'e' if index_texts|length != 1 else '' }}</h3>
+                    <ul class="index-text-list" id="index-text-list">
+                        {% for text in index_texts %}
+                        <li class="index-text-item {% if text.active %}active{% endif %}">
+                            <a href="/index-text/{{ text.id }}" style="display:block; color: inherit; text-decoration: none; width:100%; height:100%;">
+                                {{ text.name }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
         <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
-            <a href="/" class="btn btn-primary btn-sm">All Posts</a>
+            <a href="/" class="btn btn-primary btn-sm">Alle Posts</a>
             {% for category in categories %}
                 <a href="/category/{{ category }}" class="btn btn-secondary btn-sm">{{ category }}</a>
             {% endfor %}

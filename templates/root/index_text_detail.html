@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ text.name }} - {{ settings.site_title if settings.site_title else 'LatinMagazine' }}</title>
+    <link rel="stylesheet" href="/static/theme.css">
+    {% if active_theme %}
+        <link rel="stylesheet" href="/static/{{ active_theme }}">
+    {% endif %}
+
+    {% if settings.enable_analytics and settings.analytics_tracking_id %}
+    {% if settings.analytics_provider == 'google' %}
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ settings.analytics_tracking_id }}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '{{ settings.analytics_tracking_id }}');
+    </script>
+    {% endif %}
+    {% endif %}
+
+    {% if settings.embed_favicon_in_html and settings.favicon_filename %}
+    <link rel="icon" href="/static/favicon.ico">
+    {% endif %}
+
+    <style>
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #f8fafc;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+        }
+        nav.navbar {
+            width: 100%;
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        nav.navbar .navbar-brand {
+            font-weight: bold;
+            color: #111827;
+            text-decoration: none;
+        }
+        nav.navbar .navbar-nav a {
+            margin-left: 16px;
+            color: #1f2937;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        nav.navbar .navbar-nav a:hover {
+            color: #2563eb;
+        }
+        .page-header {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+        }
+        .page-header h1 {
+            margin: 0 0 0.5rem;
+        }
+        .index-text-article {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+            margin-bottom: 2rem;
+        }
+        .comment-section {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 1.5rem;
+        }
+        .comment-box,
+        .comment-sidebar {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.3rem;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+        }
+        .comment-box textarea {
+            width: 100%;
+            min-height: 120px;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.9rem;
+            resize: vertical;
+        }
+        .comment-box button {
+            margin-top: 0.75rem;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 0.65rem;
+            padding: 0.85rem 1.3rem;
+            cursor: pointer;
+        }
+        .comment-box button:hover {
+            background: #1e4ec8;
+        }
+        .comment-item,
+        .reply {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: #fafafa;
+        }
+        .reply {
+            margin-left: 1rem;
+            background: #ffffff;
+        }
+        .comment-item h4,
+        .reply h4 {
+            margin: 0 0 0.5rem;
+            font-size: 1rem;
+        }
+        .comment-item small,
+        .reply small {
+            color: #6b7280;
+        }
+        .comment-item button {
+            background: transparent;
+            border: none;
+            color: #2563eb;
+            cursor: pointer;
+            padding: 0;
+            margin-top: 0.5rem;
+        }
+        .comment-item button:hover {
+            text-decoration: underline;
+        }
+        .comment-sidebar h3 {
+            margin-top: 0;
+        }
+        .breadcrumb {
+            margin-bottom: 1rem;
+            color: #6b7280;
+        }
+        .breadcrumb a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        .cookie-banner {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(15, 23, 42, 0.96);
+            color: white;
+            border-radius: 14px;
+            padding: 18px;
+            box-shadow: 0 18px 40px rgba(0,0,0,0.2);
+            z-index: 2000;
+            display: none;
+        }
+        .cookie-banner button {
+            background: #2563eb;
+            border: none;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        @media (max-width: 900px) {
+            .comment-section {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">{{ settings.site_title if settings.site_title else 'LatinMagazine' }}</a>
+        <div class="navbar-nav">
+            <a href="/">Home</a>
+            <a href="/feed">RSS Feed</a>
+            {% if session.user %}
+                {% if auth.get_user_role(session.user) == 'administrator' %}
+                    <a href="/admin/posts">Admin</a>
+                {% endif %}
+                <a href="/logout">Logout</a>
+            {% else %}
+                <a href="/login">Login</a>
+                <a href="/register">Register</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div id="cookieConsentBanner" class="cookie-banner">
+        <div id="cookieConsentMessage">
+            {% if settings.cookie_consent_message %}
+                {{ settings.cookie_consent_message|safe }}
+            {% else %}
+                <p>Diese Webseite verwendet Cookies für ein besseres Nutzererlebnis. Bitte akzeptieren Sie Cookies.</p>
+            {% endif %}
+        </div>
+        <button onclick="acceptCookies()">Cookies akzeptieren</button>
+    </div>
+
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="/">Startseite</a> &raquo; {{ text.name }}
+        </div>
+
+        <div class="page-header">
+            <h1>{{ text.name }}</h1>
+            <!--<p style="margin-top: 0.5rem; color: #6b7280;">Voller Text inklusive Kommentarfunktion.</p>-->
+        </div>
+
+        <article class="index-text-article">
+            {{ text.content|safe }}
+        </article>
+
+        <div class="comment-section">
+            <div class="comment-box">
+                <h3>Kommentare</h3>
+                {% if top_level_comments %}
+                    {% for comment in top_level_comments %}
+                        <div class="comment-item">
+                            <h4>{{ comment.author }}</h4>
+                            <small>{{ comment.created_at }}</small>
+                            <p>{{ comment.content }}</p>
+                            <button onclick="replyToComment('{{ comment.id }}')">Antworten</button>
+                            {% if comment.id in replies %}
+                                {% for reply in replies[comment.id] %}
+                                    <div class="reply">
+                                        <h4>{{ reply.author }}</h4>
+                                        <small>{{ reply.created_at }}</small>
+                                        <p>{{ reply.content }}</p>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p>Es gibt noch keine Kommentare für diesen Text.</p>
+                {% endif %}
+
+                <hr>
+                <h3 id="commentFormTitle">Neuen Kommentar schreiben</h3>
+                {% if session.user %}
+                <form id="commentForm" onsubmit="submitComment(event)">
+                    <input type="hidden" id="parentId" name="parent_id" value="">
+                    <div style="margin-bottom: 1rem;">
+                        <p>Angemeldet als <strong>{{ session.user }}</strong>.</p>
+                    </div>
+                    <div>
+                        <label for="comment">Dein Kommentar</label><br>
+                        <textarea id="comment" name="comment" required></textarea>
+                    </div>
+                    <button type="submit">Absenden</button>
+                    <button type="button" onclick="cancelReply()" id="cancelBtn" style="display:none; margin-left: 0.5rem;">Abbrechen</button>
+                </form>
+                {% else %}
+                    <p>Du musst <a href="/login">eingeloggt</a> sein, um einen Kommentar zu schreiben.</p>
+                {% endif %}
+            </div>
+
+            <aside class="comment-sidebar">
+                <h3>Weitere Infos</h3>
+                <p>Dieser Text kann von Besuchern gelesen und kommentiert werden.</p>
+                <p><strong>Seiten:</strong></p>
+                <ul>
+                    <li><a href="/">Zurück zur Startseite</a></li>
+                    <li><a href="/feed">RSS Feed</a></li>
+                </ul>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        function replyToComment(commentId) {
+            document.getElementById('parentId').value = commentId;
+            document.getElementById('commentFormTitle').textContent = 'Antworten';
+            document.getElementById('cancelBtn').style.display = 'inline-block';
+        }
+
+        function cancelReply() {
+            document.getElementById('parentId').value = '';
+            document.getElementById('commentFormTitle').textContent = 'Neuen Kommentar schreiben';
+            document.getElementById('cancelBtn').style.display = 'none';
+        }
+
+        async function submitComment(event) {
+            event.preventDefault();
+            const formData = new FormData(document.getElementById('commentForm'));
+            const response = await fetch(window.location.pathname + '/comment', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            if (result.status === 'ok') {
+                location.reload();
+            } else {
+                alert(result.error || 'Fehler beim Absenden des Kommentars.');
+            }
+        }
+
+        function updateCookieBanner() {
+            const banner = document.getElementById('cookieConsentBanner');
+            const requireConsent = {{ 'true' if settings.require_cookie_consent else 'false' }};
+            const accepted = localStorage.getItem('cookieConsentAccepted') === 'true';
+            if (requireConsent && !accepted) {
+                banner.style.display = 'block';
+            } else {
+                banner.style.display = 'none';
+            }
+        }
+
+        function acceptCookies() {
+            localStorage.setItem('cookieConsentAccepted', 'true');
+            fetch('/consent/analytics', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({consent: true})
+            }).then(() => updateCookieBanner());
+        }
+
+        updateCookieBanner();
+    </script>
+</body>
+</html>

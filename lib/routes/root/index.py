@@ -1,7 +1,8 @@
 import os
 import json
-from flask import Blueprint, current_app, session, render_template, request
+from flask import Blueprint, current_app, session, render_template, request, abort
 from ...data.post_manager import PostManager
+from ...data.comment_manager import CommentManager
 from ...netdefense.auth.provider import AuthManager
 
 root_bp = Blueprint("root", __name__)
@@ -9,7 +10,34 @@ root_bp = Blueprint("root", __name__)
 # PostManager initialisieren
 BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
 post_manager = PostManager(BASE_PATH)
+comment_manager = CommentManager(BASE_PATH)
 auth = AuthManager(BASE_PATH)
+
+def get_index_text():
+    """Load active custom index page text from data file"""
+    index_text_path = os.path.join(current_app.root_path, "data", "index_texts.json")
+    if os.path.exists(index_text_path):
+        try:
+            with open(index_text_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                texts = data.get("texts", [])
+                active_text = next((t for t in texts if t.get("active")), None)
+                return active_text.get("content", "") if active_text else ""
+        except:
+            return ""
+    return ""
+
+def get_all_index_texts():
+    """Load all custom index page texts from data file"""
+    index_text_path = os.path.join(current_app.root_path, "data", "index_texts.json")
+    if os.path.exists(index_text_path):
+        try:
+            with open(index_text_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data.get("texts", [])
+        except:
+            return []
+    return []
 
 @root_bp.route("/", methods=["GET"])
 def index():
@@ -30,13 +58,85 @@ def index():
         with open(active_theme_path, "r", encoding="utf-8") as f:
             active_theme = f.read().strip()
 
+    # Get custom index texts
+    all_index_texts = get_all_index_texts()
+    active_text = next((t for t in all_index_texts if t.get("active")), None)
+    index_text = active_text.get("content", "") if active_text else ""
+    active_text_id = active_text.get("id") if active_text else None
+
     return render_template("root/index.html",
                            posts=posts,
                            categories=categories,
                            settings=settings,
                            active_theme=active_theme,
                            auth=auth,
-                           show_logo=settings["embed_favicon_in_html"])
+                           show_logo=settings["embed_favicon_in_html"],
+                           index_text=index_text,
+                           index_texts=all_index_texts,
+                           active_text=active_text,
+                           active_text_id=active_text_id)
+
+
+def get_index_text_by_id(text_id):
+    all_index_texts = get_all_index_texts()
+    return next((t for t in all_index_texts if t.get("id") == text_id), None)
+
+
+@root_bp.route("/index-text/<text_id>", methods=["GET"])
+def index_text_detail(text_id):
+    text = get_index_text_by_id(text_id)
+    if not text:
+        abort(404)
+
+    posts = post_manager.get_posts(limit=10)
+    categories = post_manager.get_all_categories()
+
+    # Load settings
+    settings = {}
+    settings_file = os.path.join(current_app.root_path, "data", "settings.json")
+    if os.path.exists(settings_file):
+        with open(settings_file, "r", encoding="utf-8") as f:
+            settings = json.load(f)
+
+    # Aktives Stylesheet laden
+    active_theme_path = os.path.join(current_app.root_path, "data", "active_theme.txt")
+    active_theme = None
+    if os.path.exists(active_theme_path):
+        with open(active_theme_path, "r", encoding="utf-8") as f:
+            active_theme = f.read().strip()
+
+    top_level_comments, replies = comment_manager.get_comments(f"index_text:{text_id}")
+
+    return render_template("root/index_text_detail.html",
+                           text=text,
+                           posts=posts,
+                           categories=categories,
+                           settings=settings,
+                           active_theme=active_theme,
+                           auth=auth,
+                           show_logo=settings["embed_favicon_in_html"],
+                           top_level_comments=top_level_comments,
+                           replies=replies)
+
+
+@root_bp.route("/index-text/<text_id>/comment", methods=["POST"])
+def add_index_text_comment(text_id):
+    if 'user' not in session:
+        return {"status": "error", "error": "Login required"}, 401
+
+    text = get_index_text_by_id(text_id)
+    if not text:
+        abort(404)
+
+    author = session['user']
+    content = request.form.get("comment", "").strip()
+    parent_id = request.form.get("parent_id") or None
+    if not content:
+        return {"status": "error", "error": "Comment cannot be empty"}, 400
+
+    comment_manager.add_comment(f"index_text:{text_id}", author, content, parent_id)
+    return {"status": "ok"}
+
 @root_bp.route("/profile/me", methods=["GET", "POST"])
 def profile():
     # Handle email update

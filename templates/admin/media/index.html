@@ -72,6 +72,22 @@
             color: #e5e7eb;
         }
 
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .filter-bar input,
+        .filter-bar select {
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid #1f2937;
+            background: #0f172a;
+            color: #e5e7eb;
+            font-size: 0.9rem;
+        }
+
         .btn {
             padding: 7px 14px;
             border-radius: 6px;
@@ -142,6 +158,12 @@
             margin-bottom: 8px;
         }
 
+        .file-date {
+            font-size: 0.8rem;
+            color: #60a5fa;
+            margin-bottom: 8px;
+        }
+
         .file-usage {
             font-size: 0.8rem;
             color: #60a5fa;
@@ -163,38 +185,6 @@
         .empty {
             text-align: center;
             padding: 40px;
-            color: #9ca3af;
-        }
-
-        .list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .list li {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #111827;
-        }
-
-        .list li:last-child {
-            border-bottom: none;
-        }
-
-        .file-item-info {
-            flex: 1;
-        }
-
-        .file-item-name {
-            color: #e5e7eb;
-            margin-bottom: 4px;
-        }
-
-        .file-item-meta {
-            font-size: 0.8rem;
             color: #9ca3af;
         }
 
@@ -244,6 +234,28 @@
         <section class="card">
             <h2>Alle Medien</h2>
 
+            <!-- FILTERBAR -->
+            <form method="get" class="filter-bar">
+                <input type="text" name="q" placeholder="Dateiname…" value="{{ q }}">
+
+                <select name="type">
+                    <option value="">Alle Typen</option>
+                    <option value="png" {% if filetype == "png" %}selected{% endif %}>PNG</option>
+                    <option value="jpg" {% if filetype == "jpg" %}selected{% endif %}>JPG</option>
+                    <option value="jpeg" {% if filetype == "jpeg" %}selected{% endif %}>JPEG</option>
+                    <option value="pdf" {% if filetype == "pdf" %}selected{% endif %}>PDF</option>
+                </select>
+
+                <select name="date">
+                    <option value="">Alle Zeiträume</option>
+                    <option value="today" {% if date_filter == "today" %}selected{% endif %}>Heute</option>
+                    <option value="7d" {% if date_filter == "7d" %}selected{% endif %}>Letzte 7 Tage</option>
+                    <option value="30d" {% if date_filter == "30d" %}selected{% endif %}>Letzte 30 Tage</option>
+                </select>
+
+                <button class="btn" type="submit">Filtern</button>
+            </form>
+
             {% if files %}
                 <div class="files-grid">
                     {% for file in files %}
@@ -262,6 +274,13 @@
                             <div class="file-info">
                                 <div class="file-name" title="{{ file.filename }}">{{ file.filename }}</div>
                                 <div class="file-size">{{ "%.1f" % (file.size / 1024) }} KB</div>
+
+                                {% if file.uploaded_at %}
+                                <div class="file-date">
+                                    Hochgeladen: {{ file.uploaded_at | datetimeformat }}
+                                </div>
+                                {% endif %}
+
                                 <div class="file-usage">
                                     {% if file.usage_count > 0 %}
                                         <strong style="color: #10b981;">{{ file.usage_count }}</strong> Verwendung{{ file.usage_count != 1 and 'en' or '' }}
@@ -269,6 +288,7 @@
                                         <strong style="color: #f59e0b;">Nicht verwendet</strong>
                                     {% endif %}
                                 </div>
+
                                 <div class="file-actions">
                                     <a href="/admin/media/file/{{ file.filename|urlencode }}" class="btn" style="text-align: center; text-decoration: none;">Details</a>
                                     <button class="btn btn-danger" onclick="deleteFile('{{ file.filename|urlencode }}', '{{ file.filename }}')">Löschen</button>
