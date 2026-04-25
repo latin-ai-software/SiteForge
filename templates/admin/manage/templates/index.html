@@ -447,30 +447,55 @@
 
 <script>
 // Initialize Quill editor for index text
-var indexQuill = new Quill('#index-editor', {
-    theme: 'snow',
-    modules: {
-        toolbar: [
-            [{ 'font': [] }],
-            [{ 'size': ['small', false, 'large', 'huge'] }],
-            ['bold', 'italic', 'underline', 'strike'],
-            [{ 'color': [] }, { 'background': [] }],
-            [{ 'header': 1 }, { 'header': 2 }, { 'header': 3 }],
-            [{ 'align': [] }],
-            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-            ['blockquote', 'code-block'],
-            ['link', 'image', 'video'],
-            ['clean']
-        ]
-    }
-});
-
+var indexQuill;
 let currentTextId = null;
 let allTexts = [];
+let quillInitialized = false;
+
+function initializeQuill() {
+    if (typeof Quill !== 'undefined' && !quillInitialized) {
+        quillInitialized = true;
+        indexQuill = new Quill('#index-editor', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ 'font': [] }],
+                    [{ 'size': ['small', false, 'large', 'huge'] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'color': [] }, { 'background': [] }],
+                    [{ 'header': 1 }, { 'header': 2 }, { 'header': 3 }],
+                    [{ 'align': [] }],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    ['blockquote', 'code-block'],
+                    ['link', 'image', 'video'],
+                    ['clean']
+                ]
+            }
+        });
+        return true;
+    }
+    return false;
+}
+
+function waitForQuill(callback, attempts = 50) {
+    if (attempts <= 0) {
+        console.error('Quill failed to load');
+        return;
+    }
+    
+    if (typeof Quill !== 'undefined') {
+        if (initializeQuill()) {
+            callback();
+        }
+    } else {
+        setTimeout(() => waitForQuill(callback, attempts - 1), 100);
+    }
+}
 
 // Load all texts on page load
 document.addEventListener('DOMContentLoaded', function() {
-    loadAllTexts();
+    // Wait for Quill to load before initializing
+    waitForQuill(loadAllTexts);
 });
 
 function loadAllTexts() {
@@ -508,6 +533,12 @@ function renderTextsList() {
 function editText(textId) {
     const text = allTexts.find(t => t.id === textId);
     if (!text) return;
+    
+    // Ensure Quill is initialized before using it
+    if (!quillInitialized || typeof indexQuill === 'undefined') {
+        console.error('Quill editor not ready');
+        return;
+    }
 
     currentTextId = textId;
     document.getElementById('text-id').value = textId;
