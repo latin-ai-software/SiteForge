@@ -10,17 +10,52 @@ from datetime import datetime
 class AuthManager:
     def __init__(self, base_path):
         self.userfile = os.path.join(base_path, "data", "users.json")
+        self.base_path = base_path
         os.makedirs(os.path.dirname(self.userfile), exist_ok=True)
 
         if not os.path.exists(self.userfile):
             with open(self.userfile, "w", encoding="utf-8") as f:
                 json.dump({}, f)
+    
+    def _get_encryption_manager(self):
+        """Get encryption manager if available"""
+        try:
+            from ..security.encrypted_files import get_encryption_manager
+            return get_encryption_manager()
+        except:
+            return None
 
     def _load(self):
+        """Load user data with automatic decryption if encrypted"""
+        encryption_mgr = self._get_encryption_manager()
+        
+        if encryption_mgr:
+            try:
+                return encryption_mgr.load_json(self.userfile)
+            except Exception as e:
+                print(f"Decryption failed: {e}, falling back to plain read")
+                # Fallback to plain read
+                pass
+        
+        # Plain read
         with open(self.userfile, "r", encoding="utf-8") as f:
             return json.load(f)
 
     def _save(self, data):
+        """Save user data with automatic encryption if enabled"""
+        encryption_mgr = self._get_encryption_manager()
+        
+        if encryption_mgr:
+            try:
+                encryption_mgr.save_json(self.userfile, data)
+                return
+            except Exception as e:
+                print(f"Encryption save failed: {e}, falling back to plain write")
+                # Fallback to plain write
+                pass
+        
+        # Plain write
+        os.makedirs(os.path.dirname(self.userfile), exist_ok=True)
         with open(self.userfile, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4)
 
@@ -165,8 +200,11 @@ class AuthManager:
         @wraps(f)
         def wrapper(*args, **kwargs):
             user = session.get("user")
-            if not user or self.get_user_role(user) != "administrator":
-                abort(403)
+            if not user:
+                return redirect(url_for("auth.login_page"))
+            user_role = self.get_user_role(user)
+            if user_role != "administrator":
+                abort(403, description="Administratorzugriff erforderlich")
             return f(*args, **kwargs)
         return wrapper
 

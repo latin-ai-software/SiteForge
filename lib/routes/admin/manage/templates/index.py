@@ -3,6 +3,7 @@ import json
 import uuid
 from flask import Blueprint, current_app, render_template, request, redirect, abort, jsonify
 from .....netdefense.auth.provider import AuthManager
+from lib.newsletter import send_newsletter
 
 admin_templates_bp = Blueprint("admin_templates", __name__, url_prefix="/admin/manage/templates")
 
@@ -111,6 +112,11 @@ def save_index_text():
         if text:
             text["name"] = name
             text["content"] = content
+            updated_text = text
+            action_type = "aktualisiert"
+        else:
+            updated_text = None
+            action_type = "hinzugefügt"
     else:
         # Create new text
         new_text = {
@@ -120,8 +126,26 @@ def save_index_text():
             "active": len(texts) == 0  # First text is active by default
         }
         texts.append(new_text)
-    
+        updated_text = new_text
+        action_type = "hinzugefügt"
+
     save_index_texts(texts)
+
+    if updated_text:
+        try:
+            base_url = request.host_url.rstrip("/")
+            text_url = f"{base_url}/index-text/{updated_text['id']}"
+            summary = updated_text["content"].strip().replace("\n", " ")[:200]
+            if len(updated_text["content"].strip()) > 200:
+                summary += "..."
+            send_newsletter(
+                subject=f"LatinMagazine: Indexseite Text {action_type}",
+                html_body=f"<p>Hallo,</p><p>ein Indexseite Text wurde {action_type}:</p><h2>{updated_text['name']}</h2><p>{summary}</p><p><a href='{text_url}'>Text ansehen</a></p>",
+                text_body=f"Hallo,\n\nEin Indexseite Text wurde {action_type}:\n{updated_text['name']}\n{text_url}\n\n{summary}"
+            )
+        except Exception:
+            current_app.logger.exception("Newsletter konnte nach Indexseite Text nicht gesendet werden")
+
     return redirect("/admin/manage/templates")
 
 
@@ -145,8 +169,24 @@ def activate_index_text(text_id):
     text = next((t for t in texts if t["id"] == text_id), None)
     if text:
         text["active"] = True
-    
+
     save_index_texts(texts)
+
+    if text:
+        try:
+            base_url = request.host_url.rstrip("/")
+            text_url = f"{base_url}/index-text/{text['id']}"
+            summary = text["content"].strip().replace("\n", " ")[:200]
+            if len(text["content"].strip()) > 200:
+                summary += "..."
+            send_newsletter(
+                subject=f"LatinMagazine: Startseitentext aktiviert - {text['name']}",
+                html_body=f"<p>Hallo,</p><p>ein neuer Startseitentext wurde aktiv gesetzt:</p><h2>{text['name']}</h2><p>{summary}</p><p><a href='{text_url}'>Text ansehen</a></p>",
+                text_body=f"Hallo,\n\nEin neuer Startseitentext wurde aktiv gesetzt:\n{text['name']}\n{text_url}\n\n{summary}"
+            )
+        except Exception:
+            current_app.logger.exception("Newsletter konnte nach Aktivierung des Indexseite Text nicht gesendet werden")
+
     return jsonify({"status": "ok"})
 
 

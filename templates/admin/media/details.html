@@ -181,33 +181,6 @@
             border-radius: 6px;
             text-align: center;
         }
-
-        @media (max-width: 768px) {
-            .layout {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: 100%;
-                padding: 16px;
-            }
-
-            .main {
-                padding: 16px;
-            }
-
-            .info-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .btn-group {
-                flex-direction: column;
-            }
-
-            .btn {
-                width: 100%;
-            }
-        }
     </style>
 </head>
 
@@ -231,123 +204,131 @@
     </aside>
 
     <main class="main">
-        <h1 class="page-title">{{ file_info.filename }}</h1>
+        <h1 class="page-title">Datei: {{ file_info.filename }}</h1>
 
         <section class="card">
+
+            <!-- PREVIEW -->
             <div class="preview-area">
                 {% if file_info.is_image %}
-                    <img src="{{ file_info.url }}" alt="{{ file_info.filename }}">
+                    <img src="/uploads/{{ file_info.filename }}" alt="Bild">
                 {% elif file_info.is_video %}
-                    <video controls style="max-width: 100%; max-height: 400px;">
-                        <source src="{{ file_info.url }}">
-                        Browser unterstützt Videos nicht
-                    </video>
+                    <video controls src="/uploads/{{ file_info.filename }}"></video>
+                {% elif file_info.is_document %}
+                    <div class="preview-icon">📄</div>
                 {% else %}
-                    <div class="preview-icon">
-                        {% if file_info.is_document %}
-                            📄
-                        {% else %}
-                            📎
-                        {% endif %}
-                    </div>
+                    <div class="preview-icon">📎</div>
                 {% endif %}
             </div>
 
+            <!-- INFO GRID -->
             <div class="info-grid">
                 <div class="info-item">
                     <div class="info-label">Dateiname</div>
                     <div class="info-value">{{ file_info.filename }}</div>
                 </div>
+
                 <div class="info-item">
                     <div class="info-label">Größe</div>
-                    <div class="info-value">{{ "%.2f" % (file_info.size / 1024) }} KB</div>
+                    <div class="info-value">{{ "%.1f" % (file_info.size / 1024) }} KB</div>
                 </div>
+
                 <div class="info-item">
-                    <div class="info-label">Typ</div>
-                    <div class="info-value">
-                        {% if file_info.is_image %}
-                            Bild
-                        {% elif file_info.is_video %}
-                            Video
-                        {% elif file_info.is_document %}
-                            Dokument
-                        {% else %}
-                            Sonstiges
-                        {% endif %}
-                    </div>
+                    <div class="info-label">Pfad</div>
+                    <div class="info-value">{{ file_info.path }}</div>
                 </div>
+
                 <div class="info-item">
-                    <div class="info-label">Zuletzt geändert</div>
-                    <div class="info-value" id="modifiedDate"></div>
+                    <div class="info-label">Verwendungen</div>
+                    <div class="info-value">{{ file_info.usage_count }}</div>
                 </div>
             </div>
 
-            <div class="btn-group">
-                <a href="{{ file_info.url }}" class="btn" download>Download</a>
-                <a href="/admin/media" class="btn">Zurück</a>
-                <button class="btn btn-danger" onclick="deleteFile('{{ file_info.filename|urlencode }}', '{{ file_info.filename }}')">Löschen</button>
+            <!-- RENAME -->
+            <div class="card" style="margin-top: 20px;">
+                <h3 style="margin-bottom: 12px;">Datei umbenennen</h3>
+
+                <form onsubmit="return renameDetail(event, '{{ file_info.filename }}')">
+                    <input type="text"
+                           id="newNameInput"
+                           value="{{ file_info.filename }}"
+                           style="padding: 10px; width: 260px; border-radius: 6px; border: 1px solid #1f2937; background:#0f172a; color:#e5e7eb;">
+
+                    <button class="btn" type="submit" style="margin-left: 10px;">Speichern</button>
+                </form>
             </div>
+
+            <!-- DELETE BUTTON -->
+            <div class="btn-group">
+                <button class="btn-danger" onclick="deleteFile('{{ file_info.filename }}')">Löschen</button>
+            </div>
+
         </section>
 
-        <!-- Usage Section -->
-        <section class="card usage-section">
-            <h3>Verwendung ({{ file_info.usage|length }})</h3>
-            
-            {% if file_info.usage %}
+        <!-- USAGE LIST -->
+        <section class="usage-section">
+            <h3>Verwendungsstellen</h3>
+
+            {% if file_info.usage and file_info.usage|length > 0 %}
                 <ul class="usage-list">
-                    {% for usage in file_info.usage %}
+                    {% for item in file_info.usage %}
                         <li>
-                            <div class="usage-title">{{ usage.title }}</div>
-                            <div class="usage-type">{{ usage.type|capitalize }}</div>
-                            {% if usage.type == 'post' %}
-                                <a href="/admin/posts/edit/{{ usage.post_id }}" style="font-size: 0.85rem; color: #60a5fa; text-decoration: none;">Bearbeiten →</a>
-                            {% endif %}
+                            <div class="usage-title">{{ item.title }}</div>
+                            <div class="usage-type">{{ item.type }}</div>
                         </li>
                     {% endfor %}
                 </ul>
             {% else %}
-                <div class="empty-usage">
-                    <p>Diese Datei wird nirgendwo verwendet. Sie können sie sicher löschen.</p>
-                </div>
+                <div class="empty-usage">Keine Verwendungen gefunden.</div>
             {% endif %}
         </section>
 
     </main>
-
 </div>
 
 <script>
-    // Format the modified date
-    const timestamp = {{ file_info.modified }} * 1000; // Convert to milliseconds
-    const date = new Date(timestamp);
-    const formatted = date.toLocaleDateString('de-DE', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-    document.getElementById('modifiedDate').textContent = formatted;
+function renameDetail(event, oldName) {
+    event.preventDefault();
+    const newName = document.getElementById("newNameInput").value.trim();
 
-    function deleteFile(encoded_filename, display_name) {
-        if (confirm(`Datei "${display_name}" wirklich löschen?`)) {
-            fetch(`/admin/media/delete/${encoded_filename}`, {
-                method: 'POST'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'deleted') {
-                    alert('Datei gelöscht');
-                    window.location.href = '/admin/media';
-                } else {
-                    alert('Fehler: ' + data.error);
-                }
-            })
-            .catch(error => {
-                alert('Fehler beim Löschen: ' + error);
-            });
-        }
+    if (!newName) {
+        alert("Bitte einen gültigen Dateinamen eingeben.");
+        return;
     }
+
+    const formData = new FormData();
+    formData.append("new_name", newName);
+
+    fetch(`/admin/media/rename/${oldName}`, {
+        method: "POST",
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === "renamed") {
+            alert("Datei erfolgreich umbenannt.");
+            window.location.href = `/admin/media/file/${newName}`;
+        } else {
+            alert("Fehler: " + data.error);
+        }
+    });
+}
+
+function deleteFile(filename) {
+    if (!confirm(`Datei "${filename}" wirklich löschen?`)) return;
+
+    fetch(`/admin/media/delete/${filename}`, { method: "POST" })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === "deleted") {
+                alert("Datei gelöscht.");
+                window.location.href = "/admin/media";
+            } else {
+                alert("Fehler: " + data.error);
+            }
+        });
+}
 </script>
+
 </body>
 </html>

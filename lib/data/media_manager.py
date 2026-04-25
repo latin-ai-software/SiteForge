@@ -1,134 +1,151 @@
 import os
 import json
-from pathlib import Path
+import time
 
 
 class MediaManager:
     def __init__(self, base_path):
         self.base_path = base_path
-        self.uploads_dir = os.path.join(base_path, "data", "uploads")
-        self.posts_dir = os.path.join(base_path, "data", "posts")
-        self.posts_metadata_file = os.path.join(base_path, "data", "posts_metadata.json")
+        self.upload_dir = os.path.join(base_path, "data", "uploads")
+        self.usage_file = os.path.join(base_path, "data", "media_usage.json")
 
-        # Create uploads directory if it doesn't exist
-        os.makedirs(self.uploads_dir, exist_ok=True)
+        if not os.path.exists(self.upload_dir):
+            os.makedirs(self.upload_dir)
 
-    def get_all_files(self):
-        """Get all uploaded files with metadata"""
-        files = []
-        
-        if not os.path.exists(self.uploads_dir):
-            return files
+        if not os.path.exists(os.path.dirname(self.usage_file)):
+            os.makedirs(os.path.dirname(self.usage_file))
 
-        for filename in os.listdir(self.uploads_dir):
-            filepath = os.path.join(self.uploads_dir, filename)
-            if os.path.isfile(filepath):
-                stat = os.stat(filepath)
-                files.append({
-                    "filename": filename,
-                    "path": filepath,
-                    "size": stat.st_size,
-                    "modified": stat.st_mtime,
-                    "url": f"/data/uploads/{filename}"
-                })
+        if not os.path.exists(self.usage_file):
+            with open(self.usage_file, "w", encoding="utf-8") as f:
+                json.dump({}, f, indent=4)
 
-        # Sort by modified date (newest first)
-        files.sort(key=lambda x: x["modified"], reverse=True)
-        return files
+    # ---------------------------------------------------------
+    # INTERN
+    # ---------------------------------------------------------
 
-    def find_file_usage(self, filename):
-        """Find which posts use this file"""
-        usage = []
-        
-        # Check posts metadata
-        if os.path.exists(self.posts_metadata_file):
-            try:
-                with open(self.posts_metadata_file, "r", encoding="utf-8") as f:
-                    posts_meta = json.load(f)
-                    
-                for post_id, post_data in posts_meta.items():
-                    # Check if filename is referenced in content
-                    content = post_data.get("content", "")
-                    if filename in content:
-                        usage.append({
-                            "post_id": post_id,
-                            "title": post_data.get("title", "Untitled"),
-                            "type": "post"
-                        })
-            except:
-                pass
-
-        # Check post HTML files
-        if os.path.exists(self.posts_dir):
-            for post_file in os.listdir(self.posts_dir):
-                if post_file.endswith(".html"):
-                    filepath = os.path.join(self.posts_dir, post_file)
-                    try:
-                        with open(filepath, "r", encoding="utf-8") as f:
-                            content = f.read()
-                            if filename in content:
-                                post_id = post_file.replace(".html", "")
-                                # Check if already in usage
-                                if not any(u["post_id"] == post_id for u in usage):
-                                    usage.append({
-                                        "post_id": post_id,
-                                        "title": post_id,
-                                        "type": "post"
-                                    })
-                    except:
-                        pass
-
-        return usage
-
-    def delete_file(self, filename):
-        """Delete a file from uploads"""
-        filepath = os.path.join(self.uploads_dir, filename)
-        
-        # Security check: ensure path is within uploads directory
-        if not os.path.abspath(filepath).startswith(os.path.abspath(self.uploads_dir)):
-            return False, "Invalid file path"
-        
-        if not os.path.exists(filepath):
-            return False, "File not found"
-        
+    def _load_usage(self):
         try:
-            os.remove(filepath)
-            return True, "File deleted successfully"
-        except Exception as e:
-            return False, str(e)
+            with open(self.usage_file, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except:
+            return {}
 
-    def get_file_info(self, filename):
-        """Get detailed info about a file"""
-        filepath = os.path.join(self.uploads_dir, filename)
-        
-        if not os.path.exists(filepath):
-            return None
-        
-        stat = os.stat(filepath)
-        usage = self.find_file_usage(filename)
-        
-        return {
-            "filename": filename,
-            "size": stat.st_size,
-            "modified": stat.st_mtime,
-            "url": f"/data/uploads/{filename}",
-            "usage": usage,
-            "is_image": filename.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg')),
-            "is_document": filename.lower().endswith(('.pdf', '.doc', '.docx', '.txt', '.xlsx', '.pptx')),
-            "is_video": filename.lower().endswith(('.mp4', '.webm', '.avi', '.mov'))
-        }
+    def _save_usage(self, data):
+        with open(self.usage_file, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4)
+
+    # ---------------------------------------------------------
+    # DATEILISTE + USAGE
+    # ---------------------------------------------------------
 
     def get_usage_summary(self):
-        """Get summary of all files and their usage"""
-        files = self.get_all_files()
-        summary = []
-        
-        for file_info in files:
-            usage = self.find_file_usage(file_info["filename"])
-            summary.append({
-                **file_info,
-                "usage_count": len(usage),
-                "usage": usage
+        usage = self._load_usage()
+        files = []
+
+        for filename in os.listdir(self.upload_dir):
+            path = os.path.join(self.upload_dir, filename)
+
+            if not os.path.isfile(path):
+                continue
+
+            size = os.path.getsize(path)
+            ext = filename.split(".")[-1].lower() if "." in filename else ""
+
+            files.append({
+                "filename": filename,
+                "path": path,
+                "size": size,
+                "usage_count": usage.get(filename, {}).get("count", 0),
+                "is_image": ext in ["png", "jpg", "jpeg", "gif", "webp"],
+                "is_video": ext in ["mp4", "mov", "webm"],
+                "is_document": ext in ["pdf", "docx", "txt"]
             })
-        
-        return summary
+
+        return files
+
+    # ---------------------------------------------------------
+    # EINZELDATEI
+    # ---------------------------------------------------------
+
+    def get_file_info(self, filename):
+        path = os.path.join(self.upload_dir, filename)
+
+        if not os.path.exists(path):
+            return None
+
+        usage = self._load_usage()
+        size = os.path.getsize(path)
+        ext = filename.split(".")[-1].lower() if "." in filename else ""
+
+        return {
+            "filename": filename,
+            "path": path,
+            "size": size,
+            "usage_count": usage.get(filename, {}).get("count", 0),
+            "usage": usage.get(filename, {}).get("items", []),
+            "is_image": ext in ["png", "jpg", "jpeg", "gif", "webp"],
+            "is_video": ext in ["mp4", "mov", "webm"],
+            "is_document": ext in ["pdf", "docx", "txt"]
+        }
+
+    # ---------------------------------------------------------
+    # DELETE
+    # ---------------------------------------------------------
+
+    def delete_file(self, filename):
+        path = os.path.join(self.upload_dir, filename)
+
+        if not os.path.exists(path):
+            return False, "Datei existiert nicht"
+
+        try:
+            os.remove(path)
+        except Exception as e:
+            return False, f"Fehler beim Löschen: {e}"
+
+        usage = self._load_usage()
+        if filename in usage:
+            usage.pop(filename)
+            self._save_usage(usage)
+
+        return True, "Datei gelöscht"
+
+    # ---------------------------------------------------------
+    # RENAME
+    # ---------------------------------------------------------
+
+    def rename_file(self, old_name, new_name):
+        old_path = os.path.join(self.upload_dir, old_name)
+
+        # Dateiendungen extrahieren
+        old_ext = os.path.splitext(old_name)[1]  # z.B. ".png"
+        new_ext = os.path.splitext(new_name)[1]  # z.B. ""
+
+        # Wenn neue Endung fehlt oder anders ist → alte Endung anhängen
+        if new_ext.lower() != old_ext.lower():
+            new_name = new_name + old_ext
+
+        new_path = os.path.join(self.upload_dir, new_name)
+
+        if not os.path.exists(old_path):
+            return False, "Datei existiert nicht"
+
+        if os.path.exists(new_path):
+            return False, "Eine Datei mit diesem Namen existiert bereits"
+
+        try:
+            os.rename(old_path, new_path)
+        except Exception as e:
+            return False, f"Fehler beim Umbenennen: {e}"
+
+        self._update_usage_after_rename(old_name, new_name)
+
+        return True, "Datei erfolgreich umbenannt"
+
+    def _update_usage_after_rename(self, old, new):
+        usage = self._load_usage()
+
+        if old in usage:
+            usage[new] = usage.pop(old)
+
+        self._save_usage(usage)
