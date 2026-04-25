@@ -148,20 +148,24 @@ def posts_by_category(category):
 @post_create_bp.route("/feed", methods=["GET"])
 def rss_feed():
     posts = post_manager.get_posts(limit=20)
+    
+    # Get the base URL dynamically from request or settings
+    from ....newsletter import get_base_url
+    base_url = get_base_url()
 
     rss_content = '<?xml version="1.0" encoding="UTF-8"?>\n'
     rss_content += '<rss version="2.0">\n'
     rss_content += '<channel>\n'
     rss_content += '<title>LatinMagazine</title>\n'
     rss_content += '<description>Latest posts from LatinMagazine</description>\n'
-    rss_content += '<link>http://localhost:5000</link>\n'
+    rss_content += f'<link>{base_url}</link>\n'
 
     for post in posts:
         rss_content += '<item>\n'
         rss_content += f'<title>{post["title"]}</title>\n'
         rss_content += f'<description>{post["content"][:200]}...</description>\n'
-        rss_content += f'<link>http://localhost:5000/post/{post["slug"]}</link>\n'
-        rss_content += f'<guid>http://localhost:5000/post/{post["slug"]}</guid>\n'
+        rss_content += f'<link>{base_url}/post/{post["slug"]}</link>\n'
+        rss_content += f'<guid>{base_url}/post/{post["slug"]}</guid>\n'
         rss_content += f'<pubDate>{post["created_at"]}</pubDate>\n'
         rss_content += '</item>\n'
 

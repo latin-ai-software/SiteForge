@@ -158,12 +158,6 @@
             margin-bottom: 8px;
         }
 
-        .file-date {
-            font-size: 0.8rem;
-            color: #60a5fa;
-            margin-bottom: 8px;
-        }
-
         .file-usage {
             font-size: 0.8rem;
             color: #60a5fa;
@@ -236,7 +230,10 @@
 
             <!-- FILTERBAR -->
             <form method="get" class="filter-bar">
-                <input type="text" name="q" placeholder="Dateiname…" value="{{ q }}">
+                <input type="text"
+                       name="q"
+                       placeholder="Dateiname…"
+                       value="{{ q }}">
 
                 <select name="type">
                     <option value="">Alle Typen</option>
@@ -275,23 +272,31 @@
                                 <div class="file-name" title="{{ file.filename }}">{{ file.filename }}</div>
                                 <div class="file-size">{{ "%.1f" % (file.size / 1024) }} KB</div>
 
-                                {% if file.uploaded_at %}
-                                <div class="file-date">
-                                    Hochgeladen: {{ file.uploaded_at | datetimeformat }}
-                                </div>
-                                {% endif %}
-
                                 <div class="file-usage">
                                     {% if file.usage_count > 0 %}
-                                        <strong style="color: #10b981;">{{ file.usage_count }}</strong> Verwendung{{ file.usage_count != 1 and 'en' or '' }}
+                                        <strong style="color: #10b981;">{{ file.usage_count }}</strong>
+                                        Verwendung{{ file.usage_count != 1 and 'en' or '' }}
                                     {% else %}
                                         <strong style="color: #f59e0b;">Nicht verwendet</strong>
                                     {% endif %}
                                 </div>
 
                                 <div class="file-actions">
-                                    <a href="/admin/media/file/{{ file.filename|urlencode }}" class="btn" style="text-align: center; text-decoration: none;">Details</a>
-                                    <button class="btn btn-danger" onclick="deleteFile('{{ file.filename|urlencode }}', '{{ file.filename }}')">Löschen</button>
+                                    <a href="/admin/media/file/{{ file.filename|urlencode }}"
+                                       class="btn"
+                                       style="text-align: center; text-decoration: none;">
+                                        Details
+                                    </a>
+                                    <button class="btn"
+                                            type="button"
+                                            onclick="renameFile('{{ file.filename|urlencode }}', '{{ file.filename }}')">
+                                        Umbenennen
+                                    </button>
+                                    <button class="btn btn-danger"
+                                            type="button"
+                                            onclick="deleteFile('{{ file.filename|urlencode }}', '{{ file.filename }}')">
+                                        Löschen
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -309,25 +314,101 @@
 </div>
 
 <script>
-    function deleteFile(encoded_filename, display_name) {
-        if (confirm(`Datei "${display_name}" wirklich löschen?`)) {
-            fetch(`/admin/media/delete/${encoded_filename}`, {
-                method: 'POST'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'deleted') {
-                    alert('Datei gelöscht');
-                    location.reload();
-                } else {
-                    alert('Fehler: ' + data.error);
-                }
-            })
-            .catch(error => {
-                alert('Fehler beim Löschen: ' + error);
-            });
+function deleteFile(encoded_filename, display_name) {
+    if (!confirm(`Datei "${display_name}" wirklich löschen?`)) return;
+
+    fetch(`/admin/media/delete/${encoded_filename}`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'deleted') {
+            alert('Datei gelöscht');
+            location.reload();
+        } else {
+            alert('Fehler: ' + data.error);
         }
-    }
+    })
+    .catch(error => {
+        alert('Fehler beim Löschen: ' + error);
+    });
+}
+
+function renameFile(encoded_filename, display_name) {
+    const newName = prompt("Neuer Dateiname:", display_name);
+    if (!newName) return;
+
+    const formData = new FormData();
+    formData.append("new_name", newName);
+
+    fetch(`/admin/media/rename/${encoded_filename}`, {
+        method: "POST",
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === "renamed") {
+            alert("Datei umbenannt");
+            location.reload();
+        } else {
+            alert("Fehler: " + data.error);
+        }
+    })
+    .catch(error => {
+        alert("Fehler beim Umbenennen: " + error);
+    });
+}
 </script>
+<script>
+// Ganze Seite akzeptiert Drag & Drop
+document.addEventListener("dragover", (e) => {
+    e.preventDefault();
+});
+
+document.addEventListener("drop", (e) => {
+    e.preventDefault();
+
+    // Nur Dateien akzeptieren
+    if (!e.dataTransfer || !e.dataTransfer.files.length) return;
+
+    uploadFiles(e.dataTransfer.files);
+});
+
+// Upload Funktion
+function uploadFiles(files) {
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (let file of files) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        fetch("/admin/media/upload", {
+            method: "POST",
+            body: formData
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === "ok") {
+                successCount++;
+                if (successCount + errorCount === files.length) {
+                    alert(`Upload abgeschlossen: ${successCount} erfolgreich, ${errorCount} Fehler`);
+                    if (successCount > 0) location.reload();
+                }
+            } else {
+                errorCount++;
+                console.error("Fehler bei " + file.name + ": " + data.error);
+            }
+        })
+        .catch(err => {
+            errorCount++;
+            console.error("Upload-Fehler für " + file.name + ": " + err);
+        });
+    }
+}
+</script>
+
+
+
 </body>
 </html>

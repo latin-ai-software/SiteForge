@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Post</title>
+    <title>{{ post.title }} | {{ settings.site_title if settings.site_title else 'LatinMagazine' }}</title>
     <link rel="stylesheet" href="/static/theme.css">
     {% if active_theme %}
         
@@ -23,145 +23,206 @@
     {% endif %}
 
     {% if settings.embed_favicon_in_html and settings.favicon_filename %}
-    <link rel="icon" href="/uploads/{{ settings.favicon_filename }}">
+    <link rel="icon" href="/static/favicon.ico">
     {% endif %}
 
     <style>
-        nav.navbar {
-            width: 100%;
-            background: #ffffff;
-            border-bottom: 1px solid #e5e7eb;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 1000;
-            padding: 12px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        * {
+            box-sizing: border-box;
         }
-
-        nav.navbar .navbar-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-        }
-
-        nav.navbar .navbar-brand {
-            font-weight: bold;
-            color: #111827;
-            text-decoration: none;
-            margin-right: 24px;
-        }
-
-        nav.navbar .navbar-nav a {
-            margin-left: 16px;
-            color: #1f2937;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        nav.navbar .navbar-nav a:hover {
-            color: #2563eb;
-        } 
 
         body {
             margin: 0;
-            padding-top: 70px;
+            min-height: 100vh;
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        .navbar {
+            width: 100%;
             background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 1rem 1.5rem;
         }
-                /* Callouts */
-        .callout {
-            padding: 15px;
-            border-radius: 6px;
-            margin: 10px 0;
+
+        .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            width: 100%;
+            max-width: 1140px;
+            margin: 0 auto;
         }
-        .callout.info { background: #e8f4ff; border-left: 4px solid #2196f3; }
-        .callout.success { background: #e8ffe8; border-left: 4px solid #4caf50; }
-        .callout.warning { background: #fff8e1; border-left: 4px solid #ff9800; }
-        .callout.true {
-            background: #e6f7ff;
-            border-left: 4px solid #00bcd4;
-        }
-        /* Columns */
-        .columns > div {
-            padding: 10px;
-            border: 1px dashed #ccc;
-            min-height: 50px;
-        }
-        .btn-block {
-            display: inline-block;
-            padding: 10px 16px;
-            background: #007bff;
-            color: white;
-            border-radius: 4px;
+
+        .navbar-brand {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #111827;
             text-decoration: none;
+            margin-right: auto;
+        }
+
+        .navbar-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .navbar-nav a {
+            color: #374151;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .navbar-nav a:hover {
+            color: #2563eb;
+        }
+
+        .container {
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        .page-shell {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 1rem;
+            padding: 1.75rem;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+        }
+
+        .post-meta {
+            color: #6b7280;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .comment-section h2 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+            color: #111827;
+        }
+
+        .sidebar-card h3 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .label-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.35rem 0.85rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: white;
+            background: #10b981;
+        }
+
+        .label-pill.tag {
+            background: #7c3aed;
+        }
+
+        .comment-box,
+        .comment-item,
+        .reply-item,
+        .sidebar-card {
+            border-radius: 1rem;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            padding: 1.25rem;
+        }
+
+        .comment-box {
+            background: #f9fafb;
+        }
+
+        .comment-box textarea {
+            width: 100%;
+            min-height: 130px;
+            border-radius: 0.85rem;
+            border: 1px solid #d1d5db;
+            padding: 1rem;
+            font-size: 1rem;
+            resize: vertical;
+            background: white;
+        }
+
+        .button-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.85rem 1.3rem;
+            border-radius: 0.85rem;
+            border: none;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
             font-weight: 600;
         }
-        .btn-block:hover {
-            background: #0056b3;
-            color: white;
+
+        .button-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .comment-item,
+        .reply-item {
+            margin-bottom: 1rem;
+        }
+
+        .reply-item {
+            margin-left: 1rem;
+        }
+
+        .comment-item h4,
+        .reply-item h4 {
+            margin: 0 0 0.4rem;
+            font-size: 1rem;
+        }
+
+        .comment-item small,
+        .reply-item small {
+            color: #6b7280;
+        }
+
+        .sidebar-card ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .sidebar-card li a {
+            color: #2563eb;
             text-decoration: none;
         }
-        /* Kommentarleiste rechts */
-        #commentSidebar {
-            width: 250px;
-            height: calc(100vh - 80px);
-            border-left: 1px solid #ccc;
-            padding: 10px;
-            overflow-y: auto;
-            position: fixed;
-            top: 80px;
-            right: 0;
-            background: #f5f5f5;
-            display: none;
-        }
 
-        /* Toggle-Button immer sichtbar */
-        #toggleBtn {
-            position: fixed;
-            top: 90px;
-            right: 10px;
-            padding: 5px 10px;
-            cursor: pointer;
-            z-index: 9999; /* überlappt Sidebar */
-        }
-
-        /* Inhalt rückt etwas nach links, damit Sidebar nicht überlappt */
-        #contentArea {
-            margin-right: 20px;
-            padding-right: 20px;
-            margin-left: 20px;
-        }
-
-        /* Attachments styling */
-        .attachments {
-            margin-bottom: 20px;
-        }
-
-        .attachment {
-            margin-bottom: 10px;
-            padding: 8px;
-            background: #f9f9f9;
-            border-radius: 4px;
-        }
-
-        .attachment-link {
-            color: #0066cc;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        .attachment-link:hover {
+        .sidebar-card li a:hover {
             text-decoration: underline;
-        }
-
-        .attachment-info {
-            color: #666;
-            margin-left: 10px;
         }
 
         .cookie-banner {
@@ -169,86 +230,45 @@
             bottom: 20px;
             left: 20px;
             right: 20px;
-            background: #111827;
-            color: #f9fafb;
-            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.96);
+            color: white;
+            border-radius: 14px;
             padding: 18px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            box-shadow: 0 18px 40px rgba(0,0,0,0.2);
             z-index: 2000;
             display: none;
         }
 
-        .cookie-banner p {
-            margin: 0 0 10px;
-            line-height: 1.6;
-        }
-        .cookie-banner,
-        .cookie-banner * {
-            color: white !important;
-        }
         .cookie-banner button {
             background: #2563eb;
             border: none;
             color: white;
             padding: 10px 16px;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
         }
-    </style>
 
-    <style>
-        /* Mobile responsiveness */
+        @media (max-width: 1024px) {
+            .page-shell {
+                grid-template-columns: 1fr;
+            }
+        }
+
         @media (max-width: 768px) {
-            nav.navbar {
-                padding: 8px 16px;
+            .navbar {
+                padding: 0.9rem 1rem;
             }
 
-            nav.navbar .navbar-brand {
-                font-size: 1.2rem;
+            .navbar-nav {
+                gap: 0.5rem;
             }
 
-            nav.navbar .navbar-nav a {
-                font-size: 0.9rem;
-                padding: 6px 8px;
+            .tags {
+                gap: 0.4rem;
             }
 
-            #contentArea {
-                margin-left: 0;
-                padding: 20px 10px;
-            }
-
-            #commentSidebar {
+            .button-primary {
                 width: 100%;
-                position: static;
-                height: auto;
-                display: none; /* Hide by default on mobile */
-            }
-
-            #toggleBtn {
-                display: block;
-                position: fixed;
-                bottom: 20px;
-                right: 20px;
-                z-index: 1001;
-                background: #2563eb;
-                color: white;
-                border: none;
-                border-radius: 50%;
-                width: 50px;
-                height: 50px;
-                font-size: 18px;
-                cursor: pointer;
-            }
-
-            .cookie-banner {
-                left: 10px;
-                right: 10px;
-                padding: 12px;
-            }
-
-            .cookie-banner button {
-                width: 100%;
-                margin-top: 10px;
             }
         }
     </style>
@@ -284,120 +304,120 @@
         <button onclick="acceptCookies()">Cookies akzeptieren</button>
     </div>
 
-    <!-- Button zum Ein-/Ausklappen -->
-    <button id="toggleBtn" onclick="toggleSidebar()">Mehr</button>
+    <div class="container">
+        <div class="page-shell">
+            <article class="card">
+                <h1>{{ post.title }}</h1>
+                <p class="post-meta">By <strong>{{ post.author }}</strong> on {{ post.created_at }}</p>
 
-    <!-- Kommentar-Sidebar -->
-    <div id="commentSidebar">
-        <h3>Post Info</h3>
-        <p><strong>Kategorien:</strong></p>
-        {% if post.categories %}
-            <ul>
-                {% for category in post.categories %}
-                    <li><a href="/category/{{ category }}">{{ category }}</a></li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>Keine Kategorien</p>
-        {% endif %}
+                <div class="tags">
+                    {% for category in post.categories %}
+                        <span class="label-pill">{{ category }}</span>
+                    {% endfor %}
+                    {% for tag in post.tags %}
+                        <span class="label-pill tag">#{{ tag }}</span>
+                    {% endfor %}
+                </div>
 
-        {% if post.git_repository %}
-            <p><strong>Git-Repository:</strong> <a href="/git/repos" target="_blank">{{ post.git_repository }}</a></p>
-        {% endif %}
+                <div style="line-height: 1.8; color: #374151;">
+                    {{ post.content|safe }}
+                </div>
 
-        {% if post.release_tag %}
-            <p><strong>Release / Tag:</strong> {{ post.release_tag }}</p>
-        {% endif %}
-
-        <p><strong>Tags:</strong></p>
-        {% if post.tags %}
-            <ul>
-                {% for tag in post.tags %}
-                    <li><a href="/tag/{{ tag }}">{{ tag }}</a></li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>Keine Tags</p>
-        {% endif %}
-
-        <hr>
-
-        <h3>Kommentare</h3>
-
-        {% if post.attachments %}
-            <h4>Dateianhänge</h4>
-            <div class="attachments">
-                {% for attachment in post.attachments %}
-                    <div class="attachment">
-                        <a href="/uploads/{{ attachment.filename }}" target="_blank" class="attachment-link">
-                            📎 {{ attachment.original_name }}
-                        </a>
-                        <small class="attachment-info">
-                            ({{ "%.1f"|format(attachment.size / 1024 / 1024) }} MB, {{ attachment.mime_type }})
-                        </small>
-                    </div>
-                {% endfor %}
-            </div>
-            <hr>
-        {% endif %}
-
-        {% if top_level_comments %}
-            {% for comment in top_level_comments %}
-                <div class="comment">
-                    <p><strong>{{ comment.author }}</strong> <small>{{ comment.created_at }}</small></p>
-                    <p>{{ comment.content }}</p>
-                    <button onclick="replyToComment('{{ comment.id }}')">Antworten</button>
-
-                    {% if comment.id in replies %}
-                        <div class="replies">
-                            {% for reply in replies[comment.id] %}
-                                <div class="reply">
-                                    <p><strong>{{ reply.author }}</strong> <small>{{ reply.created_at }}</small></p>
-                                    <p>{{ reply.content }}</p>
+                {% if post.attachments %}
+                <div class="card" style="margin-top: 1.5rem;">
+                    <h2>Dateianhänge</h2>
+                    <ul style="list-style: none; padding: 0; margin: 0; display: grid; gap: 0.9rem;">
+                        {% for attachment in post.attachments %}
+                            <li>
+                                <a href="/uploads/{{ attachment.filename }}" target="_blank" style="color: #2563eb; text-decoration: none; font-weight: 600;">
+                                    📎 {{ attachment.original_name }}
+                                </a>
+                                <div style="color: #6b7280; font-size: 0.94rem; margin-top: 0.35rem;">
+                                    {{ "%.1f"|format(attachment.size / 1024 / 1024) }} MB · {{ attachment.mime_type }}
                                 </div>
-                            {% endfor %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <section class="comment-section" style="margin-top: 1.75rem;">
+                    <h2 style="margin-bottom: 1rem;">Kommentare</h2>
+                    {% if top_level_comments %}
+                        {% for comment in top_level_comments %}
+                            <div class="comment-item">
+                                <h4>{{ comment.author }}</h4>
+                                <small>{{ comment.created_at }}</small>
+                                <p>{{ comment.content }}</p>
+                                <button class="button-primary" type="button" style="background: transparent; color: #2563eb; border: none; box-shadow: none; padding: 0; font-size: 0.95rem;" onclick="replyToComment('{{ comment.id }}')">Antworten</button>
+                                {% if comment.id in replies %}
+                                    {% for reply in replies[comment.id] %}
+                                        <div class="reply-item">
+                                            <h4>{{ reply.author }}</h4>
+                                            <small>{{ reply.created_at }}</small>
+                                            <p>{{ reply.content }}</p>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="comment-box">
+                            <p>Noch keine Kommentare.</p>
                         </div>
                     {% endif %}
-                </div>
-            {% endfor %}
-        {% else %}
-            <p>Noch keine Kommentare.</p>
-        {% endif %}
 
-        <hr>
+                    <div class="comment-box">
+                        <h3 id="commentFormTitle">Neuen Kommentar schreiben</h3>
+                        {% if session.user %}
+                            <form id="commentForm" onsubmit="submitComment(event)">
+                                <input type="hidden" id="parentId" name="parent_id" value="">
+                                <p>Angemeldet als <strong>{{ session.user }}</strong>.</p>
+                                <textarea id="content" name="content" placeholder="Deinen Kommentar hier eingeben..." required></textarea>
+                                <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem;">
+                                    <button class="button-primary" type="submit">Absenden</button>
+                                    <button class="button-primary" type="button" onclick="cancelReply()" id="cancelBtn" style="display:none; background: #6b7280;">Abbrechen</button>
+                                </div>
+                            </form>
+                        {% else %}
+                            <p>Du musst <a href="/login">eingeloggt</a> sein, um einen Kommentar zu schreiben.</p>
+                        {% endif %}
+                    </div>
+                </section>
+            </article>
 
-        <h4 id="commentFormTitle">Neuen Kommentar schreiben</h4>
-        {% if session.user %}
-            <form id="commentForm" onsubmit="submitComment(event)">
-                <input type="hidden" id="parentId" name="parent_id" value="">
-                <div>
-                    <p>Angemeldet als <strong>{{ session.user }}</strong>. Kommentare werden automatisch unter deinem Konto veröffentlicht.</p>
-                </div>
-                <div>
-                    <label for="content">Kommentar:</label><br>
-                    <textarea id="content" name="content" required></textarea>
-                </div>
-                <button type="submit">Senden</button>
-                <button type="button" onclick="cancelReply()" id="cancelBtn" style="display:none;">Abbrechen</button>
-            </form>
-        {% else %}
-            <p>Du musst <a href="/login">eingeloggt</a> sein, um einen Kommentar zu schreiben.</p>
-        {% endif %}
-    </div>
+            <aside class="sidebar-card" id="commentSidebar">
+                <h3>Post Info</h3>
+                <p><strong>Kategorien</strong></p>
+                {% if post.categories %}
+                    <ul>
+                        {% for category in post.categories %}
+                            <li><a href="/category/{{ category }}">{{ category }}</a></li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>Keine Kategorien</p>
+                {% endif %}
 
-    <!-- Post-Inhalt -->
-    <div id="contentArea">
-        <h1>{{ post.title }}</h1>
-        <p><small>By {{ post.author }} on {{ post.created_at }}</small></p>
-        {{ post.content|safe }}
+                {% if post.release_tag %}
+                    <p><strong>Release / Tag:</strong> {{ post.release_tag }}</p>
+                {% endif %}
+
+                {% if post.git_repository %}
+                    <p><strong>Git-Repository:</strong> <a href="/git/repos" target="_blank">{{ post.git_repository }}</a></p>
+                {% endif %}
+
+                <hr style="border-color: #e5e7eb; margin: 1.25rem 0;">
+                <p><strong>Weitere Links</strong></p>
+                <ul>
+                    <li><a href="/">Zurück zur Startseite</a></li>
+                    <li><a href="/feed">RSS Feed</a></li>
+                </ul>
+            </aside>
+        </div>
     </div>
 
     <script>
-        function toggleSidebar() {
-            const bar = document.getElementById("commentSidebar");
-            bar.style.display = bar.style.display === "block" ? "none" : "block";
-        }
-
         function replyToComment(commentId) {
             document.getElementById("parentId").value = commentId;
             document.getElementById("commentFormTitle").textContent = "Auf Kommentar antworten";
@@ -431,7 +451,7 @@
 
         function updateCookieBanner() {
             const banner = document.getElementById('cookieConsentBanner');
-            const requireConsent = {{ 'true' if settings.require_cookie_consent else 'false' }};
+            const requireConsent = {% if settings.require_cookie_consent %}true{% else %}false{% endif %};
             const accepted = localStorage.getItem('cookieConsentAccepted') === 'true';
             if (requireConsent && !accepted) {
                 banner.style.display = 'block';

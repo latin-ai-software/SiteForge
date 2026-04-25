@@ -78,10 +78,28 @@ class PostManager:
                 if author not in git_data:
                     git_data[author] = {}
 
+                # Get base URL dynamically - use request.host_url if available, otherwise build from settings
+                try:
+                    from flask import request
+                    base_url = request.host_url.rstrip("/")
+                except (RuntimeError, ImportError):
+                    # Fallback: try to get from settings
+                    base_url = "http://localhost"
+                    try:
+                        settings = json.load(open(os.path.join(os.path.dirname(__file__), "../../data/settings.json"), "r", encoding="utf-8"))
+                        if settings.get("domain"):
+                            domain = settings.get("domain").strip()
+                            if domain.startswith("http://") or domain.startswith("https://"):
+                                base_url = domain.rstrip("/")
+                            else:
+                                base_url = f"https://{domain}"
+                    except:
+                        pass
+                
                 git_data[author][repo_name] = {
                     "remote": "",
                     "branch": "main",
-                    "clone_url": f"http://localhost:443/git/{author}/{repo_name}",  # Default localhost URL
+                    "clone_url": f"{base_url}/git/{author}/{repo_name}",
                     "created_at": datetime.now().isoformat()
                 }
                 with open(git_data_file, "w", encoding="utf-8") as f:

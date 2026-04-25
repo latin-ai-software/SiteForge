@@ -345,6 +345,45 @@
                     <input type="number" id="analytics_period_days" name="analytics_period_days" value="{{ settings.analytics_period_days or 30 }}" min="1" max="365">
                     <small>Zeitraum für Besucherstatistiken (1-365 Tage)</small>
                 </div>
+            </section>
+
+            <section class="card">
+                <h2>Newsletter</h2>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="newsletter_enabled" name="newsletter_enabled" {% if settings.newsletter_enabled %}checked{% endif %}>
+                        <label for="newsletter_enabled">Newsletter und SES-Benachrichtigungen aktivieren</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="newsletter_sender_email">Absender E-Mail:</label>
+                    <input type="email" id="newsletter_sender_email" name="newsletter_sender_email" value="{{ settings.newsletter_sender_email or '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="ses_smtp_host">Amazon SES SMTP Host:</label>
+                    <input type="text" id="ses_smtp_host" name="ses_smtp_host" value="{{ settings.ses_smtp_host or '' }}" placeholder="email-smtp.eu-west-1.amazonaws.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="ses_smtp_port">Amazon SES SMTP Port:</label>
+                    <input type="number" id="ses_smtp_port" name="ses_smtp_port" value="{{ settings.ses_smtp_port or 587 }}" min="1" max="65535">
+                </div>
+
+                <div class="form-group">
+                    <label for="ses_smtp_username">Amazon SES SMTP Benutzername:</label>
+                    <input type="text" id="ses_smtp_username" name="ses_smtp_username" value="{{ settings.ses_smtp_username or '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="ses_smtp_password">Amazon SES SMTP Passwort:</label>
+                    <input type="password" id="ses_smtp_password" name="ses_smtp_password" value="{{ settings.ses_smtp_password or '' }}" autocomplete="new-password">
+                    <small>Wenn Sie das Passwort nicht ändern möchten, lassen Sie dieses Feld leer.</small>
+                </div>
+            </section>
+
             <section class="card">
                 <h2>Plugins</h2>
 
@@ -372,7 +411,7 @@ document.getElementById('settingsForm').addEventListener('submit', async functio
 
     const formData = new FormData(this);
 
-    const response = await fetch('/admin/settings', {
+    const response = await fetch(window.location.origin + '/admin/settings', {
         method: 'POST',
         body: formData
     });
