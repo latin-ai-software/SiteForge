@@ -1,0 +1,10 @@
+{
+    "admin": {
+        "LATIN-Letter": {
+            "remote": "",
+            "branch": "main",
+            "clone_url": "/git/admin/LATIN-Letter",
+            "created_at": "2026-04-19T13:08:08.584205"
+        }
+    }
+}

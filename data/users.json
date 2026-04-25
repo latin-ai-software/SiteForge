@@ -1,0 +1,30 @@
+{
+    "admin": {
+        "salt": "b2b4f0712348c5a756f4dd16a18cd91b",
+        "password": "9eec39a0d8254ba767d41a55fb9f3034a53875c99b65d8ed7715c5c61e17c711",
+        "role": "administrator",
+        "created_at": "2026-04-18 21:33:24.384582",
+        "git_access": true,
+        "email": "professor_adam@latinai.de"
+    },
+    "user": {
+        "salt": "f0ace657707b8a7cfd4700d29593f8de",
+        "password": "18957ab8e23c35fc9827f581155b32d0eefe2e3709f5bb6c8caa1f270c06d32a",
+        "role": "subscriber",
+        "created_at": "2026-04-18 22:43:46.293705"
+    },
+    "peterli123": {
+        "salt": "d07121a392bf0d0f886f7409aff72df8",
+        "password": "d2befa586adc14de9f2c384b020f15a4c6f83f3625397cc406cf4254c0a11bec",
+        "role": "administrator",
+        "created_at": "2026-04-19 12:17:05.725274",
+        "git_access": false
+    },
+    "guest": {
+        "salt": "1afe545dac889278dc9685b0b758e648",
+        "password": "f1be802643b1f62392dd1bb65fc532aece950e02de6d7fe8a595b3c202ae5a56",
+        "role": "administrator",
+        "created_at": "2026-04-19 19:22:52.332064",
+        "git_access": true
+    }
+}
