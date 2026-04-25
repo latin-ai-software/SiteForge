@@ -1,0 +1,28 @@
+{
+  "texts": [
+    {
+      "id": "5651ba54-6665-41a1-a3d9-f6b347db563a",
+      "name": "Die Welt der Motorräder",
+      "content": "<p>Das Motorrad verbindet kraftvolle Technik mit purer Freiheit. Der Motor reagiert direkt, liefert ein sattes Drehmoment und sorgt für ein dynamisches Fahrgefühl, das sowohl auf kurvigen Landstraßen als auch auf langen Touren überzeugt. Das Fahrwerk bleibt stabil, selbst bei höheren Geschwindigkeiten, während die ergonomische Sitzposition Komfort für längere Strecken bietet. Das Design kombiniert funktionale Elemente mit einer markanten Linienführung, die sofort ins Auge fällt. Dieses Motorrad steht für Abenteuerlust, Präzision und das unverwechselbare Gefühl, die Straße unmittelbar zu spüren.</p>",
+      "active": true
+    },
+    {
+      "id": "1779d699-0f37-4f40-b80b-828232476075",
+      "name": "Der Wein",
+      "content": "<p>Der Wein entfaltet im Glas eine harmonische Balance aus Frucht und feiner Würze. Bereits beim ersten Eindruck zeigt sich ein Bouquet aus reifen Beeren, dezenten Kräutern und einem Hauch von Holz. Am Gaumen wirkt er rund, weich und dennoch strukturiert, getragen von einer angenehmen Säure, die dem Gesamteindruck Frische verleiht. Dieser Wein eignet sich sowohl als Begleiter zu herzhaften Speisen als auch für entspannte Abende, an denen man einfach nur ein gutes Glas genießen möchte. Sein Abgang ist lang, elegant und hinterlässt eine feine Spur von Mineralität.</p>",
+      "active": false
+    },
+    {
+      "id": "5e87bbdd-080c-46d5-8de8-0ca91b822e13",
+      "name": "Musik",
+      "content": "<p>Meine Musik! Über <a href=\"/admin/manage/templates/\" target=\"_blank\">/admin/manage/templates/</a> können Sie Ihre Musik einfügen oder einbetten. Falls Sie Schwierigkeiten haben, kontaktieren Sie uns gerne.</p>",
+      "active": false
+    },
+    {
+      "id": "b2655093-d2c8-4a45-998d-a6df1acc976f",
+      "name": "Alles-Mögliche-Bereich",
+      "content": "<p>Werde kreativ :)</p>",
+      "active": false
+    }
+  ]
+}
