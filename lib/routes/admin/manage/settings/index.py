@@ -123,6 +123,7 @@ def save_settings():
         "ses_smtp_port": ses_smtp_port,
         "ses_smtp_username": validate_input(request.form.get("ses_smtp_username", ""), max_length=255) or "",
         "ses_smtp_password": ses_password,
+        "youtube_channel_id": validate_input(request.form.get("youtube_channel_id", ""), max_length=255) or "",
     })
 
     plugin_changed = False

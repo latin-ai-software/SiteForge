@@ -60,6 +60,7 @@ def index():
     settings.setdefault('site_title', 'My Site')
     settings.setdefault('require_cookie_consent', True)
     settings.setdefault('enable_analytics', False)
+    settings.setdefault('youtube_channel_id', '')
 
     # Aktives Stylesheet laden
     active_theme_path = os.path.join(current_app.root_path, "data", "active_theme.txt")

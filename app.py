@@ -16,6 +16,7 @@ from lib.routes.admin.manage.analytics.index import admin_analytics_bp
 from lib.routes.admin.manage.settings.index import admin_settings_bp
 from lib.routes.admin.manage.media.index import admin_media_bp
 from lib.routes.root.auth import auth_bp
+from lib.routes.data.youtube import youtube_bp
 from lib.netdefense.auth.provider import AuthManager
 import os
 from datetime import datetime
@@ -73,6 +74,7 @@ app.register_blueprint(admin_settings_bp)
 app.register_blueprint(admin_media_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(admin_analytics_bp)
+app.register_blueprint(youtube_bp)
 
 # Global variable to track loaded plugins
 loaded_plugins = set()
