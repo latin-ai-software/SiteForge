@@ -4,6 +4,7 @@ from flask import Blueprint, current_app, session, render_template, request, abo
 from ...data.post_manager import PostManager
 from ...data.comment_manager import CommentManager
 from ...netdefense.auth.provider import AuthManager
+from lib.newsletter import subscribe_email
 
 root_bp = Blueprint("root", __name__)
 
@@ -75,6 +76,41 @@ def index():
                            index_texts=all_index_texts,
                            active_text=active_text,
                            active_text_id=active_text_id)
+
+
+@root_bp.route("/newsletter", methods=["GET", "POST"])
+def newsletter_signup():
+    message = None
+    success = False
+    if request.method == "POST":
+        email = request.form.get("email", "").strip()
+        ok, message = subscribe_email(email)
+        success = ok
+
+    settings = {}
+    settings_file = os.path.join(current_app.root_path, "data", "settings.json")
+    if os.path.exists(settings_file):
+        with open(settings_file, "r", encoding="utf-8") as f:
+            settings = json.load(f)
+
+    active_theme_path = os.path.join(current_app.root_path, "data", "active_theme.txt")
+    active_theme = None
+    if os.path.exists(active_theme_path):
+        with open(active_theme_path, "r", encoding="utf-8") as f:
+            active_theme = f.read().strip()
+
+    posts = post_manager.get_posts(limit=10)
+    categories = post_manager.get_all_categories()
+
+    return render_template("root/newsletter.html",
+                           settings=settings,
+                           active_theme=active_theme,
+                           auth=auth,
+                           show_logo=settings.get("embed_favicon_in_html", False),
+                           posts=posts,
+                           categories=categories,
+                           message=message,
+                           success=success)
 
 
 def get_index_text_by_id(text_id):

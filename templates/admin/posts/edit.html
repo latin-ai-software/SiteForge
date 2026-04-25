@@ -152,16 +152,25 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="attachments">Dateianhänge</label>
+                    <label for="existing_files">Existierende Dateien hinzufügen</label>
+                    <select id="existing_files" name="existing_files" class="form-input" multiple>
+                        <!-- Wird via JavaScript geladen -->
+                    </select>
+                    <small class="form-hint">Wähle eine oder mehrere bereits hochgeladene Dateien aus, um sie mit diesem Beitrag zu verknüpfen.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="attachments">Neue Dateien hochladen</label>
                     <input type="file" id="attachments" name="attachments" class="form-input" multiple>
+                    <small class="form-hint">Wähle Dateien zum Hochladen aus.</small>
 
                     {% if post.attachments %}
-                        <div class="current-attachments">
-                            <p><strong>Aktuelle Anhänge:</strong></p>
-                            <ul>
-                                {% for attachment in post.attachments %}
-                                    <li>{{ attachment.original_name }} <a href="/uploads/{{ attachment.filename }}" target="_blank">📎</a></li>
-                                {% endfor %}
+                        <div style="margin-top: 10px; padding: 10px; background: #f0f0f0; border-radius: 4px;">
+                            <strong>Aktuelle Anhänge:</strong>
+                            <ul style="margin: 5px 0;">
+                            {% for attachment in post.attachments %}
+                                <li>{{ attachment.original_name }} ({{ "%.1f" % (attachment.size / 1024) }} KB)</li>
+                            {% endfor %}
                             </ul>
                         </div>
                     {% endif %}
@@ -375,5 +384,148 @@ Quill.register(YouTubeBlot);
             document.getElementById('content').value = quill.root.innerHTML;
         }
     </script>
+    <script>
+// Ganze Seite akzeptiert Drag & Drop
+const fileInput = document.getElementById("attachments");
+let dragCounter = 0;
+let draggedFiles = []; // Store dragged files separately
+
+// Styling for drag & drop
+const dragDropStyle = document.createElement('style');
+dragDropStyle.textContent = `
+    .drag-over {
+        background-color: #e8f4ff !important;
+        border: 2px dashed #2563eb !important;
+    }
+    
+    .upload-progress {
+        margin-top: 10px;
+        display: none;
+    }
+    
+    .progress-bar {
+        width: 100%;
+        height: 24px;
+        background: #e5e7eb;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: #2563eb;
+        width: 0%;
+        transition: width 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 0.75rem;
+        font-weight: bold;
+    }
+`;
+document.head.appendChild(dragDropStyle);
+
+// Drag & Drop Handler
+document.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dragCounter++;
+    document.body.classList.add('drag-over');
+});
+
+document.addEventListener("dragleave", (e) => {
+    e.preventDefault();
+    dragCounter--;
+    if (dragCounter === 0) {
+        document.body.classList.remove('drag-over');
+    }
+});
+
+document.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dragCounter = 0;
+    document.body.classList.remove('drag-over');
+
+    if (!e.dataTransfer || !e.dataTransfer.files.length) return;
+
+    // Get dropped files
+    draggedFiles = Array.from(e.dataTransfer.files);
+    
+    // Update the file input with all files (old + new)
+    try {
+        const dt = new DataTransfer();
+        
+        // Add existing files from input
+        for (let i = 0; i < fileInput.files.length; i++) {
+            dt.items.add(fileInput.files[i]);
+        }
+        
+        // Add dragged files
+        draggedFiles.forEach(file => {
+            dt.items.add(file);
+        });
+        
+        fileInput.files = dt.files;
+    } catch (err) {
+        console.error('Error setting files:', err);
+    }
+    
+    // Show file list
+    showFileList();
+});
+
+// Show selected files
+function showFileList() {
+    let html = '<div style="margin-top: 10px; padding: 10px; background: #f0f0f0; border-radius: 4px;"><strong>Ausgewählte Dateien:</strong><ul style="margin: 5px 0;">';
+    
+    // Show files from input
+    for (let i = 0; i < fileInput.files.length; i++) {
+        html += `<li>${fileInput.files[i].name} (${(fileInput.files[i].size / 1024).toFixed(1)} KB)</li>`;
+    }
+    
+    // Also show dragged files if not yet in input
+    draggedFiles.forEach(file => {
+        if (!Array.from(fileInput.files).some(f => f.name === file.name)) {
+            html += `<li>${file.name} (${(file.size / 1024).toFixed(1)} KB)</li>`;
+        }
+    });
+    
+    html += '</ul></div>';
+    
+    let existing = fileInput.parentElement.querySelector('.file-list-display');
+    if (existing) existing.remove();
+    
+    const container = document.createElement('div');
+    container.className = 'file-list-display';
+    container.innerHTML = html;
+    fileInput.parentElement.appendChild(container);
+}
+
+fileInput.addEventListener('change', showFileList);
+
+// Existierende Dateien laden
+function loadExistingFiles() {
+    const select = document.getElementById('existing_files');
+    if (!select) return;
+    
+    fetch('/admin/media/api/list')
+        .then(r => r.json())
+        .then(files => {
+            files.forEach(file => {
+                const option = document.createElement('option');
+                option.value = file.filename;
+                option.textContent = file.display;
+                select.appendChild(option);
+            });
+        })
+        .catch(err => console.error('Fehler beim Laden der Dateien:', err));
+}
+
+// Load files on page load
+document.addEventListener('DOMContentLoaded', loadExistingFiles);
+</script>
+
+
+
 </body>
 </html>

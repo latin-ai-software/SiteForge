@@ -3,6 +3,9 @@ from flask import Blueprint, render_template, request, jsonify, current_app, abo
 from .....netdefense.auth.provider import AuthManager
 from .....data.post_manager import PostManager
 from .....data.file_manager import FileManager
+from .....data.media_manager import MediaManager
+from lib.newsletter import send_newsletter
+#lib/routes/admin/posts/index.py
 
 admin_posts_bp = Blueprint("admin_posts", __name__, url_prefix="/admin/posts")
 
@@ -11,6 +14,7 @@ BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..
 auth = AuthManager(BASE_PATH)
 post_manager = PostManager(BASE_PATH)
 file_manager = FileManager(BASE_PATH)
+media_manager = MediaManager(BASE_PATH)
 
 # Hilfsfunktion: Pfad zu Posts
 def posts_dir():
@@ -50,8 +54,10 @@ def create_post():
     if not title or not content:
         return jsonify({"error": "title und content erforderlich"}), 400
 
-    # Handle file uploads
+    # Handle file uploads and existing files
     attachments = []
+    
+    # Add newly uploaded files
     if 'attachments' in request.files:
         files = request.files.getlist('attachments')
         for file in files:
@@ -67,6 +73,19 @@ def create_post():
                 else:
                     # Continue with other files but log the error
                     print(f"Failed to upload {file.filename}: {result}")
+    
+    # Add selected existing files
+    existing_files = request.form.getlist('existing_files')
+    for filename in existing_files:
+        if filename:
+            file_info = media_manager.get_file_info(filename)
+            if file_info:
+                attachments.append({
+                    'original_name': filename,
+                    'filename': filename,
+                    'size': file_info['size'],
+                    'mime_type': 'application/octet-stream'
+                })
 
     author = auth.current_user() or session.get("user")
     post_id = post_manager.create_post(
@@ -79,6 +98,21 @@ def create_post():
         git_repository=git_repository,
         release_tag=release_tag
     )
+
+    # Send newsletter update for new posts
+    try:
+        base_url = request.host_url.rstrip("/")
+        post_url = f"{base_url}/post/{post_id}"
+        summary = content.strip().replace("\n", " ")[:200]
+        if len(content.strip()) > 200:
+            summary += "..."
+        send_newsletter(
+            subject=f"LatinMagazine: Neuer Beitrag veröffentlicht - {title}",
+            html_body=f"<p>Hallo,</p><p>es gibt einen neuen Beitrag auf <strong>{author}</strong>'s LatinMagazine:</p><h2>{title}</h2><p>{summary}</p><p><a href='{post_url}'>Beitrag ansehen</a></p>",
+            text_body=f"Hallo,\n\nEs gibt einen neuen Beitrag auf LatinMagazine:\n{title}\n{post_url}\n\n{summary}"
+        )
+    except Exception:
+        current_app.logger.exception("Newsletter konnte nach neuem Beitrag nicht gesendet werden")
 
     return redirect("/")
 
@@ -134,8 +168,10 @@ def save_post(post_id):
     if user_role not in ["administrator", "editor"] and post["author"] != current_user:
         abort(403)
 
-    # Handle file uploads
+    # Handle file uploads and existing files
     attachments = post.get("attachments", [])  # Keep existing attachments
+    
+    # Add newly uploaded files
     if 'attachments' in request.files:
         files = request.files.getlist('attachments')
         for file in files:
@@ -151,6 +187,20 @@ def save_post(post_id):
                 else:
                     # Continue with other files but log the error
                     print(f"Failed to upload {file.filename}: {result}")
+    
+    # Add selected existing files (avoid duplicates)
+    existing_filenames = {att['filename'] for att in attachments}
+    existing_files = request.form.getlist('existing_files')
+    for filename in existing_files:
+        if filename and filename not in existing_filenames:
+            file_info = media_manager.get_file_info(filename)
+            if file_info:
+                attachments.append({
+                    'original_name': filename,
+                    'filename': filename,
+                    'size': file_info['size'],
+                    'mime_type': 'application/octet-stream'
+                })
 
     success = post_manager.update_post(
         post_id,
@@ -164,6 +214,19 @@ def save_post(post_id):
     )
 
     if success:
+        try:
+            base_url = request.host_url.rstrip("/")
+            post_url = f"{base_url}/post/{post_id}"
+            summary = content.strip().replace("\n", " ")[:200]
+            if len(content.strip()) > 200:
+                summary += "..."
+            send_newsletter(
+                subject=f"LatinMagazine: Beitrag aktualisiert - {title}",
+                html_body=f"<p>Hallo,</p><p>der Beitrag " + title + " wurde aktualisiert:</p><h2>{title}</h2><p>{summary}</p><p><a href='{post_url}'>Beitrag ansehen</a></p>",
+                text_body=f"Hallo,\n\nder Beitrag {title} wurde aktualisiert.\n{post_url}\n\n{summary}"
+            )
+        except Exception:
+            current_app.logger.exception("Newsletter konnte nach Beitragsspeicherung nicht gesendet werden")
         return redirect(url_for("admin_posts.admin_posts_index"))
     else:
         return jsonify({"error": "Post not found"}), 404
@@ -189,3 +252,23 @@ def delete_post(post_id):
         return redirect(url_for("admin_posts.admin_posts_index"))
     else:
         return jsonify({"error": "Post not found"}), 404
+
+@admin_posts_bp.route("/upload", methods=["POST"])
+@auth.require_role("author")
+def upload_post_media():
+    if "file" not in request.files:
+        return jsonify({"error": "Keine Datei erhalten"}), 400
+
+    file = request.files["file"]
+
+    if file.filename == "":
+        return jsonify({"error": "Ungültiger Dateiname"}), 400
+
+    save_path = os.path.join(media_manager.upload_dir, file.filename)
+    file.save(save_path)
+
+    return jsonify({
+        "status": "ok",
+        "filename": file.filename,
+        "url": f"/uploads/{file.filename}"
+    }), 200

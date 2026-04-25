@@ -26,6 +26,7 @@
     <link rel="icon" href="/static/favicon.ico">
     {% endif %}
     <style>
+        /* Container-Animation beim Seitenladen */
         .cookie-banner {
             position: fixed;
             bottom: 20px;
@@ -185,10 +186,30 @@
                 width: 100%;
                 margin-top: 10px;
             }
+            .cookie-banner {
+                animation: none !important;
+                opacity: 1 !important;
+                transform: none !important;
+            }
+            .cookie-banner {
+                position: fixed;
+                z-index: 99999;
+            }
         }
     </style>
 </head>
+<div id="cookieConsentBanner" class="cookie-banner">
+        <div id="cookieConsentMessage">
+            {% if settings.cookie_consent_message %}
+                {{ settings.cookie_consent_message|safe }}
+            {% else %}
+                <p>Diese Webseite verwendet Cookies für ein besseres Nutzererlebnis. Bitte akzeptieren Sie Cookies.</p>
+            {% endif %}
+        </div>
+        <button onclick="acceptCookies()">Cookies akzeptieren</button>
+    </div>
 <body>
+
     <nav class="navbar">
         <div class="navbar-content">
             {% if show_logo %}<img src="/static/favicon.ico" alt="site logo" width="140" height="128">{% endif %}
@@ -209,17 +230,6 @@
             </div>
         </div>
     </nav>
-
-    <div id="cookieConsentBanner" class="cookie-banner">
-        <div id="cookieConsentMessage">
-            {% if settings.cookie_consent_message %}
-                {{ settings.cookie_consent_message|safe }}
-            {% else %}
-                <p>Diese Webseite verwendet Cookies für ein besseres Nutzererlebnis. Bitte akzeptieren Sie Cookies.</p>
-            {% endif %}
-        </div>
-        <button onclick="acceptCookies()">Cookies akzeptieren</button>
-    </div>
 
     <div class="container">
         <header style="text-align: center; margin-bottom: 3rem;{% if settings.header_background_enabled %} background: url('/static/header-background.jpg') no-repeat center/cover; padding: 4rem 2rem; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.5);{% endif %}">
@@ -273,6 +283,7 @@
 
         <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
             <a href="/" class="btn btn-primary btn-sm">Alle Posts</a>
+            <a href="/newsletter" class="btn btn-secondary btn-sm">Newsletter abonnieren</a>
             {% for category in categories %}
                 <a href="/category/{{ category }}" class="btn btn-secondary btn-sm">{{ category }}</a>
             {% endfor %}

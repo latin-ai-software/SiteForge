@@ -1,8 +1,11 @@
 import sys
 import importlib.util
 from flask import Flask, render_template, send_from_directory, Response
+from werkzeug.middleware.proxy_fix import ProxyFix
 import json
 import lib.netdefense.check
+from lib.security import add_security_headers, RateLimiter, ConfigEncryption
+from lib.security.encrypted_files import init_encryption
 from lib.routes.create.post.index import post_create_bp
 from lib.routes.root.index import root_bp
 from lib.routes.admin.manage.templates.index import admin_templates_bp
@@ -18,8 +21,44 @@ from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = "irgendein_langes_random_secret_das_wirklich_gar_keiner_kompromittier_dabei_bin_ich_mir_sicher_vertrau_mir"
-from updater.update_loop import start_update_loop
-start_update_loop()
+# Trust X-Forwarded headers from proxies (e.g., Cloudflare tunnel)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
+
+# Initialize encryption system
+base_path = os.path.abspath(os.path.dirname(__file__))
+init_encryption(base_path)
+config_encryption = ConfigEncryption(base_path)
+
+# Security configuration
+app.config['SESSION_COOKIE_SECURE'] = True  # Only send over HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # Not accessible to JS
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF protection
+app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour timeout
+app.permanent_session_lifetime = 3600
+
+# Add security headers to all responses
+add_security_headers(app)
+
+# Initialize rate limiter
+rate_limiter = RateLimiter(base_path)
+
+# Periodic cleanup task (in real deployment, use celery or similar)
+import threading
+def cleanup_rate_limits():
+    while True:
+        import time
+        time.sleep(3600)  # Cleanup every hour
+        try:
+            rate_limiter.cleanup_old_data()
+        except:
+            pass
+
+# Start cleanup thread
+cleanup_thread = threading.Thread(target=cleanup_rate_limits, daemon=True)
+cleanup_thread.start()
+
+# from updater.update_loop import start_update_loop
+# start_update_loop()
 
 app.register_blueprint(post_create_bp)
 app.register_blueprint(root_bp)
@@ -43,12 +82,17 @@ def load_plugins(application):
     if not os.path.isdir(plugins_dir):
         return
 
-    # Load settings to check enabled plugins
+    # Load settings to check enabled plugins (use encryption manager for decryption)
     settings_file = os.path.join(application.root_path, "data", "settings.json")
     settings = {}
     if os.path.exists(settings_file):
-        with open(settings_file, "r", encoding="utf-8") as f:
-            settings = json.load(f)
+        try:
+            settings = config_encryption.encryption.load_json_file(settings_file, auto_decrypt=True)
+            if settings is None:
+                settings = {}
+        except Exception as e:
+            print(f"Warning: Could not load settings.json: {e}")
+            settings = {}
     enabled_plugins = settings.get("enabled_plugins", {})
 
     for item in os.listdir(plugins_dir):
@@ -107,6 +151,27 @@ def inject_plugin_check():
     return dict(is_plugin_loaded=is_plugin_loaded, is_plugin_available=is_plugin_available)
 
 # Analytics middleware
+@app.before_request
+def check_rate_limits():
+    """DDOS protection - rate limit by IP address"""
+    from flask import request, abort
+    
+    ip = request.remote_addr
+    
+    # Allow higher limits for static files and health checks
+    if request.path.startswith('/static') or request.path.startswith('/uploads'):
+        max_requests = 1000
+    elif request.path.startswith('/admin'):
+        max_requests = 100
+    else:
+        max_requests = 300
+    
+    if rate_limiter.is_rate_limited(f"ip_{ip}"):
+        # Log potential DDOS attempt
+        print(f"Rate limit exceeded for IP: {ip}, path: {request.path}")
+        abort(429)  # Too Many Requests
+
+
 @app.before_request
 def track_visitor():
     from flask import request, session
@@ -245,6 +310,39 @@ def robots_txt():
         body = 'User-agent: *\nDisallow: /\n'
 
     return Response(body, mimetype='text/plain')
+
+
+# Security error handlers
+@app.errorhandler(429)
+def rate_limit_error(error):
+    """Handle rate limit exceeded"""
+    return render_template('error.html', 
+                         error_code=429, 
+                         error_message='Too many requests. Please try again later.'), 429
+
+
+@app.errorhandler(403)
+def forbidden_error(error):
+    """Handle forbidden access"""
+    return render_template('error.html', 
+                         error_code=403, 
+                         error_message='Access denied.'), 403
+
+
+@app.errorhandler(404)
+def not_found_error(error):
+    """Handle not found"""
+    return render_template('error.html', 
+                         error_code=404, 
+                         error_message='Page not found.'), 404
+
+
+@app.errorhandler(500)
+def internal_error(error):
+    """Handle server errors"""
+    return render_template('error.html', 
+                         error_code=500, 
+                         error_message='Internal server error.'), 500
 
 
 def handle_cli():
