@@ -1,0 +1,7 @@
+stages:
+  - noop
+
+noop:
+  stage: noop
+  script:
+    - echo "Doing nothing"
