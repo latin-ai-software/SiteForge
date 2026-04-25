@@ -283,7 +283,9 @@
 
         <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
             <a href="/" class="btn btn-primary btn-sm">Alle Posts</a>
-            <a href="/newsletter" class="btn btn-secondary btn-sm">Newsletter abonnieren</a>
+            {% if settings.newsletter_enabled %}
+                <a href="/newsletter" class="btn btn-secondary btn-sm">Newsletter abonnieren</a>
+            {% endif %}
             {% for category in categories %}
                 <a href="/category/{{ category }}" class="btn btn-secondary btn-sm">{{ category }}</a>
             {% endfor %}
