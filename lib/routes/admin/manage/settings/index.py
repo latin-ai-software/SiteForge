@@ -88,7 +88,7 @@ def save_settings():
         "allow_robot_indexing": request.form.get("allow_robot_indexing") == "on",
         "robot_user_agents": validate_input(request.form.get("robot_user_agents", ""), max_length=500) or "",
         "require_cookie_consent": request.form.get("require_cookie_consent") == "on" or request.form.get("enable_analytics") == "on",
-        "cookie_consent_message": validate_input(request.form.get("cookie_consent_message", ""), max_length=2000) or "",
+        "cookie_consent_message": validate_input(request.form.get("cookie_consent_message", ""), max_length=2000, allowed_chars=['<', '>', '"', "'", '&', ';']) or "",
         "enable_analytics": request.form.get("enable_analytics") == "on",
         "analytics_provider": request.form.get("analytics_provider", "builtin"),
         "analytics_tracking_id": analytics_tracking_id,

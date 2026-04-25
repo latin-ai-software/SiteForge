@@ -311,7 +311,7 @@
 
                 <div class="form-group">
                     <label for="cookie_consent_message">Cookie-Benachrichtigungstext:</label>
-                    <textarea id="cookie_consent_message" name="cookie_consent_message" rows="10" style="width: 100%; background: #111827; color: #e5e7eb; border: 1px solid #374151; border-radius: 4px; padding: 8px;">{{ settings.cookie_consent_message or '' }}</textarea>
+                    <textarea id="cookie_consent_message" name="cookie_consent_message" rows="10" style="width: 100%; background: #111827; color: #e5e7eb; border: 1px solid #374151; border-radius: 4px; padding: 8px;">{{ (settings.cookie_consent_message or '') | safe }}</textarea>
                     <small>Diese Nachricht wird sichtbar, wenn Cookie-Zustimmung aktiviert ist.</small>
                 </div>
             </section>
