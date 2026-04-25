@@ -12,3 +12,5 @@ static/git/
 /test_encryption.py
 /ENCRYPTION_QUICK_START.md
 /decrypt.py
+/updater/
+/data_renamed/

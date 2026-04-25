@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Setup - Initial Configuration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .setup-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 500px;
+            padding: 40px;
+        }
+        
+        .setup-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .setup-header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .setup-header p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .info-box {
+            background-color: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 25px;
+            font-size: 13px;
+            color: #555;
+            line-height: 1.6;
+        }
+        
+        .info-box strong {
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+            cursor: pointer;
+        }
+        
+        .checkbox-group label {
+            margin: 0;
+            font-weight: normal;
+            cursor: pointer;
+        }
+        
+        .password-hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .section-title {
+            color: #333;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .button-group {
+            margin-top: 30px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .alert {
+            padding: 12px 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+        
+        .alert-error {
+            background-color: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+        }
+        
+        .alert-success {
+            background-color: #efe;
+            border: 1px solid #cfc;
+            color: #3c3;
+        }
+        
+        .alert-info {
+            background-color: #eef;
+            border: 1px solid #ccf;
+            color: #33c;
+        }
+        
+        .loading-spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .btn-primary.loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-primary.loading .loading-spinner {
+            display: inline-block;
+            margin: 0 8px 0 0;
+        }
+        
+        .init-list {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 15px;
+            font-size: 12px;
+            line-height: 1.8;
+            color: #666;
+            margin-top: 10px;
+        }
+        
+        .init-list strong {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="setup-container">
+        <div class="setup-header">
+            <h1>⚙️ Server Setup</h1>
+            <p>Initial configuration required</p>
+        </div>
+        
+        <div class="info-box">
+            <strong>First-Time Setup:</strong> This page will configure your site and create all necessary data files and directories. After setup, your site will be ready to use!
+        </div>
+        
+        <form id="setupForm">
+            <div id="alert"></div>
+            
+            <!-- Site Settings -->
+            <div class="section-title">Site Information</div>
+            
+            <div class="form-group">
+                <label for="site_title">Site Title *</label>
+                <input type="text" id="site_title" name="site_title" required placeholder="My Awesome Site">
+                <div class="password-hint">This will be displayed as your site's main title</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="site_description">Site Description</label>
+                <textarea id="site_description" name="site_description" placeholder="A brief description of your site..."></textarea>
+            </div>
+            
+            <!-- Admin Account -->
+            <div class="section-title">Admin Account</div>
+            
+            <div class="form-group">
+                <label for="admin_username">Admin Username *</label>
+                <input type="text" id="admin_username" name="admin_username" required placeholder="admin">
+                <div class="password-hint">You'll use this to log in to the admin panel</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="admin_password">Admin Password *</label>
+                <input type="password" id="admin_password" name="admin_password" required placeholder="••••••••">
+                <div class="password-hint">Minimum 8 characters</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="admin_password_confirm">Confirm Password *</label>
+                <input type="password" id="admin_password_confirm" name="admin_password_confirm" required placeholder="••••••••">
+            </div>
+            
+            <!-- Content Settings -->
+            <div class="section-title">Content Settings</div>
+            
+            <div class="form-group">
+                <label for="posts_per_page">Posts Per Page</label>
+                <input type="number" id="posts_per_page" name="posts_per_page" value="10" min="1" max="100">
+            </div>
+            
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="allow_registration" name="allow_registration" checked>
+                    <label for="allow_registration">Allow User Registration</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="require_comment_approval" name="require_comment_approval" checked>
+                    <label for="require_comment_approval">Require Comment Approval</label>
+                </div>
+            </div>
+            
+            <!-- SEO & Privacy -->
+            <div class="section-title">SEO & Privacy</div>
+            
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="allow_robot_indexing" name="allow_robot_indexing">
+                    <label for="allow_robot_indexing">Allow Search Engine Indexing</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="require_cookie_consent" name="require_cookie_consent" checked>
+                    <label for="require_cookie_consent">Require Cookie Consent</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="enable_analytics" name="enable_analytics">
+                    <label for="enable_analytics">Enable Analytics Tracking</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="newsletter_enabled" name="newsletter_enabled">
+                    <label for="newsletter_enabled">Enable Newsletter</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="domain">Site Domain (including https:// or http:// prefix and no trailing slash)</label>
+                <input type="url" id="domain" name="domain" value="http://localhost">
+            </div>
+            <!-- What Gets Initialized -->
+            <div class="section-title">What Gets Initialized</div>
+            <div class="init-list">
+                <strong>Data Files Created:</strong><br>
+                ✓ posts_metadata.json - Post metadata tracking<br>
+                ✓ comments.json - User comments storage<br>
+                ✓ analytics.json - Visitor tracking<br>
+                ✓ git_repos.json - Git repository configuration<br>
+                ✓ git_prs.json - Git pull requests tracking<br>
+                ✓ index_text.json - Index text entries<br>
+                ✓ index_texts.json - Additional text indexing<br>
+                ✓ lockouts.json - Failed login tracking<br>
+                ✓ media_usage.json - Media usage statistics<br>
+                ✓ rate_limits.json - Rate limiting data<br>
+                ✓ active_theme.txt - Theme configuration<br>
+                <br>
+                <strong>Directories Created:</strong><br>
+                ✓ data/posts/ - Blog post files<br>
+                ✓ data/git_repos/ - Git repository storage<br>
+                ✓ data/uploads/ - User uploads directory
+            </div>
+            
+            <!-- Buttons -->
+            <div class="button-group">
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                    <span class="loading-spinner"></span>
+                    Complete Setup
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <script>
+        const form = document.getElementById('setupForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const alertDiv = document.getElementById('alert');
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Clear previous alerts
+            alertDiv.innerHTML = '';
+            
+            // Collect form data
+            const formData = {
+                site_title: document.getElementById('site_title').value,
+                site_description: document.getElementById('site_description').value,
+                admin_username: document.getElementById('admin_username').value,
+                admin_password: document.getElementById('admin_password').value,
+                admin_password_confirm: document.getElementById('admin_password_confirm').value,
+                posts_per_page: document.getElementById('posts_per_page').value,
+                allow_registration: document.getElementById('allow_registration').checked,
+                require_comment_approval: document.getElementById('require_comment_approval').checked,
+                allow_robot_indexing: document.getElementById('allow_robot_indexing').checked,
+                require_cookie_consent: document.getElementById('require_cookie_consent').checked,
+                enable_analytics: document.getElementById('enable_analytics').checked,
+                newsletter_enabled: document.getElementById('newsletter_enabled').checked
+            };
+            
+            // Disable button and show loading state
+            submitBtn.disabled = true;
+            submitBtn.classList.add('loading');
+            
+            try {
+                const response = await fetch('/setup/configure', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    showAlert('Setup completed successfully! Initializing data files... Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = result.redirect || '/';
+                    }, 2000);
+                } else {
+                    showAlert(result.message || 'Setup failed', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('loading');
+                }
+            } catch (error) {
+                showAlert('An error occurred: ' + error.message, 'error');
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('loading');
+            }
+        });
+        
+        function showAlert(message, type) {
+            const alertClass = type === 'error' ? 'alert-error' : (type === 'success' ? 'alert-success' : 'alert-info');
+            alertDiv.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
+        }
+    </script>
+</body>
+</html>
