@@ -107,9 +107,9 @@ def create_post():
         if len(content.strip()) > 200:
             summary += "..."
         send_newsletter(
-            subject=f"LatinMagazine: Neuer Beitrag veröffentlicht - {title}",
-            html_body=f"<p>Hallo,</p><p>es gibt einen neuen Beitrag auf <strong>{author}</strong>'s LatinMagazine:</p><h2>{title}</h2><p>{summary}</p><p><a href='{post_url}'>Beitrag ansehen</a></p>",
-            text_body=f"Hallo,\n\nEs gibt einen neuen Beitrag auf LatinMagazine:\n{title}\n{post_url}\n\n{summary}"
+            subject=f"SiteForge: Neuer Beitrag veröffentlicht - {title}",
+            html_body=f"<p>Hallo,</p><p>es gibt einen neuen Beitrag auf <strong>{author}</strong>'s SiteForge:</p><h2>{title}</h2><p>{summary}</p><p><a href='{post_url}'>Beitrag ansehen</a></p>",
+            text_body=f"Hallo,\n\nEs gibt einen neuen Beitrag auf SiteForge:\n{title}\n{post_url}\n\n{summary}"
         )
     except Exception:
         current_app.logger.exception("Newsletter konnte nach neuem Beitrag nicht gesendet werden")
@@ -221,7 +221,7 @@ def save_post(post_id):
             if len(content.strip()) > 200:
                 summary += "..."
             send_newsletter(
-                subject=f"LatinMagazine: Beitrag aktualisiert - {title}",
+                subject=f"SiteForge: Beitrag aktualisiert - {title}",
                 html_body=f"<p>Hallo,</p><p>der Beitrag " + title + " wurde aktualisiert:</p><h2>{title}</h2><p>{summary}</p><p><a href='{post_url}'>Beitrag ansehen</a></p>",
                 text_body=f"Hallo,\n\nder Beitrag {title} wurde aktualisiert.\n{post_url}\n\n{summary}"
             )

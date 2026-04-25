@@ -51,7 +51,7 @@ def save_settings():
         abort(429)
     
     # Input validation and sanitization
-    site_title = validate_input(request.form.get("site_title", "LatinMagazine"), max_length=255)
+    site_title = validate_input(request.form.get("site_title", "SiteForge"), max_length=255)
     site_description = validate_input(request.form.get("site_description", ""), max_length=1000)
     domain = validate_input(request.form.get("domain", ""), max_length=255)
     
@@ -80,7 +80,7 @@ def save_settings():
         return jsonify({"status": "error", "message": "Invalid Google Analytics ID format"}), 400
 
     settings = {
-        "site_title": site_title or "LatinMagazine",
+        "site_title": site_title or "SiteForge",
         "site_description": site_description or "",
         "posts_per_page": posts_per_page,
         "allow_registration": request.form.get("allow_registration") == "on",
@@ -97,7 +97,8 @@ def save_settings():
         "imprint_enabled": request.form.get("imprint_enabled") == "on",
         "allow_password_change": request.form.get("allow_password_change") == "on",
         "domain": domain or "",
-        "header_background_enabled": request.form.get("header_background_enabled") == "on"
+        "header_background_enabled": request.form.get("header_background_enabled") == "on",
+        "setup_completed": True
     }
 
     # Load existing settings to preserve secret fields when left blank
