@@ -33,7 +33,7 @@ def add_security_headers(app):
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://cdn.quilljs.com https://cdn.jsdelivr.net; "
             "style-src 'self' 'unsafe-inline' https://cdn.quilljs.com https://cdn.jsdelivr.net; "
-            "img-src 'self' data: https:; "
+            "img-src 'self' data: https: i.ytimg.com; "
             "font-src 'self' data:; "
             "connect-src 'self' https://www.google-analytics.com; "
             "frame-ancestors 'self'; "

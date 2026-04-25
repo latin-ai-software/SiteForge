@@ -281,7 +281,53 @@
         </div>
         {% endif %}
 
-        <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
+        
+        {% if settings.youtube_channel_id %}
+        <div id="youtube-videos-section" style="margin-bottom: 2rem;">
+            <h2 style="margin-bottom: 1rem;">Neueste Videos</h2>
+            <div id="youtube-videos-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                <p>Lade Videos...</p>
+            </div>
+        </div>
+        <script>
+        (function() {
+            const container = document.getElementById('youtube-videos-container');
+            const channelId = '{{ settings.youtube_channel_id }}';
+            
+            fetch('/api/youtube/latest-videos?channel_id=' + encodeURIComponent(channelId))
+                .then(response => response.json())
+                .then(data => {
+                    if (data.videos && data.videos.length > 0) {
+                        container.innerHTML = data.videos.map(video => `
+                            <div style="background: white; border-radius: 0.5rem; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                <a href="${video.url}" target="_blank" style="display: block;">
+                                    <img src="${video.thumbnail}" alt="${video.title}" style="width: 100%; aspect-ratio: 16/9; object-fit: cover;">
+                                </a>
+                                <div style="padding: 1rem;">
+                                    <h3 style="margin: 0 0 0.5rem 0; font-size: 1rem; line-height: 1.4;">
+                                        <a href="${video.url}" target="_blank" style="color: var(--primary-color); text-decoration: none;">
+                                            ${video.title}
+                                        </a>
+                                    </h3>
+                                    <p style="margin: 0; font-size: 0.85rem; color: #666;">
+                                        ${video.channel_title} • ${video.published_at_formatted}
+                                    </p>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = '<p>Keine Videos gefunden.</p>';
+                    }
+                })
+                .catch(err => {
+                    console.error('YouTube fetch error:', err);
+                    container.innerHTML = '<p>Videos konnten nicht geladen werden.</p>';
+                });
+        })();
+        </script>
+        {% endif %}
+
+<div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
             <a href="/" class="btn btn-primary btn-sm">Alle Posts</a>
             {% if settings.newsletter_enabled %}
                 <a href="/newsletter" class="btn btn-secondary btn-sm">Newsletter abonnieren</a>

@@ -385,6 +385,16 @@
             </section>
 
             <section class="card">
+                <h2>YouTube Kanal</h2>
+
+                <div class="form-group">
+                    <label for="youtube_channel_id">YouTube Kanal URL oder ID:</label>
+                    <input type="text" id="youtube_channel_id" name="youtube_channel_id" value="{{ settings.youtube_channel_id or '' }}" placeholder="https://youtube.com/@KanalName oder UC...">
+                    <small>Unterstützte Formate: Vollständige URL, Kanal-ID (UC...), oder @Handle</small>
+                </div>
+            </section>
+
+            <section class="card">
                 <h2>Plugins</h2>
 
                 {% for plugin in available_plugins %}
