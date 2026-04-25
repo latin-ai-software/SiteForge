@@ -98,7 +98,10 @@ def save_settings():
         "allow_password_change": request.form.get("allow_password_change") == "on",
         "domain": domain or "",
         "header_background_enabled": request.form.get("header_background_enabled") == "on",
-        "setup_completed": True
+        "setup_completed": True,
+        "show_social_links": request.form.get("show_social_links") == "on",
+        "twitter_handle": validate_input(request.form.get("twitter_handle", ""), max_length=100) or "",
+        "facebook_page": validate_input(request.form.get("facebook_page", ""), max_length=255) or "",
     }
 
     # Load existing settings to preserve secret fields when left blank
