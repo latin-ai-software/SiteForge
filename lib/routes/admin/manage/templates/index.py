@@ -2,12 +2,12 @@ import os
 import json
 import uuid
 from flask import Blueprint, current_app, render_template, request, redirect, abort, jsonify
-from .....netdefense.auth.provider import AuthManager
+from .....netdefense.auth.identitas_auth import IdentitasAuthManager
 from lib.newsletter import send_newsletter
 
 admin_templates_bp = Blueprint("admin_templates", __name__, url_prefix="/admin/manage/templates")
 
-auth = AuthManager(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))))
+auth = IdentitasAuthManager(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))))
 
 def get_static_path():
     return os.path.join(current_app.root_path, "static")

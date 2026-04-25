@@ -17,7 +17,7 @@ from lib.routes.admin.manage.settings.index import admin_settings_bp
 from lib.routes.admin.manage.media.index import admin_media_bp
 from lib.routes.root.auth import auth_bp
 from lib.routes.data.youtube import youtube_bp
-from lib.netdefense.auth.provider import AuthManager
+from lib.netdefense.auth.identitas_auth import IdentitasAuthManager
 import os
 from datetime import datetime
 
@@ -272,7 +272,7 @@ def uploaded_file(filename):
     if 'user' not in session:
         abort(403)  # Forbidden
     
-    auth_manager = AuthManager(app.root_path)
+    auth_manager = IdentitasAuthManager(app.root_path)
     if auth_manager.get_user_role(session['user']) != 'administrator':
         abort(403)  # Forbidden
     
@@ -403,7 +403,7 @@ def handle_cli():
                 sys.exit(1)
 
         base_path = os.path.dirname(os.path.abspath(__file__))
-        auth = AuthManager(base_path)
+        auth = IdentitasAuthManager(base_path)
 
         ok, msg = auth.create_user(username, password, role)
         print(msg)

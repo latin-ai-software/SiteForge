@@ -1,7 +1,7 @@
 import os
 from flask import Blueprint, request, jsonify, render_template, current_app, abort, redirect, url_for, make_response, session
 from ....netdefense.check import MalwareChecker
-from ....netdefense.auth.provider import AuthManager
+from ....netdefense.auth.identitas_auth import IdentitasAuthManager
 from ....data.post_manager import PostManager
 from ....data.comment_manager import CommentManager
 import json
@@ -11,7 +11,7 @@ security = MalwareChecker()
 
 # AuthManager initialisieren
 BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../.."))
-auth = AuthManager(BASE_PATH)
+auth = IdentitasAuthManager(BASE_PATH)
 post_manager = PostManager(BASE_PATH)
 comment_manager = CommentManager(BASE_PATH)
 

@@ -1,13 +1,13 @@
 import os
 from flask import Blueprint, render_template, request, jsonify, abort, redirect,url_for
-from .....netdefense.auth.provider import AuthManager
+from .....netdefense.auth.identitas_auth import IdentitasAuthManager
 from .....data.user_manager import UserManager
 
 admin_users_bp = Blueprint("admin_users", __name__, url_prefix="/admin/users")
 
 # Auth-System initialisieren
 BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../.."))
-auth = AuthManager(BASE_PATH)
+auth = IdentitasAuthManager(BASE_PATH)
 user_manager = UserManager(BASE_PATH)
 
 # LISTE: Alle Benutzer anzeigen
