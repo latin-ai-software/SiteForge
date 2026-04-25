@@ -44,7 +44,7 @@ def add_security_headers(app):
         return response
 
 
-def validate_input(data, max_length=1000, allowed_chars=None):
+def validate_input(data, max_length=1000, allowed_chars=[]):
     """
     Validate and sanitize user input
     
@@ -66,7 +66,7 @@ def validate_input(data, max_length=1000, allowed_chars=None):
     # Basic XSS prevention - remove potentially dangerous characters
     dangerous_chars = ['<', '>', '"', "'", '&', ';']
     for char in dangerous_chars:
-        if char in data and not (char == '&' and '&amp;' in data):
+        if char in data and not (char == '&' and '&amp;' in data) and char not in allowed_chars:
             data = data.replace(char, '')
     
     return data.strip() if data else None
