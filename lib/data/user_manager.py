@@ -1,23 +1,34 @@
 import os
+import sys
 import json
 from flask import current_app
-from ..netdefense.auth.provider import AuthManager
+from ..netdefense.auth.identitas_auth import IdentitasAuthManager
+
+# Add Identitas to path
+IDENTITAS_PATH = os.path.join(os.path.dirname(__file__), "../../Identitas")
+if IDENTITAS_PATH not in sys.path:
+    sys.path.insert(0, IDENTITAS_PATH)
 
 class UserManager:
     def __init__(self, base_path):
         self.base_path = base_path
-        self.auth = AuthManager(base_path)
+        self.auth = IdentitasAuthManager(base_path)
 
     def get_all_users(self):
-        users = self.auth._load()
+        """Get all users from Identitas database"""
+        from sqlalchemy.orm import Session as DBSession
+        from provider.models.user import User
+        
         user_list = []
-        for username, data in users.items():
-            user_list.append({
-                "username": username,
-                "role": data.get("role", "subscriber"),
-                "git_access": data.get("git_access", False),
-                "created_at": data.get("created_at", "Unknown")
-            })
+        with DBSession(self.auth.engine) as session:
+            users = session.query(User).all()
+            for user in users:
+                user_list.append({
+                    "username": user.username,
+                    "role": self.auth._get_user_role(user.username),
+                    "git_access": self.auth.has_git_access(user.username),
+                    "created_at": str(user.created_at) if hasattr(user, 'created_at') else "Unknown"
+                })
         return user_list
 
     def update_user_role(self, username, role):

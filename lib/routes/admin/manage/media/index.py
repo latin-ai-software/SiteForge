@@ -1,13 +1,13 @@
 import os
 import time
 from flask import Blueprint, render_template, request, jsonify, abort
-from .....netdefense.auth.provider import AuthManager
+from .....netdefense.auth.identitas_auth import IdentitasAuthManager
 from .....data.media_manager import MediaManager
 
 admin_media_bp = Blueprint("admin_media", __name__, url_prefix="/admin/media")
 
 BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../.."))
-auth = AuthManager(BASE_PATH)
+auth = IdentitasAuthManager(BASE_PATH)
 media_manager = MediaManager(BASE_PATH)
 
 

@@ -3,7 +3,7 @@ import sys
 import time
 import threading
 from flask import Blueprint, render_template, request, jsonify, current_app, abort
-from .....netdefense.auth.provider import AuthManager
+from .....netdefense.auth.identitas_auth import IdentitasAuthManager
 from .....data.file_manager import FileManager
 from .....security import RateLimiter, InputValidator, validate_input
 import json
@@ -20,7 +20,7 @@ def schedule_restart(delay=0.5):
 
 # Auth-System initialisieren
 BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../.."))
-auth = AuthManager(BASE_PATH)
+auth = IdentitasAuthManager(BASE_PATH)
 file_manager = FileManager(BASE_PATH)
 rate_limiter = RateLimiter(BASE_PATH)
 
