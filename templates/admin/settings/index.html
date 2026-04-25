@@ -383,7 +383,24 @@
                     <small>Wenn Sie das Passwort nicht ändern möchten, lassen Sie dieses Feld leer.</small>
                 </div>
             </section>
-
+            <section class="card">
+                <h2>Social Media</h2>
+                <div class="form-group">
+                    <label for="show_social_links">Social Media Links anzeigen:</label>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="show_social_links" name="show_social_links" {% if settings.show_social_links %}checked{% endif %}>
+                        <label for="show_social_links">Aktivieren</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="twitter_handle">Twitter Handle:</label>
+                    <input type="text" id="twitter_handle" name="twitter_handle" value="{{ settings.twitter_handle or '' }}" placeholder="@DeinTwitterHandle">
+                </div>
+                <div class="form-group">
+                    <label for="facebook_page">Facebook Seiten-URL:</label>
+                    <input type="text" id="facebook_page" name="facebook_page" value="{{ settings.facebook_page or '' }}" placeholder="https://www.facebook.com/DeineSeite">
+                </div>
+            </section>
             <section class="card">
                 <h2>YouTube Kanal</h2>
 
