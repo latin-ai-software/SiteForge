@@ -1,7 +1,13 @@
 stages:
-  - noop
+  - security
 
-noop:
-  stage: noop
+bandit_scan:
+  stage: security
+  image: python:3.12
   script:
-    - echo "Doing nothing"
+    - pip install bandit
+    - bandit -r . -x Identitas -f html -o bandit-report.html
+  artifacts:
+    paths:
+      - bandit-report.html
+    expire_in: 7 days
