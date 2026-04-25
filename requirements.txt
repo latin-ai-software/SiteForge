@@ -1,4 +1,4 @@
-# LatinMagazine Requirements
+# SiteForge Requirements
 
 # Core
 Flask==2.3.0

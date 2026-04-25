@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>{{ text.name }} - {{ settings.site_title if settings.site_title else 'LatinMagazine' }}</title>
+    <title>{{ text.name }} - {{ settings.site_title if settings.site_title else 'SiteForge' }}</title>
     <link rel="stylesheet" href="/static/theme.css">
     {% if active_theme %}
         <link rel="stylesheet" href="/static/{{ active_theme }}">
@@ -187,7 +187,7 @@
 </head>
 <body>
     <nav class="navbar">
-        <a href="/" class="navbar-brand">{{ settings.site_title if settings.site_title else 'LatinMagazine' }}</a>
+        <a href="/" class="navbar-brand">{{ settings.site_title if settings.site_title else 'SiteForge' }}</a>
         <div class="navbar-nav">
             <a href="/">Home</a>
             <a href="/feed">RSS Feed</a>

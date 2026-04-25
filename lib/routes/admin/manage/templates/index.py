@@ -139,7 +139,7 @@ def save_index_text():
             if len(updated_text["content"].strip()) > 200:
                 summary += "..."
             send_newsletter(
-                subject=f"LatinMagazine: Indexseite Text {action_type}",
+                subject=f"SiteForge: Indexseite Text {action_type}",
                 html_body=f"<p>Hallo,</p><p>ein Indexseite Text wurde {action_type}:</p><h2>{updated_text['name']}</h2><p>{summary}</p><p><a href='{text_url}'>Text ansehen</a></p>",
                 text_body=f"Hallo,\n\nEin Indexseite Text wurde {action_type}:\n{updated_text['name']}\n{text_url}\n\n{summary}"
             )
@@ -180,7 +180,7 @@ def activate_index_text(text_id):
             if len(text["content"].strip()) > 200:
                 summary += "..."
             send_newsletter(
-                subject=f"LatinMagazine: Startseitentext aktiviert - {text['name']}",
+                subject=f"SiteForge: Startseitentext aktiviert - {text['name']}",
                 html_body=f"<p>Hallo,</p><p>ein neuer Startseitentext wurde aktiv gesetzt:</p><h2>{text['name']}</h2><p>{summary}</p><p><a href='{text_url}'>Text ansehen</a></p>",
                 text_body=f"Hallo,\n\nEin neuer Startseitentext wurde aktiv gesetzt:\n{text['name']}\n{text_url}\n\n{summary}"
             )

@@ -1,3 +1,3 @@
-# LatinMagazine
+# SiteForge
 Kundenauftrag
 Website: latinai.net

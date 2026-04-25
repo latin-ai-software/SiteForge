@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ settings.site_title if settings.site_title else 'LatinMagazine' }} - Startseite</title>
+    <title>{{ settings.site_title if settings.site_title else 'SiteForge' }} - Startseite</title>
     <link rel="stylesheet" href="/static/theme.css">
     {% if active_theme %}
         <link rel="stylesheet" href="/static/{{ active_theme }}">
@@ -91,7 +91,7 @@
     <nav class="navbar">
         <div class="navbar-content">
             {% if show_logo %}<img src="/static/favicon.ico" alt="site logo" width="140" height="128">{% endif %}
-            <a href="/" class="navbar-brand">{{ settings.site_title if settings.site_title else 'LatinMagazine' }}</a>
+            <a href="/" class="navbar-brand">{{ settings.site_title if settings.site_title else 'SiteForge' }}</a>
             <div class="navbar-nav">
                 <a href="/">Home</a>
                 <a href="/feed">RSS Feed</a>
@@ -169,7 +169,7 @@
 
     <footer style="background: var(--gray-900); color: var(--gray-100); padding: 3rem var(--spacing-lg); margin-top: 4rem; text-align: center;">
         <div class="container">
-            <p style="margin: 0;">&copy; 2024 {{ settings.site_title if settings.site_title else 'LatinMagazine' }}. Powered by Flask.</p>
+            <p style="margin: 0;">&copy; 2024 {{ settings.site_title if settings.site_title else 'SiteForge' }}. Powered by Flask.</p>
             <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem; color: var(--gray-400);">A modern, professional CMS built with Python and Flask</p>
             {% if settings.imprint_enabled %}
                 <p style="margin: 0.5rem 0 0 0;">

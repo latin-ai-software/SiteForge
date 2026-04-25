@@ -156,8 +156,8 @@ def rss_feed():
     rss_content = '<?xml version="1.0" encoding="UTF-8"?>\n'
     rss_content += '<rss version="2.0">\n'
     rss_content += '<channel>\n'
-    rss_content += '<title>LatinMagazine</title>\n'
-    rss_content += '<description>Latest posts from LatinMagazine</description>\n'
+    rss_content += '<title>SiteForge</title>\n'
+    rss_content += '<description>Latest posts from SiteForge</description>\n'
     rss_content += f'<link>{base_url}</link>\n'
 
     for post in posts:
