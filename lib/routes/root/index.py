@@ -45,12 +45,21 @@ def index():
     posts = post_manager.get_posts(limit=10)
     categories = post_manager.get_all_categories()
 
-    # Load settings
+    # Load settings with safe defaults
     settings = {}
     settings_file = os.path.join(current_app.root_path, "data", "settings.json")
     if os.path.exists(settings_file):
-        with open(settings_file, "r", encoding="utf-8") as f:
-            settings = json.load(f)
+        try:
+            with open(settings_file, "r", encoding="utf-8") as f:
+                settings = json.load(f)
+        except:
+            pass
+    
+    # Ensure all required settings keys exist with defaults
+    settings.setdefault('embed_favicon_in_html', True)
+    settings.setdefault('site_title', 'My Site')
+    settings.setdefault('require_cookie_consent', True)
+    settings.setdefault('enable_analytics', False)
 
     # Aktives Stylesheet laden
     active_theme_path = os.path.join(current_app.root_path, "data", "active_theme.txt")
@@ -71,7 +80,7 @@ def index():
                            settings=settings,
                            active_theme=active_theme,
                            auth=auth,
-                           show_logo=settings["embed_favicon_in_html"],
+                           show_logo=settings.get("embed_favicon_in_html", True),
                            index_text=index_text,
                            index_texts=all_index_texts,
                            active_text=active_text,
@@ -127,12 +136,17 @@ def index_text_detail(text_id):
     posts = post_manager.get_posts(limit=10)
     categories = post_manager.get_all_categories()
 
-    # Load settings
+    # Load settings with safe defaults
     settings = {}
     settings_file = os.path.join(current_app.root_path, "data", "settings.json")
     if os.path.exists(settings_file):
-        with open(settings_file, "r", encoding="utf-8") as f:
-            settings = json.load(f)
+        try:
+            with open(settings_file, "r", encoding="utf-8") as f:
+                settings = json.load(f)
+        except:
+            pass
+    
+    settings.setdefault('embed_favicon_in_html', True)
 
     # Aktives Stylesheet laden
     active_theme_path = os.path.join(current_app.root_path, "data", "active_theme.txt")
@@ -150,7 +164,7 @@ def index_text_detail(text_id):
                            settings=settings,
                            active_theme=active_theme,
                            auth=auth,
-                           show_logo=settings["embed_favicon_in_html"],
+                           show_logo=settings.get("embed_favicon_in_html", True),
                            top_level_comments=top_level_comments,
                            replies=replies)
 
@@ -185,12 +199,17 @@ def profile():
     posts = post_manager.get_posts(limit=10)
     categories = post_manager.get_all_categories()
 
-    # Load settings
+    # Load settings with safe defaults
     settings = {}
     settings_file = os.path.join(current_app.root_path, "data", "settings.json")
     if os.path.exists(settings_file):
-        with open(settings_file, "r", encoding="utf-8") as f:
-            settings = json.load(f)
+        try:
+            with open(settings_file, "r", encoding="utf-8") as f:
+                settings = json.load(f)
+        except:
+            pass
+    
+    settings.setdefault('embed_favicon_in_html', True)
 
     # Aktives Stylesheet laden
     active_theme_path = os.path.join(current_app.root_path, "data", "active_theme.txt")
@@ -213,7 +232,7 @@ def profile():
                            settings=settings,
                            active_theme=active_theme,
                            auth=auth,
-                           show_logo=settings["embed_favicon_in_html"],
+                           show_logo=settings.get("embed_favicon_in_html", True),
                            user_data=user_data,
                            activities=activities)
 

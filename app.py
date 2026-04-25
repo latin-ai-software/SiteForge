@@ -1,11 +1,12 @@
 import sys
 import importlib.util
-from flask import Flask, render_template, send_from_directory, Response
+from flask import Flask, render_template, send_from_directory, Response, redirect, url_for
 from werkzeug.middleware.proxy_fix import ProxyFix
 import json
 import lib.netdefense.check
 from lib.security import add_security_headers, RateLimiter, ConfigEncryption
 from lib.security.encrypted_files import init_encryption
+from lib.routes.setup.index import setup_bp, is_setup_completed
 from lib.routes.create.post.index import post_create_bp
 from lib.routes.root.index import root_bp
 from lib.routes.admin.manage.templates.index import admin_templates_bp
@@ -59,6 +60,9 @@ cleanup_thread.start()
 
 # from updater.update_loop import start_update_loop
 # start_update_loop()
+
+# Register setup blueprint first (before other routes)
+app.register_blueprint(setup_bp)
 
 app.register_blueprint(post_create_bp)
 app.register_blueprint(root_bp)
@@ -149,6 +153,24 @@ def is_plugin_available(plugin_name):
 @app.context_processor
 def inject_plugin_check():
     return dict(is_plugin_loaded=is_plugin_loaded, is_plugin_available=is_plugin_available)
+
+# Setup check middleware - redirect to setup if not completed
+@app.before_request
+def check_setup_required():
+    """Check if setup is required and redirect if necessary"""
+    from flask import request
+    
+    # Allow setup routes, static files, and uploads without setup check
+    if (request.path.startswith('/setup') or 
+        request.path.startswith('/static') or 
+        request.path.startswith('/uploads') or
+        request.path.startswith('/favicon.ico') or
+        request.path.startswith('/robots.txt')):
+        return
+    
+    # Check if setup has been completed
+    if not is_setup_completed(base_path):
+        return redirect(url_for('setup.setup_page'))
 
 # Analytics middleware
 @app.before_request
