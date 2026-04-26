@@ -426,6 +426,17 @@
                 {% endfor %}
             </section>
 
+            <section class="card">
+                <h2>Cache</h2>
+                <p style="color: #9ca3af; margin-bottom: 12px;">Intermediarium Cache-Statistiken und Steuerung</p>
+                
+                <div id="cacheStats" style="margin-bottom: 15px; font-family: monospace; font-size: 0.85rem; color: #9ca3af;">
+                    <p>Lade Cache-Statistiken...</p>
+                </div>
+                
+                <button type="button" class="btn" id="flushCacheBtn" style="background: #dc2626;">Cache leeren</button>
+            </section>
+
             <button type="submit" class="btn">Einstellungen speichern</button>
         </form>
 
@@ -458,6 +469,59 @@ document.getElementById('settingsForm').addEventListener('submit', async functio
         alert('Fehler beim Speichern!');
     }
 });
+
+// Cache functions
+async function loadCacheStats() {
+    try {
+        const response = await fetch(window.location.origin + '/admin/settings/cache/stats');
+        const result = await response.json();
+        
+        if (result.status === 'ok') {
+            const stats = result.stats;
+            let html = '';
+            for (const [cacheName, cacheStat] of Object.entries(stats)) {
+                if (cacheStat && cacheStat.hits !== undefined) {
+                    html += `<div style="margin-bottom: 8px; padding: 8px; background: #111827; border-radius: 4px;">
+                        <strong>${cacheName}:</strong> Hits: ${cacheStat.hits}, Misses: ${cacheStat.misses}, Size: ${cacheStat.size}/${cacheStat.maxsize}
+                    </div>`;
+                }
+            }
+            if (html === '') {
+                html = '<p>Keine Cache-Statistiken verfügbar</p>';
+            }
+            document.getElementById('cacheStats').innerHTML = html;
+        } else {
+            document.getElementById('cacheStats').innerHTML = '<p style="color: #ef4444;">Fehler beim Laden der Cache-Statistiken</p>';
+        }
+    } catch (e) {
+        document.getElementById('cacheStats').innerHTML = '<p style="color: #ef4444;">Fehler: ' + e.message + '</p>';
+    }
+}
+
+document.getElementById('flushCacheBtn').addEventListener('click', async function() {
+    if (!confirm('Möchten Sie wirklich den gesamten Cache leeren?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(window.location.origin + '/admin/settings/cache/flush', {
+            method: 'POST'
+        });
+        const result = await response.json();
+        
+        if (result.status === 'ok') {
+            alert('Cache erfolgreich geleert!');
+            loadCacheStats(); // Refresh stats
+        } else {
+            alert('Fehler: ' + result.message);
+        }
+    } catch (e) {
+        alert('Fehler: ' + e.message);
+    }
+});
+
+// Load cache stats on page load
+loadCacheStats();
 </script>
 </body>
 </html>
