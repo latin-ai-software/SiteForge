@@ -32,7 +32,9 @@ def add_security_headers(app):
         response.headers['Content-Security-Policy'] = (
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://cdn.quilljs.com https://cdn.jsdelivr.net; "
+            "script-src-elem 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://cdn.quilljs.com https://cdn.jsdelivr.net; "
             "style-src 'self' 'unsafe-inline' https://cdn.quilljs.com https://cdn.jsdelivr.net; "
+            "style-src-elem 'self' 'unsafe-inline' https://cdn.quilljs.com https://cdn.jsdelivr.net; "
             "img-src 'self' data: https: i.ytimg.com; "
             "font-src 'self' data:; "
             "connect-src 'self' https://www.google-analytics.com; "

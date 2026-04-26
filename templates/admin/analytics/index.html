@@ -188,6 +188,7 @@
             <a href="/admin/git">Git-Repos</a>
             {% endif %}
             <a href="/admin/settings">Einstellungen</a>
+            <a href="{{ url_for('backup.backup_index') }}">Backups</a>
         </nav>
     </aside>
 
@@ -197,7 +198,8 @@
         {% if not analytics_enabled %}
         <div class="card">
             <h2>Analytics deaktiviert</h2>
-            <p>Analytics ist derzeit deaktiviert. Aktivieren Sie Analytics in den <a href="/admin/settings">Einstellungen</a>, um Besucherstatistiken zu sammeln.</p>
+            <p>Analytics ist derzeit deaktiviert. Aktivieren Sie Analytics in den <a href="/admin/settings">Einstellungen</a>
+            <a href="{{ url_for('backup.backup_index') }}">Backups</a>, um Besucherstatistiken zu sammeln.</p>
             <p><strong>Hinweis:</strong> Analytics funktioniert nur, wenn Benutzer der Cookie-Zustimmung zugestimmt haben.</p>
         </div>
         {% else %}

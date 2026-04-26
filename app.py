@@ -21,6 +21,8 @@ from lib.netdefense.auth.identitas_auth import IdentitasAuthManager
 import os
 from datetime import datetime
 
+
+
 app = Flask(__name__)
 app.secret_key = "irgendein_langes_random_secret_das_wirklich_gar_keiner_kompromittier_dabei_bin_ich_mir_sicher_vertrau_mir"
 # Trust X-Forwarded headers from proxies (e.g., Cloudflare tunnel)
@@ -74,11 +76,23 @@ app.register_blueprint(admin_settings_bp)
 app.register_blueprint(admin_media_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(admin_analytics_bp)
+from lib.routes.admin.manage.backup import backup_bp
+app.register_blueprint(backup_bp)
 app.register_blueprint(youtube_bp)
 
 # Global variable to track loaded plugins
 loaded_plugins = set()
 available_plugins = set()
+from lib.routes.admin.manage.theme_creator import theme_creator_bp
+app.register_blueprint(theme_creator_bp)
+
+
+from lib.data.settings import get_theme
+
+@app.context_processor
+def inject_theme():
+    return {"active_theme": get_theme()}
+
 
 # Load optional plugins from plugins/ directory
 
@@ -415,6 +429,7 @@ def handle_cli():
             print("   --create-admin admin -p <passwort>")
 
         sys.exit(0)
+
 
 
 if __name__ == "__main__":
