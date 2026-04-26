@@ -24,6 +24,7 @@ def get_default_settings():
         'allow_registration': True,
         'require_comment_approval': True,
         'allow_robot_indexing': False,
+        'facebook_page': '',
         'robot_user_agents': '*',
         'require_cookie_consent': True,
         'cookie_consent_message': '<p>Please accept cookies to use this site.</p>',
@@ -42,7 +43,9 @@ def get_default_settings():
         'ses_smtp_host': '',
         'ses_smtp_port': 587,
         'ses_smtp_username': '',
-        'ses_smtp_password': ''
+        'ses_smtp_password': '',
+        'show_social_links': False,
+        'twitter_handle': ''
     }
 
 def load_settings(base_path):
