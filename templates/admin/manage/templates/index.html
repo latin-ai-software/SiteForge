@@ -612,26 +612,3 @@ function deleteText(textId) {
 </script>
 </body>
 </html>
-You are GitHub Copilot. Extend this admin template file by adding a new section for the Theme Creator.
-
-Requirements:
-
-- Add a new card/section/button that links to the route: /admin/manage/theme-creator/
-- The link must use Flask/Jinja syntax: {{ url_for('theme_creator.index') }}
-- The new section must visually match the existing admin layout (cards, buttons, spacing, colors).
-- Place the new Theme Creator block in the same style and hierarchy as other admin tools (e.g., Backup, Templates, Media, Posts).
-- Use the same CSS classes already used in this file (e.g., card, card-header, card-body, btn, btn-primary).
-- The block should contain:
-    - Title: "Theme Creator"
-    - Short description: "Erstelle und bearbeite Themes direkt im Admin‑Panel."
-    - Button: "Öffnen" → links to {{ url_for('theme_creator.index') }}
-
-If the file contains a grid or list of admin tools, add the Theme Creator as a new item in that grid/list.
-
-If the file contains a sidebar, add a new sidebar entry:
-<li><a href="{{ url_for('theme_creator.index') }}">Theme Creator</a></li>
-
-Do NOT remove or modify existing functionality. Only extend the file cleanly.
-
-Now update the file accordingly.
-
