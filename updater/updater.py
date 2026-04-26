@@ -1,24 +1,47 @@
-CODE_FOLDERS = ["lib", "plugins", "static", "templates", "updater"]
+import requests
+import os
+import json
+def auto_update():
+    """Check for updates and apply if available"""
+    try:
+        # Load config
+        with open(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/updater/config.json", "r") as f:
+            config = json.load(f)
+        
+        version_url = config.get("version_url")
+        if not version_url:
+            return "No version URL configured"
+        
+        # Get current version
+        current_version = None
+        if os.path.exists(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/updater/version.txt"):
+            with open(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/updater/version.txt", "r") as f:
+                current_version = f.read().strip()
+        
+        # Fetch latest version
+        response = requests.get(version_url, timeout=10)
+        if response.status_code != 200:
+            return f"Failed to check for updates: {response.status_code}"
+        
+        latest_version = response.text.strip()
+        print(f"Current version: {current_version}, Latest version: {latest_version}")
+        if current_version == latest_version:
+            with open(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/data/version.json", "w") as f:
+                json.dump({"requires_update": False, "latest_version": latest_version, "current_version": latest_version}, f)
+            return "Already up to date"
+        
+        # Download and apply update (this is a placeholder - implement actual update logic)
+        # For example, you could download a zip file, extract it, and replace files
+        # Make sure to handle this carefully to avoid breaking the installation
+        
+        # After successful update, write the new version to version.txt
+        # with open("version.txt", "w") as f:
+        #     f.write(latest_version)
 
-def apply_update():
-    # Backup nur der Code-Ordner
-    if os.path.exists(BACKUP_DIR):
-        shutil.rmtree(BACKUP_DIR)
-    os.makedirs(BACKUP_DIR)
-
-    for folder in CODE_FOLDERS:
-        src = os.path.join(APP_DIR, folder)
-        dst = os.path.join(BACKUP_DIR, folder)
-        if os.path.exists(src):
-            shutil.move(src, dst)
-
-    # Neue Version einspielen
-    for folder in CODE_FOLDERS:
-        src = os.path.join(UPDATE_DIR, folder)
-        dst = os.path.join(APP_DIR, folder)
-        if os.path.exists(src):
-            shutil.move(src, dst)
-
-    # app.py ersetzen
-    if os.path.exists(os.path.join(UPDATE_DIR, "app.py")):
-        shutil.move(os.path.join(UPDATE_DIR, "app.py"), os.path.join(APP_DIR, "app.py"))
+        with open(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/data/version.json", "w") as f:
+            json.dump({"requires_update": True, "latest_version": latest_version, "current_version": current_version}, f)
+        
+        return f"Done"
+    
+    except Exception as e:
+        return f"Error during update: {str(e)}"
