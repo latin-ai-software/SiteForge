@@ -434,4 +434,26 @@ def handle_cli():
 
 if __name__ == "__main__":
     handle_cli()
-    app.run(debug=True, port=443)
+
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--debug", action="store_true", help="Enable debug mode")
+    parser.add_argument("--ssl", action="store_true", help="Enable SSL")
+    parser.add_argument("--cert", type=str, help="Path to SSL certificate")
+    parser.add_argument("--key", type=str, help="Path to SSL private key")
+
+    args = parser.parse_args()
+
+    # SSL aktiv?
+    ssl_context = None
+    if args.ssl:
+        if not args.cert or not args.key:
+            raise ValueError("SSL requires --cert and --key")
+        ssl_context = (args.cert, args.key)
+
+    app.run(
+        debug=args.debug,
+        port=443,
+        ssl_context=ssl_context
+    )
