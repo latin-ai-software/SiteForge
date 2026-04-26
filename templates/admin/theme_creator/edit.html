@@ -1,0 +1,180 @@
+<link rel="stylesheet" href="/static/theme.css">
+
+<div class="admin-container">
+
+    <div class="admin-header">
+        <h1><i class="fa fa-edit"></i> Theme bearbeiten: {{ name }}</h1>
+        <p class="subtitle">Bearbeite die CSS‑Variablen für dieses Theme.</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('theme_creator.edit', name=name) }}" class="theme-form">
+        
+        <div class="vars-grid">
+            {% for v in vars %}
+            <div class="var-item">
+                <label for="{{ v.name }}">{{ v.label }}</label>
+                {% if v.type == 'color' %}
+                    <div class="color-input">
+                        <input type="color" id="{{ v.name }}_picker" value="{{ v.value }}">
+                        <input type="text" id="{{ v.name }}" name="{{ v.name }}" value="{{ v.value }}">
+                    </div>
+                {% else %}
+                    <input type="text" id="{{ v.name }}" name="{{ v.name }}" value="{{ v.value }}">
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fa fa-save"></i> Änderungen speichern
+            </button>
+            <a href="{{ url_for('theme_creator.index') }}" class="btn btn-secondary">
+                <i class="fa fa-times"></i> Abbrechen
+            </a>
+        </div>
+
+    </form>
+
+</div>
+
+<style>
+.admin-container {
+    padding: 20px;
+}
+
+.admin-header h1 {
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    opacity: 0.7;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid #374151;
+    background: #020617;
+    color: #e5e7eb;
+    font-size: 1rem;
+}
+
+.form-text {
+    display: block;
+    margin-top: 5px;
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+.vars-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.var-item {
+    background: #111827;
+    padding: 12px;
+    border-radius: 6px;
+}
+
+.var-item label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+    color: #9ca3af;
+}
+
+.var-item input[type="text"] {
+    width: 100%;
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid #374151;
+    background: #020617;
+    color: #e5e7eb;
+    font-size: 0.9rem;
+}
+
+.color-input {
+    display: flex;
+    gap: 10px;
+}
+
+.color-input input[type="color"] {
+    width: 40px;
+    height: 35px;
+    padding: 0;
+    border: none;
+    cursor: pointer;
+}
+
+.color-input input[type="text"] {
+    flex: 1;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: #2563eb;
+    color: #f9fafb;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+}
+
+.btn-secondary {
+    background: #374151;
+    color: #e5e7eb;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+}
+</style>
+
+<script>
+// Sync color picker with text input
+document.querySelectorAll('.color-input').forEach(container => {
+    const picker = container.querySelector('input[type="color"]');
+    const text = container.querySelector('input[type="text"]');
+    
+    picker.addEventListener('input', () => {
+        text.value = picker.value;
+    });
+    
+    text.addEventListener('input', () => {
+        if (/^#[0-9A-Fa-f]{6}$/.test(text.value)) {
+            picker.value = text.value;
+        }
+    });
+});
+</script>

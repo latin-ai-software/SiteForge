@@ -200,6 +200,9 @@
             <a href="/admin/git">Git-Repos</a>
             {% endif %}
             <a href="/admin/settings">Einstellungen</a>
+            <a href="{{ url_for('backup.backup_index') }}">Backups</a>
+            <li><a href="{{ url_for('backup.backup_index') }}">Backups</a></li>
+
         </nav>
     </aside>
 

@@ -526,6 +526,56 @@ document.addEventListener('DOMContentLoaded', loadExistingFiles);
 </script>
 
 
+<script>
+// Ganze Seite akzeptiert Drag & Drop
+document.addEventListener("dragover", (e) => {
+    e.preventDefault();
+});
+
+document.addEventListener("drop", (e) => {
+    e.preventDefault();
+
+    if (!e.dataTransfer || !e.dataTransfer.files.length) return;
+
+    uploadDroppedFiles(e.dataTransfer.files);
+});
+
+// Upload Funktion nutzt DEINE bestehende Route
+function uploadDroppedFiles(files) {
+    const formData = new FormData();
+
+    for (let file of files) {
+        formData.append("file", file);
+    }
+
+    fetch("/admin/posts/upload", {
+        method: "POST",
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === "ok") {
+            insertIntoEditor(data.url);
+        } else {
+            alert("Fehler: " + (data.error || "Unbekannter Fehler"));
+        }
+    })
+    .catch(err => {
+        alert("Upload-Fehler: " + err);
+    });
+}
+
+// Bild-URL in den Editor einfügen
+function insertIntoEditor(url) {
+    const editor = document.getElementById("content");
+    if (!editor) return;
+
+    const markdown = `![Bild](${url})`;
+
+    // ans Ende anhängen
+    editor.value = (editor.value || "") + "\n" + markdown + "\n";
+}
+</script>
 
 </body>
 </html>
