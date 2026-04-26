@@ -253,3 +253,48 @@ def encryption_disable():
             "status": "error",
             "message": str(e)
         }), 500
+
+
+# CACHE: Flush all caches
+@admin_settings_bp.route("/cache/flush", methods=["POST"])
+@auth.require_admin
+def flush_cache():
+    """Flush all application caches"""
+    try:
+        from lib.cache_utils import clear_all_caches, get_cache_stats
+        
+        # Get stats before clearing
+        stats_before = get_cache_stats()
+        
+        # Clear all caches
+        clear_all_caches()
+        
+        return jsonify({
+            "status": "ok",
+            "message": "All caches flushed successfully",
+            "stats_before": stats_before
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+
+# CACHE: Get cache statistics
+@admin_settings_bp.route("/cache/stats", methods=["GET"])
+@auth.require_admin
+def cache_stats():
+    """Get cache statistics"""
+    try:
+        from lib.cache_utils import get_cache_stats
+        stats = get_cache_stats()
+        return jsonify({
+            "status": "ok",
+            "stats": stats
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
