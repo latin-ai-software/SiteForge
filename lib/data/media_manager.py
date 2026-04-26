@@ -2,6 +2,13 @@ import os
 import json
 import time
 
+# Add Intermediarium cache
+try:
+    from Intermediarium import Cache
+    _cache_available = True
+except ImportError:
+    _cache_available = False
+
 
 class MediaManager:
     def __init__(self, base_path):
@@ -18,6 +25,12 @@ class MediaManager:
         if not os.path.exists(self.usage_file):
             with open(self.usage_file, "w", encoding="utf-8") as f:
                 json.dump({}, f, indent=4)
+        
+        # Initialize cache for media usage (10 minute TTL)
+        if _cache_available:
+            self._media_cache = Cache(maxsize=100, policy='lru', ttl=600)
+        else:
+            self._media_cache = None
 
     # ---------------------------------------------------------
     # INTERN
@@ -39,6 +52,13 @@ class MediaManager:
     # ---------------------------------------------------------
 
     def get_usage_summary(self):
+        """Get media usage summary (cached)"""
+        # Check cache first
+        if self._media_cache is not None:
+            cached_summary = self._media_cache.get('usage_summary')
+            if cached_summary is not None:
+                return cached_summary
+        
         usage = self._load_usage()
         files = []
 
@@ -61,7 +81,16 @@ class MediaManager:
                 "is_document": ext in ["pdf", "docx", "txt"]
             })
 
+        # Cache the result
+        if self._media_cache is not None:
+            self._media_cache.set('usage_summary', files)
+        
         return files
+    
+    def clear_cache(self):
+        """Clear media cache manually"""
+        if self._media_cache is not None:
+            self._media_cache.clear()
 
     # ---------------------------------------------------------
     # EINZELDATEI

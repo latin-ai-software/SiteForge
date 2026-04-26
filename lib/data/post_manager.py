@@ -4,6 +4,13 @@ import subprocess
 from datetime import datetime
 from flask import current_app
 
+# Add Intermediarium cache
+try:
+    from Intermediarium import Cache
+    _cache_available = True
+except ImportError:
+    _cache_available = False
+
 class PostManager:
     def __init__(self, base_path):
         self.base_path = base_path
@@ -11,6 +18,11 @@ class PostManager:
         self.metadata_file = os.path.join(base_path, "data", "posts_metadata.json")
         os.makedirs(self.posts_dir, exist_ok=True)
         self._ensure_metadata_file()
+        # Initialize cache for post metadata (30 minute TTL)
+        if _cache_available:
+            self._post_cache = Cache(maxsize=1000, policy='lru', ttl=1800)
+        else:
+            self._post_cache = None
 
     def _ensure_metadata_file(self):
         if not os.path.exists(self.metadata_file):
