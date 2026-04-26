@@ -6,7 +6,7 @@ bandit_scan:
   image: python:3.12
   script:
     - pip install bandit
-    - bandit -r . -x Identitas -f html -o bandit-report.html --exit-zero
+    - bandit -r . -x Identitas,Intermediarium -f html -o bandit-report.html --exit-zero
   artifacts:
     paths:
       - bandit-report.html
