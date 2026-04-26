@@ -3,7 +3,7 @@ import json
 from flask import Blueprint, current_app, session, render_template, request, abort
 from ...data.post_manager import PostManager
 from ...data.comment_manager import CommentManager
-from ...netdefense.auth.provider import AuthManager
+from ...netdefense.auth.identitas_auth import IdentitasAuthManager
 from lib.newsletter import subscribe_email
 
 root_bp = Blueprint("root", __name__)
@@ -12,7 +12,7 @@ root_bp = Blueprint("root", __name__)
 BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
 post_manager = PostManager(BASE_PATH)
 comment_manager = CommentManager(BASE_PATH)
-auth = AuthManager(BASE_PATH)
+auth = IdentitasAuthManager(BASE_PATH)
 
 def get_index_text():
     """Load active custom index page text from data file"""
