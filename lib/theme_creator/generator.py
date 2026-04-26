@@ -725,11 +725,12 @@ ROOT_TEMPLATE = Template(""":root {
 
 def generate_theme_file(form_data: dict, output_path: str):
     # Map Form → CSS-Variablen
+    # Note: form keys use dashes (e.g., "primary-color") not underscores
     vars_dict = {}
     for v in THEME_VARS:
         key = v["name"]
-        form_key = key.replace("-", "_")
-        value = form_data.get(form_key, v["default"])
+        # Try both dash and underscore versions for compatibility
+        value = form_data.get(key) or form_data.get(key.replace("-", "_")) or v["default"]
         # Strings mit Anführungszeichen korrekt behandeln
         if '"' in value or "'" in value:
             vars_dict[key] = value

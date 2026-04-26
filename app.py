@@ -61,8 +61,8 @@ def cleanup_rate_limits():
 cleanup_thread = threading.Thread(target=cleanup_rate_limits, daemon=True)
 cleanup_thread.start()
 
-# from updater.update_loop import start_update_loop
-# start_update_loop()
+from updater.update_loop import start_update_loop
+start_update_loop()
 
 # Register setup blueprint first (before other routes)
 app.register_blueprint(setup_bp)

@@ -437,6 +437,19 @@
                 <button type="button" class="btn" id="flushCacheBtn" style="background: #dc2626;">Cache leeren</button>
             </section>
 
+            <section class="card">
+                <h2>Updates</h2>
+                <p style="color: #9ca3af; margin-bottom: 12px;">Version und Update-Status</p>
+                
+                <div id="updateStatus" style="margin-bottom: 15px;">
+                    <p>Lade Update-Status...</p>
+                </div>
+                
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button type="button" class="btn" id="checkUpdateBtn" style="background: #059669;">Nach Updates suchen</button>
+                </div>
+            </section>
+
             <button type="submit" class="btn">Einstellungen speichern</button>
         </form>
 
@@ -522,6 +535,75 @@ document.getElementById('flushCacheBtn').addEventListener('click', async functio
 
 // Load cache stats on page load
 loadCacheStats();
+
+// Update functions
+async function loadUpdateStatus() {
+    try {
+        const response = await fetch(window.location.origin + '/admin/settings/update/status');
+        const result = await response.json();
+        
+        if (result.status === 'ok') {
+            const version = result.version;
+            const isUpdateAvailable = version.requires_update;
+            
+            let statusHtml = '';
+            if (isUpdateAvailable) {
+                statusHtml = `<div style="padding: 12px; background: #fef3c7; border-radius: 6px; color: #92400e; margin-bottom: 10px;">
+                    <strong>🔄 Update verfügbar!</strong><br>
+                    Aktuelle Version: ${version.current_version}<br>
+                    Neueste Version: ${version.latest_version}
+                </div>`;
+            } else {
+                statusHtml = `<div style="padding: 12px; background: #d1fae5; border-radius: 6px; color: #065f46; margin-bottom: 10px;">
+                    <strong>✅ System ist aktuell</strong><br>
+                    Version: ${version.current_version}<br>
+                    Neueste Version: ${version.latest_version}
+                </div>`;
+            }
+            document.getElementById('updateStatus').innerHTML = statusHtml;
+        } else {
+            document.getElementById('updateStatus').innerHTML = '<p style="color: #ef4444;">Fehler beim Laden des Update-Status</p>';
+        }
+    } catch (e) {
+        document.getElementById('updateStatus').innerHTML = '<p style="color: #ef4444;">Fehler: ' + e.message + '</p>';
+    }
+}
+
+document.getElementById('checkUpdateBtn').addEventListener('click', async function() {
+    const btn = this;
+    btn.disabled = true;
+    btn.textContent = 'Prüfe...';
+    btn.style.opacity = '0.7';
+    
+    try {
+        const response = await fetch(window.location.origin + '/admin/settings/update/check');
+        const result = await response.json();
+        
+        if (result.status === 'ok') {
+            const isUpdateAvailable = result.update_available;
+            
+            if (isUpdateAvailable) {
+                alert(`🔄 Update verfügbar!\n\nAktuelle Version: ${result.current_version}\nNeueste Version: ${result.latest_version}`);
+            } else {
+                alert(`✅ System ist bereits auf dem neuesten Stand!\n\nVersion: ${result.current_version}`);
+            }
+            
+            // Refresh the status display
+            loadUpdateStatus();
+        } else {
+            alert('Fehler: ' + result.message);
+        }
+    } catch (e) {
+        alert('Fehler: ' + e.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Nach Updates suchen';
+        btn.style.opacity = '1';
+    }
+});
+
+// Load update status on page load
+loadUpdateStatus();
 </script>
 </body>
 </html>

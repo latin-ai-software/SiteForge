@@ -298,3 +298,58 @@ def cache_stats():
             "status": "error",
             "message": str(e)
         }), 500
+
+
+# UPDATE: Check for updates
+@admin_settings_bp.route("/update/check", methods=["GET"])
+@auth.require_admin
+def check_update():
+    """Check for available updates"""
+    try:
+        from updater.updater import auto_update
+        result = auto_update()
+        
+        # Load the version.json to get update status
+        version_file = os.path.join(BASE_PATH, "data", "version.json")
+        version_info = {"requires_update": False, "latest_version": "unknown", "current_version": "unknown"}
+        
+        if os.path.exists(version_file):
+            with open(version_file, "r", encoding="utf-8") as f:
+                version_info = json.load(f)
+        
+        return jsonify({
+            "status": "ok",
+            "update_available": version_info.get("requires_update", False),
+            "current_version": version_info.get("current_version", "unknown"),
+            "latest_version": version_info.get("latest_version", "unknown"),
+            "message": result
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+
+# UPDATE: Get current version info
+@admin_settings_bp.route("/update/status", methods=["GET"])
+@auth.require_admin
+def update_status():
+    """Get current version status"""
+    try:
+        version_file = os.path.join(BASE_PATH, "data", "version.json")
+        version_info = {"requires_update": False, "latest_version": "unknown", "current_version": "unknown"}
+        
+        if os.path.exists(version_file):
+            with open(version_file, "r", encoding="utf-8") as f:
+                version_info = json.load(f)
+        
+        return jsonify({
+            "status": "ok",
+            "version": version_info
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500

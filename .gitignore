@@ -21,3 +21,6 @@ static/git/
 /CACHE_IMPLEMENTATION_SUMMARY.md
 /CACHE_INTEGRATION.md
 /CACHE_QUICK_REFERENCE.md
+/app.dist
+/app.build
+/app.onefile-build

@@ -16,3 +16,5 @@ Flask-Mail>=0.9.0
 
 # Optional enhancements
 python-dotenv>=1.0.0
+
+requests>=2.0.0  # For update checking and external API calls
