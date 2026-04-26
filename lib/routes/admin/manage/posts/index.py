@@ -1,6 +1,6 @@
 import os
 from flask import Blueprint, render_template, request, jsonify, current_app, abort, session, redirect, url_for
-from .....netdefense.auth.provider import AuthManager
+from .....netdefense.auth.identitas_auth import IdentitasAuthManager
 from .....data.post_manager import PostManager
 from .....data.file_manager import FileManager
 from .....data.media_manager import MediaManager
@@ -11,7 +11,7 @@ admin_posts_bp = Blueprint("admin_posts", __name__, url_prefix="/admin/posts")
 
 # Auth-System initialisieren
 BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../.."))
-auth = AuthManager(BASE_PATH)
+auth = IdentitasAuthManager(BASE_PATH)
 post_manager = PostManager(BASE_PATH)
 file_manager = FileManager(BASE_PATH)
 media_manager = MediaManager(BASE_PATH)

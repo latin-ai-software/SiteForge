@@ -3,7 +3,7 @@ import sys
 import time
 import threading
 from flask import Blueprint, render_template, request, jsonify, current_app, abort
-from .....netdefense.auth.provider import AuthManager
+from .....netdefense.auth.identitas_auth import IdentitasAuthManager
 from .....data.file_manager import FileManager
 from .....security import RateLimiter, InputValidator, validate_input
 import json
@@ -20,7 +20,7 @@ def schedule_restart(delay=0.5):
 
 # Auth-System initialisieren
 BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../.."))
-auth = AuthManager(BASE_PATH)
+auth = IdentitasAuthManager(BASE_PATH)
 file_manager = FileManager(BASE_PATH)
 rate_limiter = RateLimiter(BASE_PATH)
 
@@ -88,7 +88,7 @@ def save_settings():
         "allow_robot_indexing": request.form.get("allow_robot_indexing") == "on",
         "robot_user_agents": validate_input(request.form.get("robot_user_agents", ""), max_length=500) or "",
         "require_cookie_consent": request.form.get("require_cookie_consent") == "on" or request.form.get("enable_analytics") == "on",
-        "cookie_consent_message": validate_input(request.form.get("cookie_consent_message", ""), max_length=2000) or "",
+        "cookie_consent_message": validate_input(request.form.get("cookie_consent_message", ""), max_length=2000, allowed_chars=['<', '>', '"', "'", '&', ';']) or "",
         "enable_analytics": request.form.get("enable_analytics") == "on",
         "analytics_provider": request.form.get("analytics_provider", "builtin"),
         "analytics_tracking_id": analytics_tracking_id,
@@ -98,7 +98,10 @@ def save_settings():
         "allow_password_change": request.form.get("allow_password_change") == "on",
         "domain": domain or "",
         "header_background_enabled": request.form.get("header_background_enabled") == "on",
-        "setup_completed": True
+        "setup_completed": True,
+        "show_social_links": request.form.get("show_social_links") == "on",
+        "twitter_handle": validate_input(request.form.get("twitter_handle", ""), max_length=100) or "",
+        "facebook_page": validate_input(request.form.get("facebook_page", ""), max_length=255) or "",
     }
 
     # Load existing settings to preserve secret fields when left blank
@@ -123,6 +126,7 @@ def save_settings():
         "ses_smtp_port": ses_smtp_port,
         "ses_smtp_username": validate_input(request.form.get("ses_smtp_username", ""), max_length=255) or "",
         "ses_smtp_password": ses_password,
+        "youtube_channel_id": validate_input(request.form.get("youtube_channel_id", ""), max_length=255) or "",
     })
 
     plugin_changed = False

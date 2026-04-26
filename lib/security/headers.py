@@ -35,7 +35,7 @@ def add_security_headers(app):
             "script-src-elem 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://cdn.quilljs.com https://cdn.jsdelivr.net; "
             "style-src 'self' 'unsafe-inline' https://cdn.quilljs.com https://cdn.jsdelivr.net; "
             "style-src-elem 'self' 'unsafe-inline' https://cdn.quilljs.com https://cdn.jsdelivr.net; "
-            "img-src 'self' data: https:; "
+            "img-src 'self' data: https: i.ytimg.com; "
             "font-src 'self' data:; "
             "connect-src 'self' https://www.google-analytics.com; "
             "frame-ancestors 'self'; "
@@ -46,7 +46,7 @@ def add_security_headers(app):
         return response
 
 
-def validate_input(data, max_length=1000, allowed_chars=None):
+def validate_input(data, max_length=1000, allowed_chars=[]):
     """
     Validate and sanitize user input
     
@@ -68,7 +68,7 @@ def validate_input(data, max_length=1000, allowed_chars=None):
     # Basic XSS prevention - remove potentially dangerous characters
     dangerous_chars = ['<', '>', '"', "'", '&', ';']
     for char in dangerous_chars:
-        if char in data and not (char == '&' and '&amp;' in data):
+        if char in data and not (char == '&' and '&amp;' in data) and char not in allowed_chars:
             data = data.replace(char, '')
     
     return data.strip() if data else None

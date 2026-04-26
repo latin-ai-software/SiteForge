@@ -4,7 +4,7 @@ import subprocess
 from functools import wraps
 from datetime import datetime
 from flask import Blueprint, current_app, render_template, request, jsonify, redirect, url_for, session, abort, make_response
-from lib.netdefense.auth.provider import AuthManager
+from lib.netdefense.auth.identitas_auth import IdentitasAuthManager
 
 plugin_blueprint = Blueprint(
     "git_repos",
@@ -23,7 +23,7 @@ BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 REPO_ROOT = os.path.join(BASE_PATH, "static", "git")
 REPO_DATA_FILE = os.path.join(BASE_PATH, "data", "git_repos.json")
 PR_DATA_FILE = os.path.join(BASE_PATH, "data", "git_prs.json")
-auth = AuthManager(BASE_PATH)
+auth = IdentitasAuthManager(BASE_PATH)
 
 os.makedirs(REPO_ROOT, exist_ok=True)
 

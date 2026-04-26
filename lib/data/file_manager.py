@@ -4,6 +4,13 @@ import mimetypes
 from werkzeug.utils import secure_filename
 from ..netdefense.check import MalwareChecker
 
+# Add Intermediarium cache
+try:
+    from Intermediarium import Cache
+    _cache_available = True
+except ImportError:
+    _cache_available = False
+
 class FileManager:
     def __init__(self, base_path):
         self.base_path = base_path

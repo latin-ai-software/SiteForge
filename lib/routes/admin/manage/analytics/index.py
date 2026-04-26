@@ -1,6 +1,6 @@
 import os
 from flask import Blueprint, render_template, request, jsonify, current_app
-from .....netdefense.auth.provider import AuthManager
+from .....netdefense.auth.identitas_auth import IdentitasAuthManager
 from .....data.comment_manager import CommentManager
 import json
 from datetime import datetime, timedelta
@@ -9,7 +9,7 @@ admin_analytics_bp = Blueprint("admin_analytics", __name__, url_prefix="/admin/a
 
 # Auth-System initialisieren
 BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../.."))
-auth = AuthManager(BASE_PATH)
+auth = IdentitasAuthManager(BASE_PATH)
 comment_manager = CommentManager(BASE_PATH)
 
 # Analytics data file

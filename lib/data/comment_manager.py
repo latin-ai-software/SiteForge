@@ -2,12 +2,24 @@ import os
 import json
 from datetime import datetime
 
+# Add Intermediarium cache
+try:
+    from Intermediarium import Cache
+    _cache_available = True
+except ImportError:
+    _cache_available = False
+
 class CommentManager:
     def __init__(self, base_path):
         self.base_path = base_path
         self.comments_file = os.path.join(base_path, "data", "comments.json")
         os.makedirs(os.path.dirname(self.comments_file), exist_ok=True)
         self._ensure_comments_file()
+        # Initialize cache for comments (15 minute TTL)
+        if _cache_available:
+            self._comment_cache = Cache(maxsize=500, policy='lru', ttl=900)
+        else:
+            self._comment_cache = None
 
     def _ensure_comments_file(self):
         if not os.path.exists(self.comments_file):
@@ -43,9 +55,20 @@ class CommentManager:
 
         comments[post_id].append(comment)
         self._save_comments(comments)
+        # Invalidate cache on new comment
+        if self._comment_cache is not None:
+            self._comment_cache.delete(f'comments:{post_id}')
         return comment_id
 
     def get_comments(self, post_id, status="approved"):
+        """Get comments for a post (cached)"""
+        # Check cache first
+        cache_key = f'comments:{post_id}:{status}'
+        if self._comment_cache is not None:
+            cached_comments = self._comment_cache.get(cache_key)
+            if cached_comments is not None:
+                return cached_comments
+        
         comments = self._load_comments()
         post_comments = comments.get(post_id, [])
 
@@ -70,12 +93,27 @@ class CommentManager:
         for reply_list in replies.values():
             reply_list.sort(key=lambda x: x["created_at"])
 
-        return top_level, replies
+        result = (top_level, replies)
+        # Cache the result
+        if self._comment_cache is not None:
+            self._comment_cache.set(cache_key, result)
+        
+        return result
 
     def delete_comment(self, post_id, comment_id):
         comments = self._load_comments()
         if post_id in comments:
             comments[post_id] = [c for c in comments[post_id] if c["id"] != comment_id]
             self._save_comments(comments)
+            # Invalidate cache on delete
+            if self._comment_cache is not None:
+                for key in self._comment_cache.keys():
+                    if key.startswith(f'comments:{post_id}'):
+                        self._comment_cache.delete(key)
             return True
         return False
+    
+    def clear_cache(self):
+        """Clear comment cache manually"""
+        if self._comment_cache is not None:
+            self._comment_cache.clear()

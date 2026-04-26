@@ -311,7 +311,7 @@
 
                 <div class="form-group">
                     <label for="cookie_consent_message">Cookie-Benachrichtigungstext:</label>
-                    <textarea id="cookie_consent_message" name="cookie_consent_message" rows="10" style="width: 100%; background: #111827; color: #e5e7eb; border: 1px solid #374151; border-radius: 4px; padding: 8px;">{{ settings.cookie_consent_message or '' }}</textarea>
+                    <textarea id="cookie_consent_message" name="cookie_consent_message" rows="10" style="width: 100%; background: #111827; color: #e5e7eb; border: 1px solid #374151; border-radius: 4px; padding: 8px;">{{ (settings.cookie_consent_message or '') | safe }}</textarea>
                     <small>Diese Nachricht wird sichtbar, wenn Cookie-Zustimmung aktiviert ist.</small>
                 </div>
             </section>
@@ -381,6 +381,33 @@
                     <label for="ses_smtp_password">Amazon SES SMTP Passwort:</label>
                     <input type="password" id="ses_smtp_password" name="ses_smtp_password" value="{{ settings.ses_smtp_password or '' }}" autocomplete="new-password">
                     <small>Wenn Sie das Passwort nicht ändern möchten, lassen Sie dieses Feld leer.</small>
+                </div>
+            </section>
+            <section class="card">
+                <h2>Social Media</h2>
+                <div class="form-group">
+                    <label for="show_social_links">Social Media Links anzeigen:</label>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="show_social_links" name="show_social_links" {% if settings.show_social_links %}checked{% endif %}>
+                        <label for="show_social_links">Aktivieren</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="twitter_handle">Twitter Handle:</label>
+                    <input type="text" id="twitter_handle" name="twitter_handle" value="{{ settings.twitter_handle or '' }}" placeholder="@DeinTwitterHandle">
+                </div>
+                <div class="form-group">
+                    <label for="facebook_page">Facebook Seiten-URL:</label>
+                    <input type="text" id="facebook_page" name="facebook_page" value="{{ settings.facebook_page or '' }}" placeholder="https://www.facebook.com/DeineSeite">
+                </div>
+            </section>
+            <section class="card">
+                <h2>YouTube Kanal</h2>
+
+                <div class="form-group">
+                    <label for="youtube_channel_id">YouTube Kanal URL oder ID:</label>
+                    <input type="text" id="youtube_channel_id" name="youtube_channel_id" value="{{ settings.youtube_channel_id or '' }}" placeholder="https://youtube.com/@KanalName oder UC...">
+                    <small>Unterstützte Formate: Vollständige URL, Kanal-ID (UC...), oder @Handle</small>
                 </div>
             </section>
 

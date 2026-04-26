@@ -2,7 +2,7 @@
 import os
 import json
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, session
-from lib.netdefense.auth.provider import AuthManager
+from lib.netdefense.auth.identitas_auth import IdentitasAuthManager
 
 setup_bp = Blueprint('setup', __name__, url_prefix='/setup')
 
@@ -24,6 +24,7 @@ def get_default_settings():
         'allow_registration': True,
         'require_comment_approval': True,
         'allow_robot_indexing': False,
+        'facebook_page': '',
         'robot_user_agents': '*',
         'require_cookie_consent': True,
         'cookie_consent_message': '<p>Please accept cookies to use this site.</p>',
@@ -42,7 +43,9 @@ def get_default_settings():
         'ses_smtp_host': '',
         'ses_smtp_port': 587,
         'ses_smtp_username': '',
-        'ses_smtp_password': ''
+        'ses_smtp_password': '',
+        'show_social_links': False,
+        'twitter_handle': ''
     }
 
 def load_settings(base_path):
@@ -211,7 +214,7 @@ def configure():
             json.dump(settings, f, indent=4, ensure_ascii=False)
         
         # Create admin user
-        auth_manager = AuthManager(base_path)
+        auth_manager = IdentitasAuthManager(base_path)
         success, message = auth_manager.create_user(
             data.get('admin_username'),
             data.get('admin_password'),
