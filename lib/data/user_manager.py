@@ -59,6 +59,12 @@ class UserManager:
         # Invalidate cache on update
         if self._user_cache is not None:
             self._user_cache.delete('all_users')
+        # Also clear global caches
+        try:
+            from lib.cache_utils import clear_all_caches
+            clear_all_caches()
+        except Exception:
+            pass
         return result
 
     def update_user_git_access(self, username, git_access):
@@ -66,6 +72,12 @@ class UserManager:
         # Invalidate cache on update
         if self._user_cache is not None:
             self._user_cache.delete('all_users')
+        # Also clear global caches
+        try:
+            from lib.cache_utils import clear_all_caches
+            clear_all_caches()
+        except Exception:
+            pass
         return result
 
     def delete_user(self, username):
@@ -73,6 +85,12 @@ class UserManager:
         # Invalidate cache on delete
         if self._user_cache is not None:
             self._user_cache.delete('all_users')
+        # Also clear global caches
+        try:
+            from lib.cache_utils import clear_all_caches
+            clear_all_caches()
+        except Exception:
+            pass
         return result
     
     def clear_cache(self):

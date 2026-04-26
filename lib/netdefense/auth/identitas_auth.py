@@ -32,6 +32,7 @@ from provider.api.auth import logout as identitas_logout
 from provider.api.auth import validate_token as identitas_validate_token
 from provider.api.rbac import create_role as rbac_create_role
 from provider.api.rbac import assign_role_to_user as rbac_assign_role_to_user
+from provider.api.rbac import remove_role_from_user as rbac_remove_role_from_user
 from provider.api.rbac import get_user_roles as rbac_get_user_roles
 from provider.api.rbac import get_role_by_name as rbac_get_role_by_name
 from provider.api.rbac import user_has_right as rbac_user_has_right
@@ -253,6 +254,12 @@ class IdentitasAuthManager:
             role_obj = rbac_create_role(self.engine, role, f"Auto-created role: {role}")
         
         if role_obj:
+            # Remove all existing roles first (to ensure only one role at a time)
+            existing_roles = rbac_get_user_roles(self.engine, user_id)
+            for existing_role in existing_roles:
+                rbac_remove_role_from_user(self.engine, user_id, existing_role.id)
+            
+            # Add the new role
             rbac_assign_role_to_user(self.engine, user_id, role_obj.id)
             return True, "Role updated"
         return False, "Failed to update role"
