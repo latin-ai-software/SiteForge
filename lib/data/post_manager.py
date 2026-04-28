@@ -105,8 +105,10 @@ class PostManager:
                                 base_url = domain.rstrip("/")
                             else:
                                 base_url = f"https://{domain}"
-                    except:
-                        pass
+                    except (json.JSONDecodeError, IOError, KeyError) as e:
+                        # Use default base_url
+                        import logging
+                        logging.getLogger(__name__).debug(f"Could not load domain from settings: {e}")
                 
                 git_data[author][repo_name] = {
                     "remote": "",

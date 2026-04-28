@@ -2,10 +2,10 @@ import os
 import sys
 import time
 import threading
-from flask import Blueprint, render_template, request, jsonify, current_app, abort
+from flask import Blueprint, render_template, request, jsonify, current_app, abort, session
 from .....netdefense.auth.identitas_auth import IdentitasAuthManager
 from .....data.file_manager import FileManager
-from .....security import RateLimiter, InputValidator, validate_input
+from .....security import RateLimiter, InputValidator, validate_input, CSRFProtection, SecurityLogger
 import json
 
 admin_settings_bp = Blueprint("admin_settings", __name__, url_prefix="/admin/settings")
@@ -46,8 +46,19 @@ def admin_settings_index():
 def save_settings():
     import json
     
+    # CSRF protection
+    csrf_token = request.form.get("_csrf_token")
+    if not csrf_token or not CSRFProtection.validate_token(csrf_token):
+        SecurityLogger.log_unauthorized_access(
+            session.get('user', 'unknown'),
+            '/admin/settings',
+            request.remote_addr
+        )
+        abort(403)
+    
     # Rate limit settings updates - max 10 per minute
     if rate_limiter.is_rate_limited(f"settings_update_{request.remote_addr}"):
+        SecurityLogger.log_rate_limit_exceeded('/admin/settings', request.remote_addr)
         abort(429)
     
     # Input validation and sanitization
