@@ -8,19 +8,28 @@ variables:
   DOCKER_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
   DOCKER_TAG: $CI_COMMIT_SHA
   GIT_SUBMODULE_STRATEGY: recursive
-
+  # SSH configuration for private repository access
+  GIT_STRATEGY: clone
+  GIT_CHECKOUT: "true"
 
 # Test stage
 test:
   stage: test
   image: python:3.12
   before_script:
+    # Install SSH client and configure Git for SSH
+    - apt-get update && apt-get install -y openssh-client git
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan -H git.latinai.de >> ~/.ssh/known_hosts
+    - git config --global user.email "ci@gitlab.local"
+    - git config --global user.name "GitLab CI"
     - pip install -r requirements.txt
     - pip install pytest pytest-cov
-#    - git submodule sync --recursive
-#    - git submodule update --init --recursive
   script:
-    - python -m pytest --cov=lib --cov-report=html --cov-report=term
+    - python -m pytest --cov=lib --cov-report=html --cov-report=term --cov-report=xml:htmlcov/cobertura.xml
   coverage: '/TOTAL.*\s+(\d+%)$/'
   artifacts:
     reports:
@@ -38,8 +47,18 @@ test:
 bandit_scan:
   stage: security
   image: python:3.12
-  script:
+  before_script:
+    # Install SSH client and configure Git for SSH
+    - apt-get update && apt-get install -y openssh-client git
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan -H git.latinai.de >> ~/.ssh/known_hosts
+    - git config --global user.email "ci@gitlab.local"
+    - git config --global user.name "GitLab CI"
     - pip install bandit
+  script:
     - bandit -r . -x Identitas,Intermediarium -f html -o bandit-report.html --exit-zero
   artifacts:
     paths:
