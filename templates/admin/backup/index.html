@@ -209,8 +209,8 @@
             {% if is_plugin_loaded('git_repos') %}
             <a href="/admin/git">Git-Repos</a>
             {% endif %}
-            <a href="/admin/settings" class="active">Einstellungen</a>
-            <a href="{{ url_for('backup.backup_index') }}">Backups</a>
+            <a href="/admin/settings">Einstellungen</a>
+            <a href="{{ url_for('backup.backup_index') }}"  class="active">Backups</a>
             <a href="{{ url_for('theme_creator.index') }}">Theme Creator</a>
         </nav>
     </aside>

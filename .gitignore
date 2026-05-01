@@ -24,3 +24,6 @@ static/git/
 /app.dist
 /app.build
 /app.onefile-build
+/data.zip
+/SECURITY_HARDENING_REPORT.md
+/SECURITY_IMPLEMENTATION_CHECKLIST.md

@@ -60,7 +60,9 @@ def load_settings(base_path):
                 # Merge user settings over defaults
                 defaults.update(user_settings)
                 return defaults
-        except:
+        except (json.JSONDecodeError, IOError) as e:
+            import logging
+            logging.getLogger(__name__).warning(f"Could not load settings: {e}")
             return defaults
     
     return defaults

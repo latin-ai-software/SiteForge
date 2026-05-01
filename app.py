@@ -4,7 +4,7 @@ from flask import Flask, render_template, send_from_directory, Response, redirec
 from werkzeug.middleware.proxy_fix import ProxyFix
 import json
 import lib.netdefense.check
-from lib.security import add_security_headers, RateLimiter, ConfigEncryption
+from lib.security import add_security_headers, RateLimiter, ConfigEncryption, SecureConfig
 from lib.security.encrypted_files import init_encryption
 from lib.routes.setup.index import setup_bp, is_setup_completed
 from lib.routes.create.post.index import post_create_bp
@@ -21,24 +21,29 @@ from lib.netdefense.auth.identitas_auth import IdentitasAuthManager
 import os
 from datetime import datetime
 
+# Load environment variables
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # python-dotenv not installed, use environment variables only
 
-
+# Initialize Flask app
 app = Flask(__name__)
-app.secret_key = "irgendein_langes_random_secret_das_wirklich_gar_keiner_kompromittier_dabei_bin_ich_mir_sicher_vertrau_mir"
+
+# Get base path for security configuration
+base_path = os.path.abspath(os.path.dirname(__file__))
+
+# Apply secure configuration
+secure_config = SecureConfig.get_config(base_path)
+app.config.update(secure_config)
+
 # Trust X-Forwarded headers from proxies (e.g., Cloudflare tunnel)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
 
 # Initialize encryption system
-base_path = os.path.abspath(os.path.dirname(__file__))
 init_encryption(base_path)
 config_encryption = ConfigEncryption(base_path)
-
-# Security configuration
-app.config['SESSION_COOKIE_SECURE'] = True  # Only send over HTTPS
-app.config['SESSION_COOKIE_HTTPONLY'] = True  # Not accessible to JS
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF protection
-app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour timeout
-app.permanent_session_lifetime = 3600
 
 # Add security headers to all responses
 add_security_headers(app)
@@ -48,14 +53,18 @@ rate_limiter = RateLimiter(base_path)
 
 # Periodic cleanup task (in real deployment, use celery or similar)
 import threading
+import logging
+import time
+
+logger = logging.getLogger(__name__)
+
 def cleanup_rate_limits():
     while True:
-        import time
         time.sleep(3600)  # Cleanup every hour
         try:
             rate_limiter.cleanup_old_data()
-        except:
-            pass
+        except Exception as e:
+            logger.error(f"Error during rate limit cleanup: {e}", exc_info=True)
 
 # Start cleanup thread
 cleanup_thread = threading.Thread(target=cleanup_rate_limits, daemon=True)
@@ -88,10 +97,15 @@ app.register_blueprint(theme_creator_bp)
 
 
 from lib.data.settings import get_theme
+from lib.security import CSRFProtection
 
 @app.context_processor
-def inject_theme():
-    return {"active_theme": get_theme()}
+def inject_template_context():
+    """Inject commonly used values into all templates"""
+    return {
+        "active_theme": get_theme(),
+        "csrf_token": CSRFProtection.generate_token
+    }
 
 
 # Load optional plugins from plugins/ directory

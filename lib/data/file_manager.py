@@ -23,7 +23,7 @@ class FileManager:
         if allowed_extensions is None:
             allowed_extensions = {
                 'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'zip', 'doc', 'docx',
-                'xls', 'xlsx', 'ppt', 'pptx', 'mp3', 'mp4', 'avi', 'mov', 'ico'
+                'xls', 'xlsx', 'ppt', 'pptx', 'mp3', 'mp4', 'avi', 'mov', 'wav', 'wmv', 'ico'
             }
 
         return '.' in filename and \
@@ -34,6 +34,23 @@ class FileManager:
         ext = original_filename.rsplit('.', 1)[1].lower() if '.' in original_filename else ''
         unique_id = str(uuid.uuid4())
         return f"{unique_id}.{ext}" if ext else unique_id
+
+    def _is_binary_file(self, filename, file_content):
+        """Return True for known binary media/file types to skip text scanning."""
+        ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
+        binary_extensions = {
+            'mp3', 'mp4', 'avi', 'mov', 'wmv', 'wav', 'ogg', 'm4a',
+            'png', 'jpg', 'jpeg', 'gif', 'ico', 'webp', 'zip', 'pdf', 'doc', 'docx',
+            'ppt', 'pptx', 'xlsx', 'xls'
+        }
+        if ext in binary_extensions:
+            return True
+
+        if not file_content:
+            return False
+
+        non_text_bytes = sum(1 for b in file_content if b < 9 or (13 < b < 32) or b == 127)
+        return non_text_bytes / max(len(file_content), 1) > 0.30
 
     def save_file(self, file, max_size_mb=10):
         """
@@ -57,18 +74,17 @@ class FileManager:
         if not self._is_allowed_file(filename):
             return False, "File type not allowed", None
 
-        # Security scan - try to decode as text first, then check
+        # Security scan - skip text scanning for binary media files
         file_content = file.read()
-        try:
-            # Try to decode as UTF-8 text
-            text_content = file_content.decode('utf-8', errors='ignore')
-            if self.security.is_suspicious(text_content):
-                result = self.security.check_text(text_content)
-                return False, f"File contains suspicious content: {result}", None
-        except UnicodeDecodeError:
-            # If it's not text, we can't easily scan it, but we'll allow it for now
-            # In a production system, you'd want more sophisticated binary analysis
-            pass
+        if not self._is_binary_file(filename, file_content):
+            try:
+                # Try to decode as UTF-8 text
+                text_content = file_content.decode('utf-8', errors='ignore')
+                if self.security.is_suspicious(text_content):
+                    result = self.security.check_text(text_content)
+                    return False, f"File contains suspicious content: {result}", None
+            except UnicodeDecodeError:
+                pass
 
         # Reset file pointer for saving
         file.seek(0)

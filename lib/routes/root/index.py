@@ -52,8 +52,9 @@ def index():
         try:
             with open(settings_file, "r", encoding="utf-8") as f:
                 settings = json.load(f)
-        except:
-            pass
+        except (json.JSONDecodeError, IOError) as e:
+            current_app.logger.warning(f"Could not load settings.json: {e}")
+            settings = {}
     
     # Ensure all required settings keys exist with defaults
     settings.setdefault('embed_favicon_in_html', True)
@@ -144,8 +145,8 @@ def index_text_detail(text_id):
         try:
             with open(settings_file, "r", encoding="utf-8") as f:
                 settings = json.load(f)
-        except:
-            pass
+        except (json.JSONDecodeError, IOError) as e:
+            current_app.logger.warning(f"Could not load settings.json: {e}")
     
     settings.setdefault('embed_favicon_in_html', True)
 
@@ -207,8 +208,8 @@ def profile():
         try:
             with open(settings_file, "r", encoding="utf-8") as f:
                 settings = json.load(f)
-        except:
-            pass
+        except (json.JSONDecodeError, IOError) as e:
+            current_app.logger.warning(f"Could not load settings.json: {e}")
     
     settings.setdefault('embed_favicon_in_html', True)
 

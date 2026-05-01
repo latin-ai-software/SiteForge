@@ -98,6 +98,10 @@
 .ql-youtube::before {
     content: "▶️";
 }
+
+.ql-audio::before {
+    content: "🔊";
+}
 </style>
 </head>
 <body>
@@ -266,6 +270,43 @@ YouTubeBlot.blotName = "youtube";
 YouTubeBlot.tagName = "div";
 Quill.register(YouTubeBlot);
 
+// Audio
+class AudioBlot extends BlockEmbed {
+    static create(url) {
+        let node = super.create();
+        node.setAttribute("controls", "true");
+        node.setAttribute("src", url);
+        node.setAttribute("preload", "metadata");
+        return node;
+    }
+
+    static value(node) {
+        return node.getAttribute("src");
+    }
+}
+AudioBlot.blotName = "audio";
+AudioBlot.tagName = "audio";
+Quill.register(AudioBlot);
+
+class VideoBlot extends BlockEmbed {
+    static create(url) {
+        let node = super.create();
+        node.setAttribute("controls", "true");
+        node.setAttribute("src", url);
+        node.setAttribute("preload", "metadata");
+        node.style.width = "100%";
+        node.style.maxWidth = "100%";
+        return node;
+    }
+
+    static value(node) {
+        return node.getAttribute("src");
+    }
+}
+VideoBlot.blotName = "video";
+VideoBlot.tagName = "video";
+Quill.register(VideoBlot);
+
 
 /* --------------------------
    QUILL INITIALIZATION
@@ -297,28 +338,39 @@ var quill = new Quill('#editor', {
             ],
 
             handlers: {
-                youtube: function () {
-                    const url = prompt("YouTube-Link eingeben:");
-                    if (!url) return;
-                    const embed = convertYouTube(url);
-                    const range = quill.getSelection();
-                            quill.insertEmbed(range.index, 'youtube', embed);
+                image: function () {
+                    let input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'image/*,audio/*,video/*';
                     input.click();
 
                     input.onchange = async () => {
                         const file = input.files[0];
-                        let formData = new FormData();
-                        formData.append("image", file);
+                        if (!file) return;
 
-                        const res = await fetch("/upload-image", {
+                        const formData = new FormData();
+                        formData.append("file", file);
+
+                        const res = await fetch("/admin/posts/upload", {
                             method: "POST",
                             body: formData
                         });
 
                         const data = await res.json();
-                        const range = quill.getSelection();
-                        quill.insertEmbed(range.index, 'image', data.url);
+                        if (data.status === "ok") {
+                            insertMedia(data.url);
+                        } else {
+                            alert("Fehler beim Hochladen: " + (data.error || "Unbekannter Fehler"));
+                        }
                     };
+                },
+
+                youtube: function () {
+                    const url = prompt("YouTube-Link eingeben:");
+                    if (!url) return;
+                    const embed = convertYouTube(url);
+                    const range = quill.getSelection();
+                    quill.insertEmbed(range.index, 'youtube', embed);
                 },
 
                 divider: () => {
@@ -365,6 +417,21 @@ function insertColumns(cols) {
 function convertYouTube(url) {
     const id = url.split("v=")[1]?.split("&")[0];
     return "https://www.youtube.com/embed/" + id;
+}
+
+function insertMedia(url) {
+    const extension = (url.split('.').pop().split('?')[0] || '').toLowerCase();
+    const range = quill.getSelection() || { index: quill.getLength() };
+
+    if (["mp4", "mov", "webm", "avi", "wmv"].includes(extension)) {
+        quill.insertEmbed(range.index, 'video', url);
+    } else if (["mp3", "wav", "ogg", "m4a"].includes(extension)) {
+        quill.insertEmbed(range.index, 'audio', url);
+    } else if (["png", "jpg", "jpeg", "gif", "webp"].includes(extension)) {
+        quill.insertEmbed(range.index, 'image', url);
+    } else {
+        quill.insertText(range.index, url);
+    }
 }
 
 function saveContent() {
@@ -526,39 +593,27 @@ document.addEventListener("drop", (e) => {
 });
 
 // Upload Funktion nutzt DEINE bestehende Route
-function uploadDroppedFiles(files) {
-    const formData = new FormData();
-
+async function uploadDroppedFiles(files) {
     for (let file of files) {
+        const formData = new FormData();
         formData.append("file", file);
-    }
 
-    fetch("/admin/posts/upload", {
-        method: "POST",
-        body: formData
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.status === "ok") {
-            insertIntoEditor(data.url);
-        } else {
-            alert("Fehler: " + (data.error || "Unbekannter Fehler"));
+        try {
+            const res = await fetch("/admin/posts/upload", {
+                method: "POST",
+                body: formData
+            });
+            const data = await res.json();
+
+            if (data.status === "ok") {
+                insertMedia(data.url);
+            } else {
+                alert("Fehler: " + (data.error || "Unbekannter Fehler"));
+            }
+        } catch (err) {
+            alert("Upload-Fehler: " + err);
         }
-    })
-    .catch(err => {
-        alert("Upload-Fehler: " + err);
-    });
-}
-
-// Bild-URL in den Editor einfügen
-function insertIntoEditor(url) {
-    const editor = document.getElementById("content");
-    if (!editor) return;
-
-    const markdown = `![Bild](${url})`;
-
-    // ans Ende anhängen
-    editor.value = (editor.value || "") + "\n" + markdown + "\n";
+    }
 }
 </script>
 
