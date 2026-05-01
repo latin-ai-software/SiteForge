@@ -27,3 +27,17 @@ static/git/
 /data.zip
 /SECURITY_HARDENING_REPORT.md
 /SECURITY_IMPLEMENTATION_CHECKLIST.md
+
+# Modern additions
+.env
+.env.local
+.env.*.local
+*.log
+logs/
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.DS_Store
+.vscode/settings.json
+.idea/

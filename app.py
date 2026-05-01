@@ -1,3 +1,8 @@
+def create_app(config_name=None):
+    """Application factory pattern for modern Flask apps."""
+    pass  # Will implement later
+
+# For backward compatibility, keep original code below
 import sys
 import importlib.util
 from flask import Flask, render_template, send_from_directory, Response, redirect, url_for
