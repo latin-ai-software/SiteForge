@@ -76,32 +76,32 @@ bandit_scan:
     expire_in: 7 days
 
 # Build Docker image
-build:
-  stage: build
-  image: docker:latest
-  services:
-    - docker:dind
-  before_script:
-    - sleep 5  # Wait for Docker daemon to start
-    - docker info || sleep 10 && docker info
-    - |
-      if [ -n "$CI_REGISTRY" ]; then
-        echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-      else
-        echo "No container registry configured, building locally only"
-      fi
-  script:
-    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG .
-    - |
-      if [ -n "$CI_REGISTRY" ]; then
-        docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
-      else
-        echo "Skipping push - no container registry configured"
-        echo "Built image: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
-      fi
-  retry: 2
-  only:
-    - main
+#build:
+#  stage: build
+#  image: docker:latest
+#  services:
+#    - docker:dind
+#  before_script:
+#    - sleep 5  # Wait for Docker daemon to start
+#    - docker info || sleep 10 && docker info
+#    - |
+#      if [ -n "$CI_REGISTRY" ]; then
+#        echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+#      else
+#        echo "No container registry configured, building locally only"
+#      fi
+#  script:
+#    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG .
+#    - |
+#      if [ -n "$CI_REGISTRY" ]; then
+#        docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+#      else
+#        echo "Skipping push - no container registry configured"
+#        echo "Built image: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
+#      fi
+#  retry: 2
+#  only:
+#    - main
 
 # Deploy to staging
 #deploy_staging:

@@ -27,6 +27,7 @@ static/git/
 /data.zip
 /SECURITY_HARDENING_REPORT.md
 /SECURITY_IMPLEMENTATION_CHECKLIST.md
+/GITLAB_CI_SETUP.md
 
 # Modern additions
 .env
