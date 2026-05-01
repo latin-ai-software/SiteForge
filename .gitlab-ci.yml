@@ -17,8 +17,8 @@ test:
   before_script:
     - pip install -r requirements.txt
     - pip install pytest pytest-cov
-    - git submodule sync --recursive
-    - git submodule update --init --recursive
+#    - git submodule sync --recursive
+#    - git submodule update --init --recursive
   script:
     - python -m pytest --cov=lib --cov-report=html --cov-report=term
   coverage: '/TOTAL.*\s+(\d+%)$/'
