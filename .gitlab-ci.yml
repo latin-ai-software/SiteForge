@@ -7,6 +7,8 @@ stages:
 variables:
   DOCKER_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
   DOCKER_TAG: $CI_COMMIT_SHA
+  GIT_SUBMODULE_STRATEGY: recursive
+
 
 # Test stage
 test:
