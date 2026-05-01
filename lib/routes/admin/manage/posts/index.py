@@ -264,11 +264,12 @@ def upload_post_media():
     if file.filename == "":
         return jsonify({"error": "Ungültiger Dateiname"}), 400
 
-    save_path = os.path.join(media_manager.upload_dir, file.filename)
-    file.save(save_path)
+    success, result, file_info = file_manager.save_file(file)
+    if not success:
+        return jsonify({"error": result}), 400
 
     return jsonify({
         "status": "ok",
-        "filename": file.filename,
-        "url": f"/uploads/{file.filename}"
+        "filename": file_info["filename"],
+        "url": file_manager.get_file_url(file_info["filename"])
     }), 200

@@ -77,7 +77,8 @@ class MediaManager:
                 "size": size,
                 "usage_count": usage.get(filename, {}).get("count", 0),
                 "is_image": ext in ["png", "jpg", "jpeg", "gif", "webp"],
-                "is_video": ext in ["mp4", "mov", "webm"],
+                "is_video": ext in ["mp4", "mov", "webm", "avi", "wmv"],
+                "is_audio": ext in ["mp3", "wav", "ogg", "m4a"],
                 "is_document": ext in ["pdf", "docx", "txt"]
             })
 
@@ -113,7 +114,8 @@ class MediaManager:
             "usage_count": usage.get(filename, {}).get("count", 0),
             "usage": usage.get(filename, {}).get("items", []),
             "is_image": ext in ["png", "jpg", "jpeg", "gif", "webp"],
-            "is_video": ext in ["mp4", "mov", "webm"],
+            "is_video": ext in ["mp4", "mov", "webm", "avi", "wmv"],
+            "is_audio": ext in ["mp3", "wav", "ogg", "m4a"],
             "is_document": ext in ["pdf", "docx", "txt"]
         }
 

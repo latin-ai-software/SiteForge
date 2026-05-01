@@ -150,7 +150,8 @@ class FileUploadValidator:
         'images': {'jpg', 'jpeg', 'png', 'gif', 'ico', 'webp'},
         'documents': {'pdf', 'doc', 'docx', 'txt'},
         'config': {'json', 'html', 'css'},
-        'video': {'mp4', 'webm', 'avi'}
+        'video': {'mp4', 'webm', 'avi', 'wmv', 'mov'},
+        'audio': {'mp3', 'wav', 'ogg', 'm4a'}
     }
     
     @staticmethod
