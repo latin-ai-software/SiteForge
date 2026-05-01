@@ -229,8 +229,13 @@
                                             <span class="post-tags">{{ tag }}</span>
                                         {% endfor %}
                                     </div>
-                                {% endif %}
-                            </div>
+                                {% endif %}                                {% if post.survey %}
+                                    <div style="margin-top: 0.75rem; color: #9ca3af; font-size: 0.9rem;">
+                                        <strong>Umfrage:</strong> {{ post.survey.question }}<br>
+                                        {% set total_votes = post.survey.votes|length if post.survey.votes else 0 %}
+                                        <span>{{ total_votes }} Stimme{{ '' if total_votes == 1 else 'n' }}</span>
+                                    </div>
+                                {% endif %}                            </div>
 
                             <div class="actions">
                                 <a href="/post/{{ post.slug }}" target="_blank">

@@ -132,7 +132,47 @@ class PostManager:
         with open(self.metadata_file, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, default=str)
 
-    def create_post(self, title, content, author, status="publish", post_type="post", categories=None, tags=None, attachments=None, git_repository=None, release_tag=None):
+    def _build_survey(self, question, options, existing_survey=None):
+        if not question or not options or len(options) < 2:
+            return None
+
+        cleaned_options = [opt.strip() for opt in options if opt.strip()]
+        if len(cleaned_options) < 2:
+            return None
+
+        existing_ids = {}
+        if existing_survey and isinstance(existing_survey, dict):
+            for opt in existing_survey.get("options", []):
+                existing_ids[opt.get("text", "")] = opt.get("id")
+
+        new_options = []
+        for index, option_text in enumerate(cleaned_options):
+            option_id = existing_ids.get(option_text, f"option-{index}")
+            new_options.append({
+                "id": option_id,
+                "text": option_text,
+                "votes": 0
+            })
+
+        votes = {}
+        if existing_survey and isinstance(existing_survey, dict):
+            votes = {user: choice for user, choice in existing_survey.get("votes", {}).items() if choice in {o["id"] for o in new_options}}
+
+        vote_counts = {opt["id"]: 0 for opt in new_options}
+        for vote_choice in votes.values():
+            if vote_choice in vote_counts:
+                vote_counts[vote_choice] += 1
+
+        for opt in new_options:
+            opt["votes"] = vote_counts.get(opt["id"], 0)
+
+        return {
+            "question": question.strip(),
+            "options": new_options,
+            "votes": votes
+        }
+
+    def create_post(self, title, content, author, status="publish", post_type="post", categories=None, tags=None, attachments=None, git_repository=None, release_tag=None, survey=None):
         metadata = self._load_metadata()
 
         # Generate slug from title
@@ -159,6 +199,7 @@ class PostManager:
             "attachments": attachments or [],
             "git_repository": git_repository or "",
             "release_tag": release_tag or "",
+            "survey": survey or None,
             "created_at": now.isoformat(),
             "modified_at": now.isoformat(),
             "slug": slug
@@ -172,7 +213,7 @@ class PostManager:
 
         return post_id
 
-    def update_post(self, post_id, title=None, content=None, status=None, categories=None, tags=None, attachments=None, git_repository=None, release_tag=None):
+    def update_post(self, post_id, title=None, content=None, status=None, categories=None, tags=None, attachments=None, git_repository=None, release_tag=None, survey=None):
         metadata = self._load_metadata()
         if post_id not in metadata:
             return False
@@ -197,10 +238,45 @@ class PostManager:
                 self._create_git_repository(git_repository, metadata[post_id]["author"])
         if release_tag is not None:
             metadata[post_id]["release_tag"] = release_tag
+        if survey is not None:
+            if survey:
+                metadata[post_id]["survey"] = survey
+            else:
+                metadata[post_id].pop("survey", None)
 
         metadata[post_id]["modified_at"] = datetime.now().isoformat()
         self._save_metadata(metadata)
         return True
+
+    def vote_survey(self, post_id, user, option_id):
+        metadata = self._load_metadata()
+        if post_id not in metadata:
+            return False, "Post nicht gefunden"
+
+        survey = metadata[post_id].get("survey")
+        if not survey or "options" not in survey:
+            return False, "Keine Umfrage für diesen Beitrag vorhanden"
+
+        option_ids = {opt["id"] for opt in survey["options"]}
+        if option_id not in option_ids:
+            return False, "Ungültige Option"
+
+        survey_votes = survey.get("votes", {}) or {}
+        survey_votes[user] = option_id
+
+        vote_counts = {opt["id"]: 0 for opt in survey["options"]}
+        for vote_choice in survey_votes.values():
+            if vote_choice in vote_counts:
+                vote_counts[vote_choice] += 1
+
+        for option in survey["options"]:
+            option["votes"] = vote_counts.get(option["id"], 0)
+
+        survey["votes"] = survey_votes
+        metadata[post_id]["survey"] = survey
+        metadata[post_id]["modified_at"] = datetime.now().isoformat()
+        self._save_metadata(metadata)
+        return True, "Vote gespeichert"
 
     def get_post(self, post_id):
         metadata = self._load_metadata()

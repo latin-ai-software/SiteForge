@@ -156,6 +156,25 @@
                 </div>
 
                 <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="survey_enabled" name="survey_enabled" {% if post.survey %}checked{% endif %}>
+                        Umfrage zum Beitrag hinzufügen
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label for="survey_question">Umfragefrage</label>
+                    <input type="text" id="survey_question" name="survey_question" class="form-input" value="{{ post.survey.question if post.survey else '' }}" placeholder="Welche Frage möchtest du stellen?">
+                </div>
+
+                <div class="form-group">
+                    <label for="survey_options">Umfrageoptionen</label>
+                    <textarea id="survey_options" name="survey_options" class="form-input" rows="4" placeholder="Eine Option pro Zeile">{% if post.survey %}{% for option in post.survey.options %}{{ option.text }}
+{% endfor %}{% endif %}</textarea>
+                    <small class="form-hint">Gib mindestens zwei Optionen ein, jeweils eine pro Zeile. Bestehende Stimmen bleiben erhalten, wenn Optionen unverändert bleiben.</small>
+                </div>
+
+                <div class="form-group">
                     <label for="existing_files">Existierende Dateien hinzufügen</label>
                     <select id="existing_files" name="existing_files" class="form-input" multiple>
                         <!-- Wird via JavaScript geladen -->
