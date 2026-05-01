@@ -78,33 +78,28 @@ bandit_scan:
 # Build Docker image
 build:
   stage: build
-  image: docker:24
+  image: docker:latest
   services:
     - docker:dind
-  variables:
-    DOCKER_HOST: tcp://docker:2376
-    DOCKER_TLS_CERTDIR: "/certs"
-    DOCKER_TLS_VERIFY: 1
-    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
-    DOCKER_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
   before_script:
-    - docker info
+    - sleep 5  # Wait for Docker daemon to start
+    - docker info || sleep 10 && docker info
     - |
       if [ -n "$CI_REGISTRY" ]; then
         echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
       else
         echo "No container registry configured, building locally only"
-        export DOCKER_IMAGE="latinmagazine:$CI_COMMIT_REF_SLUG"
       fi
   script:
-    - docker build -t $DOCKER_IMAGE .
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG .
     - |
       if [ -n "$CI_REGISTRY" ]; then
-        docker push $DOCKER_IMAGE
+        docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
       else
         echo "Skipping push - no container registry configured"
-        echo "Built image: $DOCKER_IMAGE"
+        echo "Built image: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
       fi
+  retry: 2
   only:
     - main
 
