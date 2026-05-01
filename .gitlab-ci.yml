@@ -80,7 +80,7 @@ build:
   stage: build
   image: docker:24
   services:
-    - docker:24-dind
+    - docker:dind
   variables:
     DOCKER_HOST: tcp://docker:2376
     DOCKER_TLS_CERTDIR: "/certs"
