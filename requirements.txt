@@ -1,11 +1,11 @@
 # SiteForge Requirements
 
 # Core
-Flask==2.3.0
-Werkzeug==2.3.0
+Flask>=3.0.0
+Werkzeug>=3.0.0
 
 # Security
-cryptography>=41.0.0  # For file encryption
+cryptography>=42.0.0  # For file encryption
 PyJWT>=2.8.0
 
 # Database
@@ -17,4 +17,11 @@ Flask-Mail>=0.9.0
 # Optional enhancements
 python-dotenv>=1.0.0
 
-requests>=2.0.0  # For update checking and external API calls
+requests>=2.31.0  # For update checking and external API calls
+
+# Development and deployment
+gunicorn>=21.2.0  # WSGI server
+psycopg2-binary>=2.9.0  # PostgreSQL driver
+redis>=5.0.0  # Redis client
+structlog>=23.0.0  # Structured logging
+sentry-sdk[flask]>=1.40.0  # Error tracking

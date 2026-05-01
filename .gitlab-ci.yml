@@ -1,13 +1,115 @@
 stages:
+  - test
   - security
+  - build
+  - deploy
 
+variables:
+  DOCKER_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+  DOCKER_TAG: $CI_COMMIT_SHA
+  GIT_SUBMODULE_STRATEGY: recursive
+  # SSH configuration for private repository access
+  GIT_STRATEGY: clone
+  GIT_CHECKOUT: "true"
+
+# Test stage
+test:
+  stage: test
+  image: python:3.12
+  before_script:
+    # Install SSH client and configure Git for SSH (optional)
+    - apt-get update && apt-get install -y openssh-client git
+    - |
+      if [ -n "$SSH_PRIVATE_KEY" ]; then
+        eval $(ssh-agent -s)
+        echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - || echo "SSH key setup failed, continuing without SSH"
+        mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+        ssh-keyscan -H git.latinai.de >> ~/.ssh/known_hosts || true
+      else
+        echo "No SSH_PRIVATE_KEY provided, skipping SSH setup"
+      fi
+    - git config --global user.email "ci@gitlab.local"
+    - git config --global user.name "GitLab CI"
+    - pip install -r requirements.txt
+    - pip install pytest pytest-cov
+  script:
+    - python -m pytest --cov=lib --cov-report=html --cov-report=term --cov-report=xml:htmlcov/cobertura.xml
+  coverage: '/TOTAL.*\s+(\d+%)$/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: htmlcov/cobertura.xml
+    paths:
+      - htmlcov/
+    expire_in: 7 days
+  only:
+    - merge_requests
+    - main
+
+# Security scanning
 bandit_scan:
   stage: security
   image: python:3.12
-  script:
+  before_script:
+    # Install SSH client and configure Git for SSH (optional)
+    - apt-get update && apt-get install -y openssh-client git
+    - |
+      if [ -n "$SSH_PRIVATE_KEY" ]; then
+        eval $(ssh-agent -s)
+        echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - || echo "SSH key setup failed, continuing without SSH"
+        mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+        ssh-keyscan -H git.latinai.de >> ~/.ssh/known_hosts || true
+      else
+        echo "No SSH_PRIVATE_KEY provided, skipping SSH setup"
+      fi
+    - git config --global user.email "ci@gitlab.local"
+    - git config --global user.name "GitLab CI"
     - pip install bandit
+  script:
     - bandit -r . -x Identitas,Intermediarium -f html -o bandit-report.html --exit-zero
   artifacts:
     paths:
       - bandit-report.html
     expire_in: 7 days
+
+# Build Docker image
+build:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  script:
+    - docker build -t $DOCKER_IMAGE .
+    - docker push $DOCKER_IMAGE
+  only:
+    - main
+
+# Deploy to staging
+#deploy_staging:
+#  stage: deploy
+#  script:
+#    - echo "Deploying to staging environment"
+#    - docker pull $DOCKER_IMAGE
+#    - docker-compose -f docker-compose.staging.yml up -d
+#  environment:
+#    name: staging
+#    url: https://staging.siteforge.example.com
+#  only:
+#    - develop
+
+# Deploy to production
+#deploy_production:
+#  stage: deploy
+#  script:
+#    - echo "Deploying to production environment"
+#    - docker pull $DOCKER_IMAGE
+#    - docker-compose -f docker-compose.prod.yml up -d
+#  environment:
+#    name: production
+#    url: https://siteforge.example.com
+#  only:
+#    - main
+#  when: manual
