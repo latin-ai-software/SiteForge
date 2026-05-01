@@ -17,13 +17,18 @@ test:
   stage: test
   image: python:3.12
   before_script:
-    # Install SSH client and configure Git for SSH
+    # Install SSH client and configure Git for SSH (optional)
     - apt-get update && apt-get install -y openssh-client git
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-    - ssh-keyscan -H git.latinai.de >> ~/.ssh/known_hosts
+    - |
+      if [ -n "$SSH_PRIVATE_KEY" ]; then
+        eval $(ssh-agent -s)
+        echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - || echo "SSH key setup failed, continuing without SSH"
+        mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+        ssh-keyscan -H git.latinai.de >> ~/.ssh/known_hosts || true
+      else
+        echo "No SSH_PRIVATE_KEY provided, skipping SSH setup"
+      fi
     - git config --global user.email "ci@gitlab.local"
     - git config --global user.name "GitLab CI"
     - pip install -r requirements.txt
@@ -48,13 +53,18 @@ bandit_scan:
   stage: security
   image: python:3.12
   before_script:
-    # Install SSH client and configure Git for SSH
+    # Install SSH client and configure Git for SSH (optional)
     - apt-get update && apt-get install -y openssh-client git
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-    - ssh-keyscan -H git.latinai.de >> ~/.ssh/known_hosts
+    - |
+      if [ -n "$SSH_PRIVATE_KEY" ]; then
+        eval $(ssh-agent -s)
+        echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - || echo "SSH key setup failed, continuing without SSH"
+        mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+        ssh-keyscan -H git.latinai.de >> ~/.ssh/known_hosts || true
+      else
+        echo "No SSH_PRIVATE_KEY provided, skipping SSH setup"
+      fi
     - git config --global user.email "ci@gitlab.local"
     - git config --global user.name "GitLab CI"
     - pip install bandit
