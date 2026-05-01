@@ -50,9 +50,18 @@ def create_post():
     tags = [tag.strip() for tag in request.form.get("tags", "").split(",") if tag.strip()]
     git_repository = request.form.get("git_repository", "").strip()
     release_tag = request.form.get("release_tag", "").strip()
+    survey_enabled = request.form.get("survey_enabled") == "on"
+    survey_question = request.form.get("survey_question", "").strip()
+    survey_options = [opt.strip() for opt in request.form.get("survey_options", "").splitlines() if opt.strip()]
 
     if not title or not content:
         return jsonify({"error": "title und content erforderlich"}), 400
+
+    survey = None
+    if survey_enabled:
+        if not survey_question or len(survey_options) < 2:
+            return jsonify({"error": "Umfragefrage und mindestens 2 Optionen erforderlich"}), 400
+        survey = post_manager._build_survey(survey_question, survey_options)
 
     # Handle file uploads and existing files
     attachments = []
@@ -96,7 +105,8 @@ def create_post():
         tags=tags,
         attachments=attachments,
         git_repository=git_repository,
-        release_tag=release_tag
+        release_tag=release_tag,
+        survey=survey
     )
 
     # Send newsletter update for new posts
@@ -202,6 +212,16 @@ def save_post(post_id):
                     'mime_type': 'application/octet-stream'
                 })
 
+    survey_enabled = request.form.get("survey_enabled") == "on"
+    survey_question = request.form.get("survey_question", "").strip()
+    survey_options = [opt.strip() for opt in request.form.get("survey_options", "").splitlines() if opt.strip()]
+
+    survey = {} if not survey_enabled else None
+    if survey_enabled:
+        if not survey_question or len(survey_options) < 2:
+            return jsonify({"error": "Umfragefrage und mindestens 2 Optionen erforderlich"}), 400
+        survey = post_manager._build_survey(survey_question, survey_options, existing_survey=post.get("survey"))
+
     success = post_manager.update_post(
         post_id,
         title=title,
@@ -210,7 +230,8 @@ def save_post(post_id):
         tags=tags,
         attachments=attachments,
         git_repository=git_repository,
-        release_tag=release_tag
+        release_tag=release_tag,
+        survey=survey
     )
 
     if success:

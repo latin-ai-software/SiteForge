@@ -108,6 +108,28 @@ def add_comment(slug):
 
     return jsonify({"status": "ok", "comment_id": comment_id})
 
+# POST: Umfrage abstimmen
+@post_create_bp.route("/post/<slug>/vote", methods=["POST"])
+@auth.require_login
+def vote_post_survey(slug):
+    post = post_manager.get_post(slug)
+    if not post:
+        return jsonify({"error": "Post nicht gefunden"}), 404
+
+    if not post.get("survey"):
+        return jsonify({"error": "Keine Umfrage für diesen Beitrag vorhanden"}), 400
+
+    choice = request.form.get("survey_choice")
+    if not choice:
+        return jsonify({"error": "Bitte wähle eine Option aus."}), 400
+
+    user = auth.current_user()
+    success, message = post_manager.vote_survey(post["id"], user, choice)
+    if not success:
+        return jsonify({"error": message}), 400
+
+    return jsonify({"status": "ok", "message": message})
+
 # LIST: Alle Posts als JSON ausgeben
 @post_create_bp.route("/posts/list", methods=["GET"])
 def list_posts():

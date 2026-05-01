@@ -341,6 +341,46 @@
                 </div>
                 {% endif %}
 
+                {% if post.survey %}
+                <div class="card" style="margin-top: 1.5rem;">
+                    <h2>Umfrage</h2>
+                    <p style="margin-bottom: 1rem; font-weight: 600;">{{ post.survey.question }}</p>
+
+                    {% set user_choice = post.survey.votes[session.user] if session.user and post.survey.votes and session.user in post.survey.votes else None %}
+                    {% set total_votes = post.survey.votes|length if post.survey.votes else 0 %}
+
+                    {% if session.user %}
+                        {% if user_choice %}
+                            {% set selected_option = post.survey.options|selectattr('id','equalto',user_choice)|first %}
+                            <p>Du hast abgestimmt: <strong>{{ selected_option.text if selected_option else 'Unbekannte Option' }}</strong></p>
+                        {% else %}
+                            <form id="surveyForm" onsubmit="submitSurvey(event)">
+                                {% for option in post.survey.options %}
+                                    <label style="display: block; margin-bottom: 0.75rem;">
+                                        <input type="radio" name="survey_choice" value="{{ option.id }}"> {{ option.text }}
+                                    </label>
+                                {% endfor %}
+                                <button class="button-primary" type="submit">Abstimmen</button>
+                            </form>
+                        {% endif %}
+                    {% else %}
+                        <p>Du musst <a href="/login">eingeloggt</a> sein, um an dieser Umfrage teilzunehmen.</p>
+                    {% endif %}
+
+                    <div style="margin-top: 1.25rem;">
+                        <p style="font-weight: 600; margin-bottom: 0.75rem;">Ergebnisse ({{ total_votes }} Stimme{{ '' if total_votes == 1 else 'n' }}):</p>
+                        <ul style="list-style: none; padding: 0; margin: 0;">
+                            {% for option in post.survey.options %}
+                                {% set percent = (option.votes / total_votes * 100)|round(0) if total_votes > 0 else 0 %}
+                                <li style="margin-bottom: 0.75rem;">
+                                    <strong>{{ option.text }}</strong> — {{ option.votes }} Stimme{{ '' if option.votes == 1 else 'n' }} ({{ percent }}%)
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+
                 <section class="comment-section" style="margin-top: 1.75rem;">
                     <h2 style="margin-bottom: 1rem;">Kommentare</h2>
                     {% if top_level_comments %}
@@ -444,6 +484,23 @@
             if (result.status === "ok") {
                 alert("Kommentar hinzugefügt!");
                 location.reload(); // Simple refresh for now
+            } else {
+                alert("Fehler: " + result.error);
+            }
+        }
+
+        async function submitSurvey(event) {
+            event.preventDefault();
+            const formData = new FormData(document.getElementById("surveyForm"));
+            const response = await fetch(window.location.pathname + "/vote", {
+                method: "POST",
+                body: formData
+            });
+            const result = await response.json();
+
+            if (result.status === "ok") {
+                alert("Danke für deine Stimme!");
+                location.reload();
             } else {
                 alert("Fehler: " + result.error);
             }
