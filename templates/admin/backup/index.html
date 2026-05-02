@@ -157,40 +157,49 @@
             gap: 8px;
         }
 
-        /* Mobile responsiveness */
-        @media (max-width: 768px) {
-            .layout {
-                flex-direction: column;
-            }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
 
-            .sidebar {
-                width: 100%;
-                border-right: none;
-                border-bottom: 1px solid #1f2937;
-                padding: 16px;
-            }
+        .btn.loading {
+            position: relative;
+        }
 
-            .sidebar nav {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 8px;
-            }
+        .btn.loading::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            margin: auto;
+            border: 2px solid transparent;
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
 
-            .sidebar nav a {
-                margin-bottom: 0;
-            }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
 
-            .main {
-                padding: 16px;
-            }
+        .alert {
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            border-radius: 6px;
+            border-left: 4px solid;
+        }
 
-            .table {
-                font-size: 0.85rem;
-            }
+        .alert-success {
+            background: #064e3b;
+            border-color: #10b981;
+            color: #d1fae5;
+        }
 
-            .actions-cell {
-                flex-direction: column;
-            }
+        .alert-error {
+            background: #7f1d1d;
+            border-color: #ef4444;
+            color: #fecaca;
         }
     </style>
 </head>
@@ -217,11 +226,16 @@
 
     <main class="main">
         <h1 class="page-title">Backups verwalten</h1>
+        
+        <div id="alert-container"></div>
 
         <div class="card">
-            <div style="margin-bottom: 20px;">
+            <div style="margin-bottom: 20px; display: flex; gap: 12px; align-items: center;">
                 <a href="{{ url_for('backup.backup_create') }}" class="btn btn-primary">
                     <i class="fa fa-plus"></i> Neues Backup erstellen
+                </a>
+                <a href="{{ url_for('backup.remote_settings') }}" class="btn btn-secondary">
+                    <i class="fa fa-cog"></i> Remote-Einstellungen
                 </a>
             </div>
 
@@ -247,6 +261,10 @@
                                     <i class="fa fa-download"></i> Download
                                 </a>
 
+                                <button onclick="pushToRemote('{{ b.name }}')" class="btn btn-primary btn-sm" id="push-btn-{{ b.name }}">
+                                    <i class="fa fa-upload"></i> Push Remote
+                                </button>
+
                                 <a href="{{ url_for('backup.backup_delete', name=b.name) }}"
                                    class="btn btn-danger btn-sm"
                                    onclick="return confirm('Backup wirklich löschen?');">
@@ -270,5 +288,84 @@
     </main>
 
 </div>
+
+<script>
+function showAlert(message, type = 'success') {
+    const container = document.getElementById('alert-container');
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type}`;
+    alert.textContent = message;
+    
+    container.appendChild(alert);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        alert.remove();
+    }, 5000);
+}
+
+async function pushToRemote(backupName) {
+    const button = document.getElementById(`push-btn-${backupName}`);
+    const originalText = button.innerHTML;
+    
+    // Disable button and show loading
+    button.disabled = true;
+    button.classList.add('loading');
+    button.innerHTML = '<i class="fa fa-spinner"></i> Uploading...';
+    
+    try {
+        const response = await fetch(`/admin/manage/backup/api/upload-remote/${backupName}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            let successCount = 0;
+            let totalCount = 0;
+            let messages = [];
+            
+            // Count successful uploads
+            Object.keys(data.results).forEach(protocol => {
+                const protocolResults = data.results[protocol];
+                if (Array.isArray(protocolResults)) {
+                    totalCount += protocolResults.length;
+                    protocolResults.forEach(result => {
+                        if (result[1]) { // success flag
+                            successCount++;
+                        } else {
+                            messages.push(`${protocol.toUpperCase()}: ${result[1]}`);
+                        }
+                    });
+                }
+            });
+            
+            if (successCount > 0) {
+                showAlert(`Backup "${backupName}" erfolgreich zu ${successCount}/${totalCount} Remote-Servern hochgeladen.`, 'success');
+            } else {
+                showAlert(`Backup "${backupName}" konnte nicht hochgeladen werden.`, 'error');
+            }
+            
+            // Show detailed error messages if any
+            messages.forEach(msg => showAlert(msg, 'error'));
+            
+        } else {
+            showAlert(`Fehler beim Hochladen: ${data.message}`, 'error');
+        }
+        
+    } catch (error) {
+        showAlert(`Netzwerkfehler: ${error.message}`, 'error');
+    } finally {
+        // Re-enable button and restore original text
+        button.disabled = false;
+        button.classList.remove('loading');
+        button.innerHTML = originalText;
+    }
+}
+</script>
+
 </body>
 </html>

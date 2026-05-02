@@ -30,6 +30,7 @@ static/git/
 /SECURITY_IMPLEMENTATION_CHECKLIST.md
 /GITLAB_CI_SETUP.md
 /build
+/MagicMock/
 
 # Modern additions
 .env
