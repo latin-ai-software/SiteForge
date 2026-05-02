@@ -47,11 +47,21 @@ class YouTubeHelper:
             if match:
                 return match.group(1)
         
+        # https://youtube.com/user/ChannelName format
+        if '/user/' in url:
+            match = re.search(r'/user/([a-zA-Z0-9_-]+)', url)
+            if match:
+                return match.group(1)
+        
         # https://youtube.com/channel/CHANNEL_ID format
         if '/channel/' in url:
             match = re.search(r'/channel/([a-zA-Z0-9_-]+)', url)
             if match:
                 return match.group(1)
+        
+        # If it's a URL that doesn't match any known pattern, return None
+        if url.startswith('http'):
+            return None
         
         # Assume it's a channel ID or handle
         return url
@@ -150,11 +160,11 @@ class YouTubeHelper:
             date_string: ISO 8601 date string (e.g., "2026-04-25T10:30:00Z")
         
         Returns:
-            Formatted date string (e.g., "25. Apr 2026")
+            Formatted date string (e.g., "2026-04-25")
         """
         try:
             from datetime import datetime
             dt = datetime.fromisoformat(date_string.replace('Z', '+00:00'))
-            return dt.strftime('%d. %b %Y')
+            return dt.strftime('%Y-%m-%d')
         except:
             return date_string

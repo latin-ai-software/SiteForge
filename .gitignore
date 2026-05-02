@@ -12,7 +12,8 @@ static/git/
 /test_encryption.py
 /ENCRYPTION_QUICK_START.md
 /decrypt.py
-/updater/
+!/updater/install_update.py
+/updater/backups/
 /data_renamed/
 /data/
 /keys/
@@ -28,6 +29,7 @@ static/git/
 /SECURITY_HARDENING_REPORT.md
 /SECURITY_IMPLEMENTATION_CHECKLIST.md
 /GITLAB_CI_SETUP.md
+/build
 
 # Modern additions
 .env

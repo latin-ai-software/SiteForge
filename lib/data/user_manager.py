@@ -55,7 +55,7 @@ class UserManager:
         return user_list
 
     def update_user_role(self, username, role):
-        result = self.auth.update_user_role(username, role)
+        success, message = self.auth.update_user_role(username, role)
         # Invalidate cache on update
         if self._user_cache is not None:
             self._user_cache.delete('all_users')
@@ -65,10 +65,10 @@ class UserManager:
             clear_all_caches()
         except Exception:
             pass
-        return result
+        return success
 
     def update_user_git_access(self, username, git_access):
-        result = self.auth.update_user_git_access(username, git_access)
+        success, message = self.auth.update_user_git_access(username, git_access)
         # Invalidate cache on update
         if self._user_cache is not None:
             self._user_cache.delete('all_users')
@@ -78,7 +78,7 @@ class UserManager:
             clear_all_caches()
         except Exception:
             pass
-        return result
+        return success
 
     def delete_user(self, username):
         result = self.auth.delete_user(username)

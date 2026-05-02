@@ -76,6 +76,11 @@ class FileManager:
 
         # Security scan - skip text scanning for binary media files
         file_content = file.read()
+        
+        # Malware scan
+        if self.security.is_suspicious(file_content):
+            return False, "Malware detected: suspicious content found", None
+        
         if not self._is_binary_file(filename, file_content):
             try:
                 # Try to decode as UTF-8 text

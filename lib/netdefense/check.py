@@ -18,8 +18,20 @@ class MalwareChecker:
             "suspicious_url": re.compile(r"https?://[^\s]+"),
         }
 
-    def check_text(self, text: str) -> Dict[str, List[str]]:
+    def check_text(self, text) -> Dict[str, List[str]]:
         """Analysiert Text auf verdächtige Muster."""
+        # Handle bytes input by decoding to string
+        if isinstance(text, bytes):
+            try:
+                text = text.decode('utf-8', errors='ignore')
+            except (UnicodeDecodeError, AttributeError):
+                # If decoding fails, return empty findings
+                return {
+                    "keywords": [],
+                    "patterns": [],
+                    "score": 0
+                }
+        
         findings = {
             "keywords": [],
             "patterns": [],
@@ -40,7 +52,7 @@ class MalwareChecker:
 
         return findings
 
-    def is_suspicious(self, text: str, threshold: int = 2) -> bool:
+    def is_suspicious(self, text, threshold: int = 2) -> bool:
         """Gibt True zurück, wenn der Text verdächtig wirkt."""
         result = self.check_text(text)
         return result["score"] >= threshold

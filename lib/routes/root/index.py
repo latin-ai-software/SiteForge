@@ -1,6 +1,6 @@
 import os
 import json
-from flask import Blueprint, current_app, session, render_template, request, abort
+from flask import Blueprint, current_app, session, render_template, request, abort, redirect, url_for
 from ...data.post_manager import PostManager
 from ...data.comment_manager import CommentManager
 from ...netdefense.auth.identitas_auth import IdentitasAuthManager
@@ -174,7 +174,10 @@ def index_text_detail(text_id):
 @root_bp.route("/index-text/<text_id>/comment", methods=["POST"])
 def add_index_text_comment(text_id):
     if 'user' not in session:
-        return {"status": "error", "error": "Login required"}, 401
+        try:
+            return redirect(url_for("auth.login_page"))
+        except Exception:
+            return redirect("/login")
 
     text = get_index_text_by_id(text_id)
     if not text:
