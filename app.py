@@ -1,11 +1,146 @@
 def create_app(config_name=None):
     """Application factory pattern for modern Flask apps."""
-    pass  # Will implement later
+    import sys
+    import importlib.util
+    from flask import Flask, render_template, send_from_directory, Response, redirect, url_for
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    import json
+    import lib.netdefense.check
+    from lib.security import add_security_headers, RateLimiter, ConfigEncryption, SecureConfig
+    from lib.security.encrypted_files import init_encryption
+    from lib.routes.setup.index import setup_bp, is_setup_completed
+    from lib.routes.create.post.index import post_create_bp
+    from lib.routes.root.index import root_bp
+    from lib.routes.admin.manage.templates.index import admin_templates_bp
+    from lib.routes.admin.manage.posts.index import admin_posts_bp
+    from lib.routes.admin.manage.users.index import admin_users_bp
+    from lib.routes.admin.manage.analytics.index import admin_analytics_bp
+    from lib.routes.admin.manage.settings.index import admin_settings_bp
+    from lib.routes.admin.manage.media.index import admin_media_bp
+    from lib.routes.root.auth import auth_bp
+    from lib.routes.data.youtube import youtube_bp
+    from lib.netdefense.auth.identitas_auth import IdentitasAuthManager
+    import os
+    from datetime import datetime
+
+    # Load environment variables
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+    except ImportError:
+        pass  # python-dotenv not installed, use environment variables only
+
+    # Initialize Flask app
+    app = Flask(__name__)
+
+    # Get base path for security configuration
+    base_path = os.path.abspath(os.path.dirname(__file__))
+
+    # Apply secure configuration
+    secure_config = SecureConfig.get_config(base_path)
+    app.config.update(secure_config)
+
+    # Apply modern configuration
+    from config import get_config
+    config_class = get_config(config_name)
+    app.config.from_object(config_class)
+
+    # Trust X-Forwarded headers from proxies (e.g., Cloudflare tunnel)
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1, x_port=1)
+
+    # Initialize encryption system
+    init_encryption(base_path)
+    config_encryption = ConfigEncryption(base_path)
+
+    # Add security headers to all responses
+    add_security_headers(app)
+
+    # Setup modern logging
+    from logging_config import setup_logging
+    setup_logging(app)
+
+    # Initialize rate limiter
+    rate_limiter = RateLimiter(base_path)
+
+    # Periodic cleanup task (in real deployment, use celery or similar)
+    import threading
+    import logging
+    import time
+
+    logger = logging.getLogger(__name__)
+
+    def cleanup_rate_limits():
+        while True:
+            time.sleep(3600)  # Cleanup every hour
+            try:
+                rate_limiter.cleanup_old_data()
+            except Exception as e:
+                logger.error(f"Error during rate limit cleanup: {e}", exc_info=True)
+
+    # Start cleanup thread
+    cleanup_thread = threading.Thread(target=cleanup_rate_limits, daemon=True)
+    cleanup_thread.start()
+
+    from updater.update_loop import start_update_loop
+    start_update_loop()
+
+    # Register blueprints
+    app.register_blueprint(setup_bp)
+    app.register_blueprint(post_create_bp)
+    app.register_blueprint(root_bp)
+    app.register_blueprint(admin_templates_bp)
+    app.register_blueprint(admin_posts_bp)
+    app.register_blueprint(admin_users_bp)
+    app.register_blueprint(admin_settings_bp)
+    app.register_blueprint(admin_media_bp)
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(admin_analytics_bp)
+    from lib.routes.admin.manage.backup import backup_bp
+    app.register_blueprint(backup_bp)
+    app.register_blueprint(youtube_bp)
+
+    # Global variable to track loaded plugins
+    loaded_plugins = set()
+    available_plugins = set()
+    from lib.routes.admin.manage.theme_creator import theme_creator_bp
+    app.register_blueprint(theme_creator_bp)
+
+    from lib.data.settings import get_theme
+    from lib.security import CSRFProtection
+
+    # Health check endpoint
+    @app.route('/health')
+    def health_check():
+        return {'status': 'healthy'}, 200
+
+    # Load plugins (keeping existing logic)
+    load_plugins(app)
+
+    # Setup check middleware
+    @app.before_request
+    def check_setup_required():
+        """Check if setup is required and redirect if necessary"""
+        from flask import request
+
+        # Allow setup routes, static files, and uploads without setup check
+        if (request.path.startswith('/setup') or
+            request.path.startswith('/static') or
+            request.path.startswith('/uploads') or
+            request.path.startswith('/favicon.ico') or
+            request.path.startswith('/robots.txt')):
+            return
+
+        # Check if setup has been completed
+        if not is_setup_completed(base_path):
+            return redirect(url_for('setup.setup_page'))
+
+    return app
 
 # For backward compatibility, keep original code below
 import sys
 import importlib.util
 from flask import Flask, render_template, send_from_directory, Response, redirect, url_for
+import requests
 from werkzeug.middleware.proxy_fix import ProxyFix
 import json
 import lib.netdefense.check
@@ -450,8 +585,46 @@ def handle_cli():
         sys.exit(0)
 
 
+import os
 
+def read_license_key():
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    license_file = os.path.join(base_dir, "data", "license.txt")
+
+    if not os.path.exists(license_file):
+        raise FileNotFoundError("license.txt not found")
+
+    with open(license_file, "r") as f:
+        return f.read().strip()
+    import requests
+
+def is_license_valid(license_key):
+    url = f"https://latinai.ch/wp-json/shoplicensegateway/license/validate/{license_key}"
+
+    try:
+        response = requests.get(url, timeout=5)
+    except Exception:
+        return False
+
+    # Prüfen ob JSON
+    try:
+        data = response.json()
+    except ValueError:
+        return False
+
+    # Gateway gibt {"status": "valid"} zurück
+    return data.get("status") == "valid"
+def ensure_license_valid():
+    license_key = read_license_key()
+
+    if not is_license_valid(license_key):
+        print("❌ Lizenz ungültig — Anwendung wird beendet.")
+        exit(1)
+
+    print("✔ Lizenz gültig — Anwendung startet.")
 if __name__ == "__main__":
+    ensure_license_valid()
+
     handle_cli()
 
     import argparse
