@@ -75,8 +75,8 @@ class TestFileManager:
         )
 
         result = file_manager.save_file(file)
-        assert "success" in result
-        assert "filename" in result
+        assert result[0] is True
+        assert result[1].endswith('.txt')
 
     @patch('lib.data.file_manager.MalwareChecker')
     def test_save_file_too_large(self, mock_malware_checker, file_manager):
@@ -93,8 +93,8 @@ class TestFileManager:
         )
 
         result = file_manager.save_file(file, max_size_mb=10)
-        assert "error" in result
-        assert "too large" in result["error"].lower()
+        assert result[0] is False
+        assert "too large" in result[1]
 
     @patch('lib.data.file_manager.MalwareChecker')
     def test_save_file_malware_detected(self, mock_malware_checker, file_manager):
@@ -110,8 +110,8 @@ class TestFileManager:
         )
 
         result = file_manager.save_file(file)
-        assert "error" in result
-        assert "malware" in result["error"].lower()
+        assert result[0] is False
+        assert "Malware detected" in result[1]
 
     @patch('lib.data.file_manager.MalwareChecker')
     def test_save_file_not_allowed(self, mock_malware_checker, file_manager):
@@ -151,13 +151,8 @@ class TestFileManager:
         expected = os.path.join(file_manager.uploads_dir, "test.txt")
         assert path == expected
 
-    @patch('flask.current_app')
-    def test_get_file_url(self, mock_current_app, file_manager):
+    def test_get_file_url(self, file_manager):
         """Test get_file_url."""
-        mock_app = MagicMock()
-        mock_app.url_for.return_value = "/uploads/test.txt"
-        mock_current_app.return_value = mock_app
-
         url = file_manager.get_file_url("test.txt")
         assert url == "/uploads/test.txt"
 
@@ -171,4 +166,5 @@ class TestFileManager:
 
         files = file_manager.list_files()
         assert len(files) == 3
-        assert all(f in files for f in test_files)
+        filenames = [f['filename'] for f in files]
+        assert set(filenames) == set(test_files)

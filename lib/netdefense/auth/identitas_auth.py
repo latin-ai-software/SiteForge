@@ -264,6 +264,11 @@ class IdentitasAuthManager:
             return True, "Role updated"
         return False, "Failed to update role"
     
+    def _set_user_role(self, username, role):
+        """Set user's role (internal method)"""
+        success, _ = self.update_user_role(username, role)
+        return success
+    
     def update_user_git_access(self, username, git_access):
         """Update user's git access (stored in role file)"""
         if git_access:

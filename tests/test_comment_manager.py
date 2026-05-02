@@ -89,12 +89,12 @@ class TestCommentManager:
         comments = comment_manager._load_comments()
         comments["post1"][0]["status"] = "pending"
         comment_manager._save_comments(comments)
-        pending_comments = comment_manager.get_comments("post1", "pending")
+        pending_comments, stats = comment_manager.get_comments("post1", "pending")
         assert len(pending_comments) == 1
 
     def test_get_comments_nonexistent_post(self, comment_manager):
         """Test get_comments for non-existent post."""
-        comments = comment_manager.get_comments("nonexistent")
+        comments, stats = comment_manager.get_comments("nonexistent")
         assert comments == []
 
     def test_delete_comment(self, comment_manager):

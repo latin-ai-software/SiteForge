@@ -99,7 +99,8 @@ class TestNewsletter:
         """Test subscribe_email."""
         with app.app_context():
             result = newsletter.subscribe_email("test@example.com")
-            assert result is True
+            assert result[0] is True
+            assert "Danke" in result[1]
 
             subscribers = newsletter.load_newsletter_subscribers()
             assert "test@example.com" in subscribers
@@ -108,13 +109,13 @@ class TestNewsletter:
         """Test subscribe_email with invalid email."""
         with app.app_context():
             result = newsletter.subscribe_email("invalid-email")
-            assert result is False
+            assert result[0] is False
+            assert "gültige" in result[1]
 
     def test_get_base_url(self, app):
         """Test get_base_url."""
         with app.app_context():
-            with patch('flask.request') as mock_request:
-                mock_request.host_url = "http://localhost:5000/"
+            with app.test_request_context('/'):
                 base_url = newsletter.get_base_url()
                 assert base_url == "http://localhost:5000"
 
@@ -134,8 +135,7 @@ class TestNewsletter:
                     "newsletter_sender_email": "sender@example.com"
                 }, f)
 
-            with patch('flask.request') as mock_request:
-                mock_request.host_url = "http://localhost:5000/"
+            with app.test_request_context('/'):
                 result = newsletter.send_newsletter("Subject", "<p>Body</p>", "Text body")
                 assert result is True
 
