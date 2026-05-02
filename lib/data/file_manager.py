@@ -78,9 +78,8 @@ class FileManager:
         file_content = file.read()
         
         # Malware scan
-        malware_ok, malware_message = self.security.scan_file(file_content)
-        if not malware_ok:
-            return False, f"Malware detected: {malware_message}", None
+        if self.security.is_suspicious(file_content):
+            return False, "Malware detected: suspicious content found", None
         
         if not self._is_binary_file(filename, file_content):
             try:

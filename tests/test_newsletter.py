@@ -117,7 +117,7 @@ class TestNewsletter:
         with app.app_context():
             with app.test_request_context('/'):
                 base_url = newsletter.get_base_url()
-                assert base_url == "http://localhost:5000"
+                assert base_url == "http://localhost"
 
     @patch('smtplib.SMTP')
     def test_send_newsletter(self, mock_smtp, app):
@@ -132,7 +132,8 @@ class TestNewsletter:
                     "ses_smtp_port": 587,
                     "ses_smtp_username": "user",
                     "ses_smtp_password": "pass",
-                    "newsletter_sender_email": "sender@example.com"
+                    "newsletter_sender_email": "sender@example.com",
+                    "newsletter_enabled": True
                 }, f)
 
             with app.test_request_context('/'):

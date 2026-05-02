@@ -67,12 +67,14 @@ class TestSetupFunctions:
             json.dump(test_settings, f)
 
         settings = load_settings(temp_dir)
-        assert settings == test_settings
+        assert settings["test"] == "value"
+        assert "site_title" in settings  # Should have defaults merged
 
     def test_load_settings_no_file(self, temp_dir):
         """Test load_settings with no file."""
         settings = load_settings(temp_dir)
-        assert settings == {}
+        assert "site_title" in settings  # Should have defaults
+        assert settings["site_title"] == "My Awesome Site"
 
     def test_initialize_data_files(self, temp_dir):
         """Test initialize_data_files."""

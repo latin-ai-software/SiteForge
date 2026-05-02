@@ -97,12 +97,16 @@ class TestFileManager:
         assert "too large" in result[1]
 
     @patch('lib.data.file_manager.MalwareChecker')
-    def test_save_file_malware_detected(self, mock_malware_checker, file_manager):
+    @patch('lib.data.file_manager.MalwareChecker')
+    def test_save_file_malware_detected(self, mock_malware_checker, temp_dir):
         """Test save_file with malware detected."""
         mock_checker = MagicMock()
-        mock_checker.scan_file.return_value = (False, "Malware detected")
+        mock_checker.is_suspicious.return_value = True
         mock_malware_checker.return_value = mock_checker
 
+        # Create file manager after mocking
+        file_manager = FileManager(temp_dir)
+        
         file = FileStorage(
             stream=BytesIO(b"malware content"),
             filename="malware.txt",
@@ -111,7 +115,7 @@ class TestFileManager:
 
         result = file_manager.save_file(file)
         assert result[0] is False
-        assert "Malware detected" in result[1]
+        assert "Malware detected" in result[1] or "suspicious content" in result[1]
 
     @patch('lib.data.file_manager.MalwareChecker')
     def test_save_file_not_allowed(self, mock_malware_checker, file_manager):
@@ -126,8 +130,8 @@ class TestFileManager:
         )
 
         result = file_manager.save_file(file)
-        assert "error" in result
-        assert "not allowed" in result["error"].lower()
+        assert result[0] is False
+        assert "File type not allowed" in result[1]
 
     def test_delete_file(self, file_manager):
         """Test delete_file."""

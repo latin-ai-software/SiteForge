@@ -130,7 +130,7 @@ class TestRootRoutes:
     @patch('lib.routes.root.index.render_template')
     def test_newsletter_post_success(self, mock_render, mock_subscribe, app, client):
         """Test newsletter POST route with success."""
-        mock_subscribe.return_value = True
+        mock_subscribe.return_value = (True, "Success")
 
         response = client.post('/newsletter', data={'email': 'test@example.com'})
         assert response.status_code == 200
@@ -139,7 +139,7 @@ class TestRootRoutes:
     @patch('lib.routes.root.index.render_template')
     def test_newsletter_post_invalid_email(self, mock_render, mock_subscribe, app, client):
         """Test newsletter POST route with invalid email."""
-        mock_subscribe.return_value = False
+        mock_subscribe.return_value = (False, "Invalid email")
 
         response = client.post('/newsletter', data={'email': 'invalid-email'})
         assert response.status_code == 200
