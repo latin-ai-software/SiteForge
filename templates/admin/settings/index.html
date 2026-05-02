@@ -450,6 +450,14 @@
                 
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <button type="button" class="btn" id="checkUpdateBtn" style="background: #059669;">Nach Updates suchen</button>
+                    <button type="button" class="btn" id="installUpdateBtn" style="background: #dc2626; display: none;">Update installieren</button>
+                </div>
+                
+                <div id="updateProgress" style="display: none; margin-top: 15px;">
+                    <p style="color: #fbbf24;">Installiere Update...</p>
+                    <div style="width: 100%; height: 4px; background: #374151; border-radius: 2px; margin-top: 8px;">
+                        <div id="progressBar" style="width: 0%; height: 100%; background: #059669; border-radius: 2px; transition: width 0.3s;"></div>
+                    </div>
                 </div>
             </section>
 
@@ -556,12 +564,14 @@ async function loadUpdateStatus() {
                     Aktuelle Version: ${version.current_version}<br>
                     Neueste Version: ${version.latest_version}
                 </div>`;
+                document.getElementById('installUpdateBtn').style.display = 'inline-block';
             } else {
                 statusHtml = `<div style="padding: 12px; background: #d1fae5; border-radius: 6px; color: #065f46; margin-bottom: 10px;">
                     <strong>✅ System ist aktuell</strong><br>
                     Version: ${version.current_version}<br>
-                    Neueste Version: ${version.latest_version}
+                    <small style="color: #047857;">Keine Updates verfügbar</small>
                 </div>`;
+                document.getElementById('installUpdateBtn').style.display = 'none';
             }
             document.getElementById('updateStatus').innerHTML = statusHtml;
         } else {
@@ -601,6 +611,57 @@ document.getElementById('checkUpdateBtn').addEventListener('click', async functi
     } finally {
         btn.disabled = false;
         btn.textContent = 'Nach Updates suchen';
+        btn.style.opacity = '1';
+    }
+});
+
+// Install update button
+document.getElementById('installUpdateBtn').addEventListener('click', async function() {
+    if (!confirm('Sind Sie sicher, dass Sie das Update installieren möchten? Das System wird während der Installation nicht verfügbar sein.')) {
+        return;
+    }
+    
+    const btn = this;
+    const progressDiv = document.getElementById('updateProgress');
+    const progressBar = document.getElementById('progressBar');
+    
+    btn.disabled = true;
+    btn.textContent = 'Installiere...';
+    btn.style.opacity = '0.7';
+    progressDiv.style.display = 'block';
+    progressBar.style.width = '10%';
+    
+    try {
+        const response = await fetch(window.location.origin + '/admin/settings/update/install', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        const result = await response.json();
+        progressBar.style.width = '100%';
+        
+        if (result.status === 'ok') {
+            alert(`✅ Update erfolgreich installiert!\n\n${result.message}\n\nDas System wird neu gestartet.`);
+            
+            // Show restart message
+            progressDiv.innerHTML = '<p style="color: #059669; font-weight: bold;">Update installiert! System wird neu gestartet...</p>';
+            
+            // Reload page after a delay to allow restart
+            setTimeout(() => {
+                window.location.reload();
+            }, 3000);
+        } else {
+            alert('❌ Fehler bei der Update-Installation: ' + result.message);
+            progressDiv.style.display = 'none';
+        }
+    } catch (e) {
+        alert('❌ Fehler: ' + e.message);
+        progressDiv.style.display = 'none';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Update installieren';
         btn.style.opacity = '1';
     }
 });

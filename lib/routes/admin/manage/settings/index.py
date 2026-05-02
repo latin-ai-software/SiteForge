@@ -231,41 +231,6 @@ def encryption_enable():
         }), 500
 
 
-@admin_settings_bp.route("/encryption/disable", methods=["POST"])
-@auth.require_admin
-def encryption_disable():
-    """Disable encryption for all config files (DANGEROUS)"""
-    from ...security import ConfigEncryption
-    
-    # Rate limit encryption changes - max 1 per minute
-    if rate_limiter.is_rate_limited(f"encryption_change_{request.remote_addr}"):
-        abort(429)
-    
-    # Require confirmation
-    confirm = request.form.get("confirm_disable") == "true"
-    if not confirm:
-        return jsonify({
-            "status": "error",
-            "message": "Must confirm disabling encryption by setting confirm_disable=true"
-        }), 400
-    
-    try:
-        config_enc = ConfigEncryption(BASE_PATH)
-        results = config_enc.disable_all()
-        
-        success_count = sum(1 for success, _ in results.values() if success)
-        return jsonify({
-            "status": "ok",
-            "message": f"Encryption disabled for {success_count} files",
-            "results": results
-        })
-    except Exception as e:
-        return jsonify({
-            "status": "error",
-            "message": str(e)
-        }), 500
-
-
 # CACHE: Flush all caches
 @admin_settings_bp.route("/cache/flush", methods=["POST"])
 @auth.require_admin
@@ -363,4 +328,121 @@ def update_status():
         return jsonify({
             "status": "error",
             "message": str(e)
+        }), 500
+
+
+# UPDATE: Download and install update
+@admin_settings_bp.route("/update/install", methods=["POST"])
+@auth.require_admin
+def install_update():
+    """Download and install the latest update"""
+    import requests
+    import zipfile
+    import tempfile
+    import shutil
+    
+    # Rate limit update installations - max 1 per hour
+    if rate_limiter.is_rate_limited(f"update_install_{request.remote_addr}", max_requests=1, window_seconds=3600):
+        return jsonify({
+            "status": "error",
+            "message": "Update installation rate limited. Please wait 1 hour between installations."
+        }), 429
+    
+    try:
+        # Read license key
+        license_file = os.path.join(BASE_PATH, "data", "license.txt")
+        if not os.path.exists(license_file):
+            return jsonify({
+                "status": "error",
+                "message": "License file not found. Please ensure data/license.txt exists."
+            }), 400
+        
+        with open(license_file, "r", encoding="utf-8") as f:
+            license_key = f.read().strip()
+        
+        if not license_key:
+            return jsonify({
+                "status": "error",
+                "message": "License key is empty. Please check data/license.txt."
+            }), 400
+        
+        # Get current version
+        version_file = os.path.join(BASE_PATH, "data", "version.json")
+        current_version = "0.1.0"  # Default fallback
+        if os.path.exists(version_file):
+            with open(version_file, "r", encoding="utf-8") as f:
+                version_data = json.load(f)
+                current_version = version_data.get("current_version", "0.1.0")
+        
+        # Download update
+        update_url = f"https://latinai.ch/wp-json/shoplicensegateway/update?version={current_version}&license_key={license_key}"
+        
+        # Create temporary directory for download
+        with tempfile.TemporaryDirectory() as temp_dir:
+            zip_path = os.path.join(temp_dir, "update.zip")
+            
+            # Download the ZIP file
+            response = requests.get(update_url, timeout=300)  # 5 minute timeout
+            response.raise_for_status()
+            
+            # Save ZIP file
+            with open(zip_path, "wb") as f:
+                f.write(response.content)
+            
+            # Extract ZIP file
+            extract_path = os.path.join(temp_dir, "extracted")
+            os.makedirs(extract_path, exist_ok=True)
+            
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall(extract_path)
+            
+            # Get list of files in the extracted directory
+            extracted_files = []
+            for root, dirs, files in os.walk(extract_path):
+                for file in files:
+                    rel_path = os.path.relpath(os.path.join(root, file), extract_path)
+                    extracted_files.append(rel_path)
+            
+            # Copy files to installation directory
+            updated_files = []
+            for rel_path in extracted_files:
+                source_path = os.path.join(extract_path, rel_path)
+                target_path = os.path.join(BASE_PATH, rel_path)
+                
+                # Create target directory if it doesn't exist
+                os.makedirs(os.path.dirname(target_path), exist_ok=True)
+                
+                # Copy file (this will overwrite existing files)
+                shutil.copy2(source_path, target_path)
+                updated_files.append(rel_path)
+            
+            # Log the update
+            SecurityLogger.log_config_change(
+                session.get('user', 'unknown'),
+                'system_update',
+                current_version,
+                f"Updated {len(updated_files)} files"
+            )
+            
+            return jsonify({
+                "status": "ok",
+                "message": f"Successfully updated {len(updated_files)} files",
+                "files_updated": updated_files,
+                "restart_required": True
+            })
+    
+    except requests.exceptions.RequestException as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Failed to download update: {str(e)}"
+        }), 500
+    except zipfile.BadZipFile as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Invalid ZIP file received: {str(e)}"
+        }), 500
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Update installation failed: {str(e)}"
         }), 500
