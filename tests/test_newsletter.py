@@ -128,7 +128,7 @@ class TestNewsletter:
             os.makedirs(os.path.dirname(settings_file), exist_ok=True)
             with open(settings_file, 'w') as f:
                 json.dump({
-                    "ses_smtp_server": "smtp.example.com",
+                    "ses_smtp_host": "smtp.example.com",
                     "ses_smtp_port": 587,
                     "ses_smtp_username": "user",
                     "ses_smtp_password": "pass",
@@ -137,7 +137,12 @@ class TestNewsletter:
                 }, f)
 
             with app.test_request_context('/'):
-                result = newsletter.send_newsletter("Subject", "<p>Body</p>", "Text body")
+                result = newsletter.send_newsletter(
+                    "Subject",
+                    "<p>Body</p>",
+                    "Text body",
+                    recipients=["recipient@example.com"]
+                )
                 assert result is True
 
     def test_get_newsletter_subscriber_count(self, app):

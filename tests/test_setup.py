@@ -157,18 +157,15 @@ class TestSetupRoutes:
         mock_auth_manager_class.return_value = mock_auth
         mock_jsonify.return_value = {"success": True}
 
-        with app.app_context():
-            with patch('flask.request') as mock_request:
-                mock_request.get_json.return_value = {
-                    "site_title": "Test Site",
-                    "admin_username": "admin",
-                    "admin_password": "password123",
-                    "admin_password_confirm": "password123"
-                }
-
-                from lib.routes.setup.index import configure
-                result = configure()
-                mock_jsonify.assert_called()
+        with app.test_request_context('/setup/configure', method='POST', json={
+            "site_title": "Test Site",
+            "admin_username": "admin",
+            "admin_password": "password123",
+            "admin_password_confirm": "password123"
+        }):
+            from lib.routes.setup.index import configure
+            result = configure()
+            mock_jsonify.assert_called()
 
     @patch('lib.routes.setup.index.is_setup_completed')
     @patch('lib.routes.setup.index.jsonify')
@@ -189,10 +186,8 @@ class TestSetupRoutes:
         mock_is_completed.return_value = False
         mock_jsonify.return_value = {"success": False}
 
-        with app.app_context():
-            with patch('flask.request') as mock_request:
-                mock_request.get_json.return_value = {}
-
-                from lib.routes.setup.index import configure
-                result = configure()
-                # Should call jsonify with error about site_title
+        with app.test_request_context('/setup/configure', method='POST', json={}):
+            from lib.routes.setup.index import configure
+            result = configure()
+            # Should call jsonify with error about site_title
+            mock_jsonify.assert_called()

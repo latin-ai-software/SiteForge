@@ -17,7 +17,10 @@ def temp_dir():
 @pytest.fixture
 def user_manager(temp_dir):
     """Create a UserManager instance with a temporary directory."""
-    return UserManager(temp_dir)
+    with patch('lib.data.user_manager.IdentitasAuthManager') as mock_auth_class:
+        mock_auth = MagicMock()
+        mock_auth_class.return_value = mock_auth
+        yield UserManager(temp_dir)
 
 
 class TestUserManager:
@@ -29,7 +32,7 @@ class TestUserManager:
             mock_auth.assert_called_once_with(temp_dir)
 
     @patch('lib.data.user_manager.IdentitasAuthManager')
-    def test_get_all_users(self, mock_auth_class, user_manager):
+    def test_get_all_users(self, mock_auth_class, temp_dir):
         """Test get_all_users."""
         mock_auth = MagicMock()
         mock_auth_class.return_value = mock_auth
@@ -39,10 +42,14 @@ class TestUserManager:
 
         # Mock SQLAlchemy session and User model
         mock_session = MagicMock()
+        mock_session.__enter__.return_value = mock_session
         mock_user = MagicMock()
         mock_user.username = "testuser"
         mock_user.created_at = "2023-01-01"
         mock_session.query.return_value.all.return_value = [mock_user]
+
+        from lib.data.user_manager import UserManager
+        user_manager = UserManager(temp_dir)
 
         with patch('sqlalchemy.orm.Session', return_value=mock_session):
             users = user_manager.get_all_users()
@@ -50,33 +57,42 @@ class TestUserManager:
             assert users[0]["username"] == "testuser"
 
     @patch('lib.data.user_manager.IdentitasAuthManager')
-    def test_update_user_role(self, mock_auth_class, user_manager):
+    def test_update_user_role(self, mock_auth_class, temp_dir):
         """Test update_user_role."""
         mock_auth = MagicMock()
         mock_auth_class.return_value = mock_auth
-        mock_auth.update_user_role.return_value = True
+        mock_auth.update_user_role.return_value = (True, "Success")
+
+        from lib.data.user_manager import UserManager
+        user_manager = UserManager(temp_dir)
 
         result = user_manager.update_user_role("testuser", "admin")
         assert result is True
         mock_auth.update_user_role.assert_called_once_with("testuser", "admin")
 
     @patch('lib.data.user_manager.IdentitasAuthManager')
-    def test_update_user_git_access(self, mock_auth_class, user_manager):
+    def test_update_user_git_access(self, mock_auth_class, temp_dir):
         """Test update_user_git_access."""
         mock_auth = MagicMock()
         mock_auth_class.return_value = mock_auth
-        mock_auth.update_user_git_access.return_value = True
+        mock_auth.update_user_git_access.return_value = (True, "Success")
+
+        from lib.data.user_manager import UserManager
+        user_manager = UserManager(temp_dir)
 
         result = user_manager.update_user_git_access("testuser", True)
         assert result is True
         mock_auth.update_user_git_access.assert_called_once_with("testuser", True)
 
     @patch('lib.data.user_manager.IdentitasAuthManager')
-    def test_delete_user(self, mock_auth_class, user_manager):
+    def test_delete_user(self, mock_auth_class, temp_dir):
         """Test delete_user."""
         mock_auth = MagicMock()
         mock_auth_class.return_value = mock_auth
         mock_auth.delete_user.return_value = True
+
+        from lib.data.user_manager import UserManager
+        user_manager = UserManager(temp_dir)
 
         result = user_manager.delete_user("testuser")
         assert result is True
