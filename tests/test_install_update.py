@@ -3,12 +3,15 @@ import sys
 import json
 import tempfile
 import zipfile
+import importlib.util
 from unittest.mock import patch, MagicMock
 
-# Add parent directory to path for imports
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from updater.install_update import install_update
+# Load install_update module directly from file path
+updater_script_path = os.path.join(os.path.dirname(__file__), '..', 'updater', 'install_update.py')
+spec = importlib.util.spec_from_file_location("install_update", updater_script_path)
+install_update_module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(install_update_module)
+install_update = install_update_module.install_update
 
 
 def make_zip_bytes(file_map):
