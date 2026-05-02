@@ -231,41 +231,6 @@ def encryption_enable():
         }), 500
 
 
-@admin_settings_bp.route("/encryption/disable", methods=["POST"])
-@auth.require_admin
-def encryption_disable():
-    """Disable encryption for all config files (DANGEROUS)"""
-    from ...security import ConfigEncryption
-    
-    # Rate limit encryption changes - max 1 per minute
-    if rate_limiter.is_rate_limited(f"encryption_change_{request.remote_addr}"):
-        abort(429)
-    
-    # Require confirmation
-    confirm = request.form.get("confirm_disable") == "true"
-    if not confirm:
-        return jsonify({
-            "status": "error",
-            "message": "Must confirm disabling encryption by setting confirm_disable=true"
-        }), 400
-    
-    try:
-        config_enc = ConfigEncryption(BASE_PATH)
-        results = config_enc.disable_all()
-        
-        success_count = sum(1 for success, _ in results.values() if success)
-        return jsonify({
-            "status": "ok",
-            "message": f"Encryption disabled for {success_count} files",
-            "results": results
-        })
-    except Exception as e:
-        return jsonify({
-            "status": "error",
-            "message": str(e)
-        }), 500
-
-
 # CACHE: Flush all caches
 @admin_settings_bp.route("/cache/flush", methods=["POST"])
 @auth.require_admin
@@ -410,7 +375,7 @@ def install_update():
                 current_version = version_data.get("current_version", "0.1.0")
         
         # Download update
-        update_url = f"http://127.0.0.1:8080/update?version={current_version}&license_key={license_key}"
+        update_url = f"https://latinai.ch/wp-json/shoplicensegateway/update?version={current_version}&license_key={license_key}"
         
         # Create temporary directory for download
         with tempfile.TemporaryDirectory() as temp_dir:
