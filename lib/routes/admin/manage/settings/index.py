@@ -335,14 +335,13 @@ def update_status():
 @admin_settings_bp.route("/update/install", methods=["POST"])
 @auth.require_admin
 def install_update():
-    """Download and install the latest update"""
-    import requests
-    import zipfile
-    import tempfile
-    import shutil
+    """Download and install the latest update (runs as background process)"""
+    import subprocess
     
     # Rate limit update installations - max 1 per hour
-    if rate_limiter.is_rate_limited(f"update_install_{request.remote_addr}", max_requests=1, window_seconds=3600):
+    # Create a new rate limiter with 1 request per 3600 seconds
+    update_rate_limiter = RateLimiter(BASE_PATH, max_requests=1, window_seconds=3600)
+    if update_rate_limiter.is_rate_limited(f"update_install_{request.remote_addr}"):
         return jsonify({
             "status": "error",
             "message": "Update installation rate limited. Please wait 1 hour between installations."
@@ -374,75 +373,38 @@ def install_update():
                 version_data = json.load(f)
                 current_version = version_data.get("current_version", "0.1.0")
         
-        # Download update
-        update_url = f"https://latinai.ch/wp-json/shoplicensegateway/update?version={current_version}&license_key={license_key}"
+        # Log the update request
+        SecurityLogger.log_config_change(
+            session.get('user', 'unknown'),
+            'update_initiated',
+            current_version,
+            f"Update installation initiated for version {current_version}"
+        )
         
-        # Create temporary directory for download
-        with tempfile.TemporaryDirectory() as temp_dir:
-            zip_path = os.path.join(temp_dir, "update.zip")
-            
-            # Download the ZIP file
-            response = requests.get(update_url, timeout=300)  # 5 minute timeout
-            response.raise_for_status()
-            
-            # Save ZIP file
-            with open(zip_path, "wb") as f:
-                f.write(response.content)
-            
-            # Extract ZIP file
-            extract_path = os.path.join(temp_dir, "extracted")
-            os.makedirs(extract_path, exist_ok=True)
-            
-            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                zip_ref.extractall(extract_path)
-            
-            # Get list of files in the extracted directory
-            extracted_files = []
-            for root, dirs, files in os.walk(extract_path):
-                for file in files:
-                    rel_path = os.path.relpath(os.path.join(root, file), extract_path)
-                    extracted_files.append(rel_path)
-            
-            # Copy files to installation directory
-            updated_files = []
-            for rel_path in extracted_files:
-                source_path = os.path.join(extract_path, rel_path)
-                target_path = os.path.join(BASE_PATH, rel_path)
-                
-                # Create target directory if it doesn't exist
-                os.makedirs(os.path.dirname(target_path), exist_ok=True)
-                
-                # Copy file (this will overwrite existing files)
-                shutil.copy2(source_path, target_path)
-                updated_files.append(rel_path)
-            
-            # Log the update
-            SecurityLogger.log_config_change(
-                session.get('user', 'unknown'),
-                'system_update',
-                current_version,
-                f"Updated {len(updated_files)} files"
-            )
-            
-            return jsonify({
-                "status": "ok",
-                "message": f"Successfully updated {len(updated_files)} files",
-                "files_updated": updated_files,
-                "restart_required": True
-            })
+        # Spawn background update process
+        # This runs independently and doesn't block the Flask application
+        updater_script = os.path.join(BASE_PATH, "updater", "install_update.py")
+        
+        # Use Popen to run as background process without waiting
+        import subprocess
+        process = subprocess.Popen(
+            [sys.executable, updater_script, BASE_PATH, license_key, current_version],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            cwd=BASE_PATH,
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == 'win32' else 0
+        )
+        
+        return jsonify({
+            "status": "ok",
+            "message": "Update installation started in background process",
+            "process_id": process.pid,
+            "restart_required": True,
+            "info": "The application will be updated and restarted automatically. This may take a few minutes."
+        })
     
-    except requests.exceptions.RequestException as e:
-        return jsonify({
-            "status": "error",
-            "message": f"Failed to download update: {str(e)}"
-        }), 500
-    except zipfile.BadZipFile as e:
-        return jsonify({
-            "status": "error",
-            "message": f"Invalid ZIP file received: {str(e)}"
-        }), 500
     except Exception as e:
         return jsonify({
             "status": "error",
-            "message": f"Update installation failed: {str(e)}"
+            "message": f"Failed to start update installation: {str(e)}"
         }), 500
