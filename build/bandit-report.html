@@ -1,0 +1,931 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+
+<title>
+    Bandit Report
+</title>
+
+<style>
+
+html * {
+    font-family: "Arial", sans-serif;
+}
+
+pre {
+    font-family: "Monaco", monospace;
+}
+
+.bordered-box {
+    border: 1px solid black;
+    padding-top:.5em;
+    padding-bottom:.5em;
+    padding-left:1em;
+}
+
+.metrics-box {
+    font-size: 1.1em;
+    line-height: 130%;
+}
+
+.metrics-title {
+    font-size: 1.5em;
+    font-weight: 500;
+    margin-bottom: .25em;
+}
+
+.issue-description {
+    font-size: 1.3em;
+    font-weight: 500;
+}
+
+.candidate-issues {
+    margin-left: 2em;
+    border-left: solid 1px; LightGray;
+    padding-left: 5%;
+    margin-top: .2em;
+    margin-bottom: .2em;
+}
+
+.issue-block {
+    border: 1px solid LightGray;
+    padding-left: .5em;
+    padding-top: .5em;
+    padding-bottom: .5em;
+    margin-bottom: .5em;
+}
+
+.issue-sev-high {
+    background-color: Pink;
+}
+
+.issue-sev-medium {
+    background-color: NavajoWhite;
+}
+
+.issue-sev-low {
+    background-color: LightCyan;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="metrics">
+    <div class="metrics-box bordered-box">
+        <div class="metrics-title">
+            Metrics:<br>
+        </div>
+        Total lines of code: <span id="loc">6023</span><br>
+        Total lines skipped (#nosec): <span id="nosec">0</span>
+    </div>
+</div>
+
+
+
+
+<br>
+<div id="results">
+    
+<div id="issue-0">
+<div class="issue-block issue-sev-low">
+    <b>try_except_pass: </b> Try, Except, Pass detected.<br>
+    <b>Test ID:</b> B110<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/703.html" target="_blank">CWE-703</a><br>
+    <b>File: </b><a href=".\Identitas\provider\api\auth.py" target="_blank">.\Identitas\provider\api\auth.py</a><br>
+    <b>Line number: </b>235<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html" target="_blank">https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html</a><br>
+
+<div class="code">
+<pre>
+234	                _BLACKLIST_CACHE[entry.token] = int(entry.expires_at.timestamp())
+235	    except Exception:
+236	        pass
+237	
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-1">
+<div class="issue-block issue-sev-low">
+    <b>try_except_pass: </b> Try, Except, Pass detected.<br>
+    <b>Test ID:</b> B110<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/703.html" target="_blank">CWE-703</a><br>
+    <b>File: </b><a href=".\Identitas\provider\api\auth.py" target="_blank">.\Identitas\provider\api\auth.py</a><br>
+    <b>Line number: </b>265<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html" target="_blank">https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html</a><br>
+
+<div class="code">
+<pre>
+264	            session.commit()
+265	    except Exception:
+266	        pass
+267	
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-2">
+<div class="issue-block issue-sev-low">
+    <b>hardcoded_password_string: </b> Possible hardcoded password: 'irgendein_langes_random_secret_das_wirklich_gar_keiner_kompromittier_dabei_bin_ich_mir_sicher_vertrau_mir'<br>
+    <b>Test ID:</b> B105<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>MEDIUM<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/259.html" target="_blank">CWE-259</a><br>
+    <b>File: </b><a href=".\app.py" target="_blank">.\app.py</a><br>
+    <b>Line number: </b>25<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html" target="_blank">https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html</a><br>
+
+<div class="code">
+<pre>
+24	app = Flask(__name__)
+25	app.secret_key = &quot;irgendein_langes_random_secret_das_wirklich_gar_keiner_kompromittier_dabei_bin_ich_mir_sicher_vertrau_mir&quot;
+26	# Trust X-Forwarded headers from proxies (e.g., Cloudflare tunnel)
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-3">
+<div class="issue-block issue-sev-low">
+    <b>try_except_pass: </b> Try, Except, Pass detected.<br>
+    <b>Test ID:</b> B110<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/703.html" target="_blank">CWE-703</a><br>
+    <b>File: </b><a href=".\app.py" target="_blank">.\app.py</a><br>
+    <b>Line number: </b>55<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html" target="_blank">https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html</a><br>
+
+<div class="code">
+<pre>
+54	            rate_limiter.cleanup_old_data()
+55	        except:
+56	            pass
+57	
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-4">
+<div class="issue-block issue-sev-high">
+    <b>flask_debug_true: </b> A Flask app appears to be run with debug=True, which exposes the Werkzeug debugger and allows the execution of arbitrary code.<br>
+    <b>Test ID:</b> B201<br>
+    <b>Severity: </b>HIGH<br>
+    <b>Confidence: </b>MEDIUM<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/94.html" target="_blank">CWE-94</a><br>
+    <b>File: </b><a href=".\app.py" target="_blank">.\app.py</a><br>
+    <b>Line number: </b>422<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/plugins/b201_flask_debug_true.html" target="_blank">https://bandit.readthedocs.io/en/1.9.4/plugins/b201_flask_debug_true.html</a><br>
+
+<div class="code">
+<pre>
+421	    handle_cli()
+422	    app.run(debug=True, port=443)
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-5">
+<div class="issue-block issue-sev-low">
+    <b>try_except_pass: </b> Try, Except, Pass detected.<br>
+    <b>Test ID:</b> B110<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/703.html" target="_blank">CWE-703</a><br>
+    <b>File: </b><a href=".\encrypt_config.py" target="_blank">.\encrypt_config.py</a><br>
+    <b>Line number: </b>218<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html" target="_blank">https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html</a><br>
+
+<div class="code">
+<pre>
+217	                os.chmod(key_file, 0o600)
+218	            except:
+219	                pass
+220	            
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-6">
+<div class="issue-block issue-sev-low">
+    <b>blacklist: </b> Consider possible security implications associated with the subprocess module.<br>
+    <b>Test ID:</b> B404<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/78.html" target="_blank">CWE-78</a><br>
+    <b>File: </b><a href=".\lib\data\post_manager.py" target="_blank">.\lib\data\post_manager.py</a><br>
+    <b>Line number: </b>3<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess" target="_blank">https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess</a><br>
+
+<div class="code">
+<pre>
+2	import json
+3	import subprocess
+4	from datetime import datetime
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-7">
+<div class="issue-block issue-sev-low">
+    <b>subprocess_without_shell_equals_true: </b> subprocess call - check for execution of untrusted input.<br>
+    <b>Test ID:</b> B603<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/78.html" target="_blank">CWE-78</a><br>
+    <b>File: </b><a href=".\lib\data\post_manager.py" target="_blank">.\lib\data\post_manager.py</a><br>
+    <b>Line number: </b>22<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html" target="_blank">https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html</a><br>
+
+<div class="code">
+<pre>
+21	        try:
+22	            result = subprocess.run(
+23	                [&quot;git&quot;] + args,
+24	                cwd=repo_path,
+25	                capture_output=True,
+26	                text=True,
+27	                check=True
+28	            )
+29	            return True, result.stdout.strip()
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-8">
+<div class="issue-block issue-sev-low">
+    <b>try_except_pass: </b> Try, Except, Pass detected.<br>
+    <b>Test ID:</b> B110<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/703.html" target="_blank">CWE-703</a><br>
+    <b>File: </b><a href=".\lib\data\post_manager.py" target="_blank">.\lib\data\post_manager.py</a><br>
+    <b>Line number: </b>96<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html" target="_blank">https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html</a><br>
+
+<div class="code">
+<pre>
+95	                                base_url = f&quot;https://{domain}&quot;
+96	                    except:
+97	                        pass
+98	                
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-9">
+<div class="issue-block issue-sev-low">
+    <b>hardcoded_password_string: </b> Possible hardcoded password: 'identitas_token'<br>
+    <b>Test ID:</b> B105<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>MEDIUM<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/259.html" target="_blank">CWE-259</a><br>
+    <b>File: </b><a href=".\lib\netdefense\auth\identitas_auth.py" target="_blank">.\lib\netdefense\auth\identitas_auth.py</a><br>
+    <b>Line number: </b>63<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html" target="_blank">https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html</a><br>
+
+<div class="code">
+<pre>
+62	        # Store token in session for later logout
+63	        self._session_token_key = &quot;identitas_token&quot;
+64	        self._session_user_key = &quot;user&quot;
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-10">
+<div class="issue-block issue-sev-low">
+    <b>start_process_with_no_shell: </b> Starting a process without a shell.<br>
+    <b>Test ID:</b> B606<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>MEDIUM<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/78.html" target="_blank">CWE-78</a><br>
+    <b>File: </b><a href=".\lib\routes\admin\manage\settings\index.py" target="_blank">.\lib\routes\admin\manage\settings\index.py</a><br>
+    <b>Line number: </b>17<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/plugins/b606_start_process_with_no_shell.html" target="_blank">https://bandit.readthedocs.io/en/1.9.4/plugins/b606_start_process_with_no_shell.html</a><br>
+
+<div class="code">
+<pre>
+16	        python = sys.executable
+17	        os.execv(python, [python] + sys.argv)
+18	    t = threading.Thread(target=restart, daemon=True)
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-11">
+<div class="issue-block issue-sev-low">
+    <b>try_except_pass: </b> Try, Except, Pass detected.<br>
+    <b>Test ID:</b> B110<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/703.html" target="_blank">CWE-703</a><br>
+    <b>File: </b><a href=".\lib\routes\root\index.py" target="_blank">.\lib\routes\root\index.py</a><br>
+    <b>Line number: </b>55<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html" target="_blank">https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html</a><br>
+
+<div class="code">
+<pre>
+54	                settings = json.load(f)
+55	        except:
+56	            pass
+57	    
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-12">
+<div class="issue-block issue-sev-low">
+    <b>try_except_pass: </b> Try, Except, Pass detected.<br>
+    <b>Test ID:</b> B110<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/703.html" target="_blank">CWE-703</a><br>
+    <b>File: </b><a href=".\lib\routes\root\index.py" target="_blank">.\lib\routes\root\index.py</a><br>
+    <b>Line number: </b>147<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html" target="_blank">https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html</a><br>
+
+<div class="code">
+<pre>
+146	                settings = json.load(f)
+147	        except:
+148	            pass
+149	    
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-13">
+<div class="issue-block issue-sev-low">
+    <b>try_except_pass: </b> Try, Except, Pass detected.<br>
+    <b>Test ID:</b> B110<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/703.html" target="_blank">CWE-703</a><br>
+    <b>File: </b><a href=".\lib\routes\root\index.py" target="_blank">.\lib\routes\root\index.py</a><br>
+    <b>Line number: </b>210<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html" target="_blank">https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html</a><br>
+
+<div class="code">
+<pre>
+209	                settings = json.load(f)
+210	        except:
+211	            pass
+212	    
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-14">
+<div class="issue-block issue-sev-low">
+    <b>hardcoded_password_string: </b> Possible hardcoded password: 'False'<br>
+    <b>Test ID:</b> B105<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>MEDIUM<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/259.html" target="_blank">CWE-259</a><br>
+    <b>File: </b><a href=".\lib\routes\setup\index.py" target="_blank">.\lib\routes\setup\index.py</a><br>
+    <b>Line number: </b>36<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html" target="_blank">https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html</a><br>
+
+<div class="code">
+<pre>
+35	        &#x27;imprint_enabled&#x27;: False,
+36	        &#x27;allow_password_change&#x27;: False,
+37	        &#x27;domain&#x27;: &#x27;http://localhost&#x27;,
+38	        &#x27;header_background_enabled&#x27;: False,
+39	        &#x27;enabled_plugins&#x27;: {},
+40	        &#x27;newsletter_enabled&#x27;: False,
+41	        &#x27;newsletter_sender_email&#x27;: &#x27;&#x27;,
+42	        &#x27;ses_smtp_host&#x27;: &#x27;&#x27;,
+43	        &#x27;ses_smtp_port&#x27;: 587,
+44	        &#x27;ses_smtp_username&#x27;: &#x27;&#x27;,
+45	        &#x27;ses_smtp_password&#x27;: &#x27;&#x27;
+46	    }
+47	
+48	def load_settings(base_path):
+49	    &quot;&quot;&quot;Load settings with defaults merged in&quot;&quot;&quot;
+50	    defaults = get_default_settings()
+51	    settings_file = get_settings_file(base_path)
+52	    
+53	    if os.path.exists(settings_file):
+54	        try:
+55	            with open(settings_file, &#x27;r&#x27;, encoding=&#x27;utf-8&#x27;) as f:
+56	                user_settings = json.load(f)
+57	                # Merge user settings over defaults
+58	                defaults.update(user_settings)
+59	                return defaults
+60	        except:
+61	            return defaults
+62	    
+63	    return defaults
+64	
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-15">
+<div class="issue-block issue-sev-low">
+    <b>hardcoded_password_string: </b> Possible hardcoded password: ''<br>
+    <b>Test ID:</b> B105<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>MEDIUM<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/259.html" target="_blank">CWE-259</a><br>
+    <b>File: </b><a href=".\lib\routes\setup\index.py" target="_blank">.\lib\routes\setup\index.py</a><br>
+    <b>Line number: </b>45<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html" target="_blank">https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html</a><br>
+
+<div class="code">
+<pre>
+44	        &#x27;ses_smtp_username&#x27;: &#x27;&#x27;,
+45	        &#x27;ses_smtp_password&#x27;: &#x27;&#x27;
+46	    }
+47	
+48	def load_settings(base_path):
+49	    &quot;&quot;&quot;Load settings with defaults merged in&quot;&quot;&quot;
+50	    defaults = get_default_settings()
+51	    settings_file = get_settings_file(base_path)
+52	    
+53	    if os.path.exists(settings_file):
+54	        try:
+55	            with open(settings_file, &#x27;r&#x27;, encoding=&#x27;utf-8&#x27;) as f:
+56	                user_settings = json.load(f)
+57	                # Merge user settings over defaults
+58	                defaults.update(user_settings)
+59	                return defaults
+60	        except:
+61	            return defaults
+62	    
+63	    return defaults
+64	
+65	def initialize_data_files(base_path):
+66	    &quot;&quot;&quot;Initialize all required data files with proper structure&quot;&quot;&quot;
+67	    data_dir = get_data_dir(base_path)
+68	    os.makedirs(data_dir, exist_ok=True)
+69	    
+70	    # Define all required data files with their default structures
+71	    required_files = {
+72	        &#x27;posts_metadata.json&#x27;: {},
+73	        &#x27;comments.json&#x27;: {},
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-16">
+<div class="issue-block issue-sev-low">
+    <b>try_except_pass: </b> Try, Except, Pass detected.<br>
+    <b>Test ID:</b> B110<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/703.html" target="_blank">CWE-703</a><br>
+    <b>File: </b><a href=".\lib\security\encryption.py" target="_blank">.\lib\security\encryption.py</a><br>
+    <b>Line number: </b>33<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html" target="_blank">https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html</a><br>
+
+<div class="code">
+<pre>
+32	                os.chmod(self.key_file, 0o600)
+33	            except:
+34	                pass
+35	    
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-17">
+<div class="issue-block issue-sev-low">
+    <b>try_except_pass: </b> Try, Except, Pass detected.<br>
+    <b>Test ID:</b> B110<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/703.html" target="_blank">CWE-703</a><br>
+    <b>File: </b><a href=".\lib\security\ratelimiter.py" target="_blank">.\lib\security\ratelimiter.py</a><br>
+    <b>Line number: </b>38<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html" target="_blank">https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html</a><br>
+
+<div class="code">
+<pre>
+37	                json.dump(data, f)
+38	        except:
+39	            pass
+40	    
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-18">
+<div class="issue-block issue-sev-low">
+    <b>try_except_pass: </b> Try, Except, Pass detected.<br>
+    <b>Test ID:</b> B110<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/703.html" target="_blank">CWE-703</a><br>
+    <b>File: </b><a href=".\lib\security\ratelimiter.py" target="_blank">.\lib\security\ratelimiter.py</a><br>
+    <b>Line number: </b>56<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html" target="_blank">https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html</a><br>
+
+<div class="code">
+<pre>
+55	                json.dump(data, f)
+56	        except:
+57	            pass
+58	    
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-19">
+<div class="issue-block issue-sev-low">
+    <b>blacklist: </b> Using xml.etree.ElementTree to parse untrusted XML data is known to be vulnerable to XML attacks. Replace xml.etree.ElementTree with the equivalent defusedxml package, or make sure defusedxml.defuse_stdlib() is called.<br>
+    <b>Test ID:</b> B405<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/20.html" target="_blank">CWE-20</a><br>
+    <b>File: </b><a href=".\lib\youtube_helper.py" target="_blank">.\lib\youtube_helper.py</a><br>
+    <b>Line number: </b>5<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b405-import-xml-etree" target="_blank">https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b405-import-xml-etree</a><br>
+
+<div class="code">
+<pre>
+4	import requests
+5	import xml.etree.ElementTree as ET
+6	import re
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-20">
+<div class="issue-block issue-sev-medium">
+    <b>blacklist: </b> Using xml.etree.ElementTree.fromstring to parse untrusted XML data is known to be vulnerable to XML attacks. Replace xml.etree.ElementTree.fromstring with its defusedxml equivalent function or make sure defusedxml.defuse_stdlib() is called<br>
+    <b>Test ID:</b> B314<br>
+    <b>Severity: </b>MEDIUM<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/20.html" target="_blank">CWE-20</a><br>
+    <b>File: </b><a href=".\lib\youtube_helper.py" target="_blank">.\lib\youtube_helper.py</a><br>
+    <b>Line number: </b>73<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b313-b320-xml-bad-elementtree" target="_blank">https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b313-b320-xml-bad-elementtree</a><br>
+
+<div class="code">
+<pre>
+72	
+73	            root = ET.fromstring(response.content)
+74	
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-21">
+<div class="issue-block issue-sev-low">
+    <b>blacklist: </b> Consider possible security implications associated with the subprocess module.<br>
+    <b>Test ID:</b> B404<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/78.html" target="_blank">CWE-78</a><br>
+    <b>File: </b><a href=".\plugins\git_repos\git_repos.py" target="_blank">.\plugins\git_repos\git_repos.py</a><br>
+    <b>Line number: </b>3<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess" target="_blank">https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess</a><br>
+
+<div class="code">
+<pre>
+2	import json
+3	import subprocess
+4	from functools import wraps
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-22">
+<div class="issue-block issue-sev-low">
+    <b>subprocess_without_shell_equals_true: </b> subprocess call - check for execution of untrusted input.<br>
+    <b>Test ID:</b> B603<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/78.html" target="_blank">CWE-78</a><br>
+    <b>File: </b><a href=".\plugins\git_repos\git_repos.py" target="_blank">.\plugins\git_repos\git_repos.py</a><br>
+    <b>Line number: </b>62<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html" target="_blank">https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html</a><br>
+
+<div class="code">
+<pre>
+61	    try:
+62	        result = subprocess.run(
+63	            [&quot;git&quot;] + args,
+64	            cwd=repo_path,
+65	            capture_output=True,
+66	            text=True,
+67	            check=True
+68	        )
+69	        return True, result.stdout.strip()
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-23">
+<div class="issue-block issue-sev-low">
+    <b>start_process_with_partial_path: </b> Starting a process with a partial executable path<br>
+    <b>Test ID:</b> B607<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/78.html" target="_blank">CWE-78</a><br>
+    <b>File: </b><a href=".\plugins\git_repos\git_repos.py" target="_blank">.\plugins\git_repos\git_repos.py</a><br>
+    <b>Line number: </b>355<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html" target="_blank">https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html</a><br>
+
+<div class="code">
+<pre>
+354	
+355	    result = subprocess.run(
+356	        [&#x27;git&#x27;, service.replace(&#x27;git-&#x27;, &#x27;&#x27;), &#x27;--advertise-refs&#x27;, repo_path],
+357	        capture_output=True
+358	    )
+359	
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-24">
+<div class="issue-block issue-sev-low">
+    <b>subprocess_without_shell_equals_true: </b> subprocess call - check for execution of untrusted input.<br>
+    <b>Test ID:</b> B603<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/78.html" target="_blank">CWE-78</a><br>
+    <b>File: </b><a href=".\plugins\git_repos\git_repos.py" target="_blank">.\plugins\git_repos\git_repos.py</a><br>
+    <b>Line number: </b>355<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html" target="_blank">https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html</a><br>
+
+<div class="code">
+<pre>
+354	
+355	    result = subprocess.run(
+356	        [&#x27;git&#x27;, service.replace(&#x27;git-&#x27;, &#x27;&#x27;), &#x27;--advertise-refs&#x27;, repo_path],
+357	        capture_output=True
+358	    )
+359	
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-25">
+<div class="issue-block issue-sev-low">
+    <b>blacklist: </b> Consider possible security implications associated with the subprocess module.<br>
+    <b>Test ID:</b> B404<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/78.html" target="_blank">CWE-78</a><br>
+    <b>File: </b><a href=".\plugins\git_repos\git_repos.py" target="_blank">.\plugins\git_repos\git_repos.py</a><br>
+    <b>Line number: </b>379<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess" target="_blank">https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess</a><br>
+
+<div class="code">
+<pre>
+378	
+379	    import subprocess
+380	    result = subprocess.run(
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-26">
+<div class="issue-block issue-sev-low">
+    <b>start_process_with_partial_path: </b> Starting a process with a partial executable path<br>
+    <b>Test ID:</b> B607<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/78.html" target="_blank">CWE-78</a><br>
+    <b>File: </b><a href=".\plugins\git_repos\git_repos.py" target="_blank">.\plugins\git_repos\git_repos.py</a><br>
+    <b>Line number: </b>380<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html" target="_blank">https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html</a><br>
+
+<div class="code">
+<pre>
+379	    import subprocess
+380	    result = subprocess.run(
+381	        [&#x27;git&#x27;, &#x27;upload-pack&#x27;, &#x27;--stateless-rpc&#x27;, repo_path],
+382	        input=request.get_data(),
+383	        capture_output=True
+384	    )
+385	    if result.returncode != 0:
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-27">
+<div class="issue-block issue-sev-low">
+    <b>subprocess_without_shell_equals_true: </b> subprocess call - check for execution of untrusted input.<br>
+    <b>Test ID:</b> B603<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/78.html" target="_blank">CWE-78</a><br>
+    <b>File: </b><a href=".\plugins\git_repos\git_repos.py" target="_blank">.\plugins\git_repos\git_repos.py</a><br>
+    <b>Line number: </b>380<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html" target="_blank">https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html</a><br>
+
+<div class="code">
+<pre>
+379	    import subprocess
+380	    result = subprocess.run(
+381	        [&#x27;git&#x27;, &#x27;upload-pack&#x27;, &#x27;--stateless-rpc&#x27;, repo_path],
+382	        input=request.get_data(),
+383	        capture_output=True
+384	    )
+385	    if result.returncode != 0:
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-28">
+<div class="issue-block issue-sev-low">
+    <b>blacklist: </b> Consider possible security implications associated with the subprocess module.<br>
+    <b>Test ID:</b> B404<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/78.html" target="_blank">CWE-78</a><br>
+    <b>File: </b><a href=".\plugins\git_repos\git_repos.py" target="_blank">.\plugins\git_repos\git_repos.py</a><br>
+    <b>Line number: </b>399<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess" target="_blank">https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess</a><br>
+
+<div class="code">
+<pre>
+398	
+399	    import subprocess
+400	    result = subprocess.run(
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-29">
+<div class="issue-block issue-sev-low">
+    <b>start_process_with_partial_path: </b> Starting a process with a partial executable path<br>
+    <b>Test ID:</b> B607<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/78.html" target="_blank">CWE-78</a><br>
+    <b>File: </b><a href=".\plugins\git_repos\git_repos.py" target="_blank">.\plugins\git_repos\git_repos.py</a><br>
+    <b>Line number: </b>400<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html" target="_blank">https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html</a><br>
+
+<div class="code">
+<pre>
+399	    import subprocess
+400	    result = subprocess.run(
+401	        [&#x27;git&#x27;, &#x27;receive-pack&#x27;, &#x27;--stateless-rpc&#x27;, repo_path],
+402	        input=request.get_data(),
+403	        capture_output=True
+404	    )
+405	    if result.returncode != 0:
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-30">
+<div class="issue-block issue-sev-low">
+    <b>subprocess_without_shell_equals_true: </b> subprocess call - check for execution of untrusted input.<br>
+    <b>Test ID:</b> B603<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/78.html" target="_blank">CWE-78</a><br>
+    <b>File: </b><a href=".\plugins\git_repos\git_repos.py" target="_blank">.\plugins\git_repos\git_repos.py</a><br>
+    <b>Line number: </b>400<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html" target="_blank">https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html</a><br>
+
+<div class="code">
+<pre>
+399	    import subprocess
+400	    result = subprocess.run(
+401	        [&#x27;git&#x27;, &#x27;receive-pack&#x27;, &#x27;--stateless-rpc&#x27;, repo_path],
+402	        input=request.get_data(),
+403	        capture_output=True
+404	    )
+405	    if result.returncode != 0:
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-31">
+<div class="issue-block issue-sev-low">
+    <b>hardcoded_password_string: </b> Possible hardcoded password: 'password123'<br>
+    <b>Test ID:</b> B105<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>MEDIUM<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/259.html" target="_blank">CWE-259</a><br>
+    <b>File: </b><a href=".\test_encryption.py" target="_blank">.\test_encryption.py</a><br>
+    <b>Line number: </b>65<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html" target="_blank">https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html</a><br>
+
+<div class="code">
+<pre>
+64	            print(&quot;\nTest 4: Testing encryption/decryption...&quot;)
+65	            test_data = {&quot;username&quot;: &quot;admin&quot;, &quot;secret&quot;: &quot;password123&quot;}
+66	            
+</pre>
+</div>
+
+
+</div>
+</div>
+
+</div>
+
+</body>
+</html>
