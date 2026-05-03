@@ -597,45 +597,22 @@ def handle_cli():
 
 
 import os
+import requests
 
-def read_license_key():
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    license_file = os.path.join(base_dir, "data", "license.txt")
+# CRITICAL: Import license check before anything else
+# This runs at module import time and blocks the app if license is invalid
+import _license_check
 
-    if not os.path.exists(license_file):
-        raise FileNotFoundError("license.txt not found")
 
-    with open(license_file, "r") as f:
-        return f.read().strip()
-    import requests
-
-def is_license_valid(license_key):
-    url = f"https://latinai.ch/wp-json/shoplicensegateway/license/validate/{license_key}"
-
-    try:
-        response = requests.get(url, timeout=5)
-    except Exception:
-        return False
-
-    # Prüfen ob JSON
-    try:
-        data = response.json()
-    except ValueError:
-        return False
-
-    # Gateway gibt {"status": "valid"} zurück
-    return data.get("status") == "valid"
 def ensure_license_valid():
-    license_key = read_license_key()
+    """Legacy function for CLI compatibility.
+    License is already validated at module import time via _license_check.
+    """
+    pass  # License already validated at import time
 
-    if not is_license_valid(license_key):
-        print("❌ Lizenz ungültig — Anwendung wird beendet.")
-        exit(1)
 
-    print("✔ Lizenz gültig — Anwendung startet.")
 if __name__ == "__main__":
-    ensure_license_valid()
-
+    # License is already validated at module import time via _license_check
     handle_cli()
 
     import argparse

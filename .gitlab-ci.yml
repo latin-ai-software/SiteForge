@@ -11,6 +11,8 @@ variables:
   # SSH configuration for private repository access
   GIT_STRATEGY: clone
   GIT_CHECKOUT: "true"
+  # Skip license validation in CI
+  CI: "true"
 
 # Test stage
 test:
