@@ -51,7 +51,7 @@ def install_update(base_path, license_key, version):
             return False
         
         # Build update URL
-        update_url = f"http://127.0.0.1:8080/update?version={version}&license_key={license_key}"
+        update_url = f"https://latinai.ch/wp-json/shoplicensegateway/updater/SF/update?version={version}&license_key={license_key}"
         logger.info(f"Update URL: {update_url}")
         
         # Download update
