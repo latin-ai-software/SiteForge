@@ -53,6 +53,12 @@ def test_admin_help_route_renders(client):
     assert b'Hilfe' in response.data or b'Help' in response.data
 
 
+def test_admin_help_url_for_builds(app):
+    """Test that the named admin_help endpoint can be built."""
+    with app.test_request_context():
+        assert app.url_for('admin_help') == '/admin/help'
+
+
 def test_admin_templates_include_help_link():
     """Test that admin templates include a link to the help page."""
     admin_template_files = [
