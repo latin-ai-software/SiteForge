@@ -31,6 +31,8 @@ static/git/
 /GITLAB_CI_SETUP.md
 /build
 /MagicMock/
+/coverage.txt
+/tmp_debug.py
 
 # Modern additions
 .env

@@ -17,6 +17,7 @@ def create_app(config_name=None):
     from lib.routes.admin.manage.analytics.index import admin_analytics_bp
     from lib.routes.admin.manage.settings.index import admin_settings_bp
     from lib.routes.admin.manage.media.index import admin_media_bp
+    from lib.routes.admin.help import admin_help_bp
     from lib.routes.root.auth import auth_bp
     from lib.routes.data.youtube import youtube_bp
     from lib.netdefense.auth.identitas_auth import IdentitasAuthManager
@@ -93,6 +94,7 @@ def create_app(config_name=None):
     app.register_blueprint(admin_users_bp)
     app.register_blueprint(admin_settings_bp)
     app.register_blueprint(admin_media_bp)
+    app.register_blueprint(admin_help_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_analytics_bp)
     from lib.routes.admin.manage.backup import backup_bp
@@ -113,8 +115,15 @@ def create_app(config_name=None):
     def health_check():
         return {'status': 'healthy'}, 200
 
+    # Admin help page is now registered via admin_help_bp blueprint
+
     # Load plugins (keeping existing logic)
     load_plugins(app)
+
+    # Make plugin helpers available in templates
+    @app.context_processor
+    def inject_plugin_check():
+        return dict(is_plugin_loaded=is_plugin_loaded, is_plugin_available=is_plugin_available)
 
     # Setup check middleware
     @app.before_request
@@ -155,6 +164,7 @@ from lib.routes.admin.manage.users.index import admin_users_bp
 from lib.routes.admin.manage.analytics.index import admin_analytics_bp
 from lib.routes.admin.manage.settings.index import admin_settings_bp
 from lib.routes.admin.manage.media.index import admin_media_bp
+from lib.routes.admin.help import admin_help_bp
 from lib.routes.root.auth import auth_bp
 from lib.routes.data.youtube import youtube_bp
 from lib.netdefense.auth.identitas_auth import IdentitasAuthManager
@@ -223,6 +233,7 @@ app.register_blueprint(admin_posts_bp)
 app.register_blueprint(admin_users_bp)
 app.register_blueprint(admin_settings_bp)
 app.register_blueprint(admin_media_bp)
+app.register_blueprint(admin_help_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(admin_analytics_bp)
 from lib.routes.admin.manage.backup import backup_bp
