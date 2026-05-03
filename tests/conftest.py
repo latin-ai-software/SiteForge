@@ -20,6 +20,7 @@ def patch_auth_globally():
     mock_auth = MagicMock()
     mock_auth.require_admin = lambda f: f
     mock_auth.require_login = lambda f: f
+    mock_auth.require_role = lambda role: lambda f: f  # Mock decorator that just returns the function
     mock_auth.current_user = MagicMock(return_value='testadmin')
     mock_auth.get_user_role = MagicMock(return_value='administrator')
     
@@ -63,6 +64,7 @@ def auth_mock():
     auth = MagicMock()
     auth.require_admin = MagicMock(return_value=lambda f: f)
     auth.require_login = MagicMock(return_value=lambda f: f)
+    auth.require_role = MagicMock(return_value=lambda f: f)
     auth.current_user = MagicMock(return_value='testuser')
     auth.get_user_role = MagicMock(return_value='administrator')
     return auth

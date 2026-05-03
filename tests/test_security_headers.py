@@ -37,6 +37,42 @@ def test_sanitize_filename_limits_length():
     assert safe.endswith('.txt')
 
 
+def test_add_security_headers_sets_expected_headers():
+    app = Flask(__name__)
+    app.config['TESTING'] = True
+    add_security_headers(app)
+
+    @app.route('/')
+    def index():
+        return 'ok'
+
+    client = app.test_client()
+    response = client.get('/')
+
+    assert response.headers['X-Frame-Options'] == 'SAMEORIGIN'
+    assert response.headers['X-Content-Type-Options'] == 'nosniff'
+    assert response.headers['X-XSS-Protection'] == '1; mode=block'
+    assert 'Strict-Transport-Security' not in response.headers
+    assert 'Content-Security-Policy' in response.headers
+    assert response.headers['Referrer-Policy'] == 'strict-origin-when-cross-origin'
+    assert 'Permissions-Policy' in response.headers
+
+
+def test_add_security_headers_sets_hsts_on_https():
+    app = Flask(__name__)
+    app.config['TESTING'] = True
+    add_security_headers(app)
+
+    @app.route('/')
+    def index():
+        return 'ok'
+
+    client = app.test_client()
+    response = client.get('/', base_url='https://localhost')
+
+    assert response.headers['Strict-Transport-Security'] == 'max-age=31536000; includeSubDomains'
+
+
 def test_input_validator_email_username_password_url_integer():
     assert InputValidator.validate_email('user@example.com') is True
     assert InputValidator.validate_email('bad-email') is False
@@ -53,20 +89,84 @@ def test_input_validator_email_username_password_url_integer():
     assert InputValidator.validate_integer('not-a-number') is False
 
 
-def test_add_security_headers_on_response():
-    app = Flask(__name__)
-    add_security_headers(app)
+def test_validate_input_valid_string():
+    """Test validate_input with valid string."""
+    result = validate_input("hello world")
+    assert result == "hello world"
 
-    @app.route('/test')
-    def test_route():
-        return Response('ok')
 
-    client = app.test_client()
-    response = client.get('/test', base_url='https://localhost')
-    assert response.headers['X-Frame-Options'] == 'SAMEORIGIN'
-    assert response.headers['X-Content-Type-Options'] == 'nosniff'
-    assert 'X-XSS-Protection' in response.headers
-    assert response.headers['Referrer-Policy'] == 'strict-origin-when-cross-origin'
-    assert response.headers['Permissions-Policy'].startswith('geolocation=()')
-    assert response.headers['Strict-Transport-Security'] == 'max-age=31536000; includeSubDomains'
-    assert 'Content-Security-Policy' in response.headers
+def test_validate_input_none():
+    """Test validate_input with None."""
+    result = validate_input(None)
+    assert result is None
+
+
+def test_validate_input_non_string():
+    """Test validate_input with non-string."""
+    result = validate_input(123)
+    assert result is None
+
+
+def test_validate_input_too_long():
+    """Test validate_input with string too long."""
+    long_string = "a" * 1001
+    result = validate_input(long_string)
+    assert result is None
+
+
+def test_validate_input_max_length():
+    """Test validate_input with max length."""
+    string = "a" * 1000
+    result = validate_input(string)
+    assert result == string
+
+
+def test_validate_input_custom_max_length():
+    """Test validate_input with custom max length."""
+    result = validate_input("hello", max_length=3)
+    assert result is None
+    
+    result = validate_input("hi", max_length=3)
+    assert result == "hi"
+
+
+def test_validate_input_allowed_chars():
+    """Test validate_input with allowed_chars restriction."""
+    # When allowed_chars is provided, dangerous chars in that list are not removed
+    result = validate_input("hello<>", allowed_chars=['<', '>'])
+    assert result == "hello<>"  # < and > are not removed because in allowed_chars
+    
+    result = validate_input("hello", allowed_chars=[])
+    assert result == "hello"
+
+
+def test_validate_input_empty_allowed_chars():
+    """Test validate_input with empty allowed_chars."""
+    result = validate_input("hello", allowed_chars=[])
+    assert result == "hello"  # Empty list means no restriction
+
+
+def test_validate_input_newlines_and_tabs():
+    """Test validate_input preserves newlines and tabs."""
+    input_str = "hello\nworld\t!"
+    result = validate_input(input_str)
+    assert result == input_str
+
+
+def test_validate_input_unicode():
+    """Test validate_input with unicode characters."""
+    input_str = "héllo wörld"
+    result = validate_input(input_str)
+    assert result == input_str
+
+
+def test_validate_input_empty_string():
+    """Test validate_input with empty string."""
+    result = validate_input("")
+    assert result is None  # Empty string returns None
+
+
+def test_validate_input_only_dangerous():
+    """Test validate_input with string containing only dangerous chars."""
+    result = validate_input("<>\"'&;")
+    assert result is None  # All chars removed, then returns None for empty

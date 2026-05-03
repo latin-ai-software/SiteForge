@@ -46,7 +46,147 @@ def test_get_config_returns_dict():
             assert isinstance(config, dict)
             assert 'SECRET_KEY' in config
             assert 'DEBUG' in config
-            assert 'SESSION_COOKIE_HTTPONLY' in config
+            assert config['SESSION_COOKIE_SECURE'] is True
+            assert config['SESSION_COOKIE_HTTPONLY'] is True
+            assert config['SESSION_COOKIE_SAMESITE'] == 'Lax'
+            assert config['MAX_CONTENT_LENGTH'] == 52428800
+
+
+def test_get_config_production_requires_secret_key():
+    """Test that production mode fails without SECRET_KEY."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with patch.dict(os.environ, {'FLASK_ENV': 'production'}, clear=True):
+            with pytest.raises(ValueError):
+                SecureConfig.get_config(tmpdir)
+
+
+def test_csrf_generate_token():
+    """Test CSRF token generation."""
+    app = Flask(__name__)
+    app.secret_key = 'test-secret-key'
+    with app.test_request_context():
+        session.clear()
+        token1 = CSRFProtection.generate_token()
+        token2 = CSRFProtection.generate_token()
+        assert token1 == token2  # Same session
+        assert len(token1) == 64
+
+
+def test_csrf_validate_token_valid():
+    """Test CSRF token validation with valid token."""
+    app = Flask(__name__)
+    app.secret_key = 'test-secret-key'
+    with app.test_request_context():
+        session.clear()
+        token = CSRFProtection.generate_token()
+        assert CSRFProtection.validate_token(token) is True
+
+
+def test_csrf_validate_token_invalid():
+    """Test CSRF token validation with invalid token."""
+    app = Flask(__name__)
+    app.secret_key = 'test-secret-key'
+    with app.test_request_context():
+        session.clear()
+        CSRFProtection.generate_token()
+        assert CSRFProtection.validate_token('invalid-token') is False
+
+
+def test_csrf_validate_token_no_session():
+    """Test CSRF token validation without session token."""
+    app = Flask(__name__)
+    app.secret_key = 'test-secret-key'
+    with app.test_request_context():
+        session.clear()
+        assert CSRFProtection.validate_token('any-token') is False
+
+
+@patch('lib.security.secure_config.abort')
+@patch('lib.security.secure_config.security_logger')
+def test_csrf_require_csrf_valid(mock_logger, mock_abort):
+    """Test CSRF decorator with valid token."""
+    app = Flask(__name__)
+    app.secret_key = 'test-secret-key'
+    
+    @app.route('/test', methods=['POST'])
+    @CSRFProtection.require_csrf
+    def test_route():
+        return 'ok'
+    
+    with app.test_request_context('/test', method='POST', data={'_csrf_token': 'valid'}):
+        session['_csrf_token'] = 'valid'
+        response = test_route()
+        assert response == 'ok'
+        mock_abort.assert_not_called()
+
+
+@patch('lib.security.secure_config.abort')
+@patch('lib.security.secure_config.security_logger')
+def test_csrf_require_csrf_invalid(mock_logger, mock_abort):
+    """Test CSRF decorator with invalid token."""
+    app = Flask(__name__)
+    app.secret_key = 'test-secret-key'
+    
+    @app.route('/test', methods=['POST'])
+    @CSRFProtection.require_csrf
+    def test_route():
+        return 'forbidden'
+    
+    with app.test_request_context('/test', method='POST', data={'_csrf_token': 'invalid'}):
+        session['_csrf_token'] = 'valid'
+        response = test_route()
+        mock_abort.assert_called_once_with(403)
+        mock_logger.warning.assert_called_once()
+
+
+def test_csrf_require_csrf_get_request():
+    """Test CSRF decorator allows GET requests."""
+    app = Flask(__name__)
+    
+    @app.route('/test')
+    @CSRFProtection.require_csrf
+    def test_route():
+        return 'ok'
+    
+    with app.test_request_context('/test', method='GET'):
+        response = test_route()
+        assert response == 'ok'
+
+
+def test_csrf_require_csrf_header_token_valid():
+    """Test CSRF decorator accepts X-CSRF-Token header."""
+    app = Flask(__name__)
+    app.secret_key = 'test-secret-key'
+
+    @app.route('/test', methods=['POST'])
+    @CSRFProtection.require_csrf
+    def test_route():
+        return 'ok'
+
+    with app.test_request_context('/test', method='POST', headers={'X-CSRF-Token': 'valid'}):
+        session['_csrf_token'] = 'valid'
+        response = test_route()
+        assert response == 'ok'
+
+
+@patch('lib.security.secure_config.security_logger')
+def test_security_logger_failed_login(mock_logger):
+    """Test logging failed login."""
+    SecurityLogger.log_failed_login('testuser', '192.168.1.1')
+    mock_logger.warning.assert_called_once()
+    call_args = mock_logger.warning.call_args[0][0]
+    assert 'testuser' in call_args
+    assert '192.168.1.1' in call_args
+
+
+@patch('lib.security.secure_config.security_logger')
+def test_security_logger_rate_limit(mock_logger):
+    """Test logging rate limit exceeded."""
+    SecurityLogger.log_rate_limit_exceeded('/api/test', '10.0.0.1')
+    mock_logger.warning.assert_called_once()
+    call_args = mock_logger.warning.call_args[0][0]
+    assert '/api/test' in call_args
+    assert '10.0.0.1' in call_args
 
 
 def test_csrf_generate_and_validate():
@@ -140,6 +280,39 @@ def test_file_upload_validator_complete_validation():
     is_valid, msg = FileUploadValidator.validate_upload(file, category='images')
     assert is_valid is True
     assert 'Valid' in msg
+
+
+def test_file_upload_validator_invalid_extension():
+    """Test file upload validation rejects disallowed extensions."""
+    from io import BytesIO
+    from werkzeug.datastructures import FileStorage
+
+    file = FileStorage(
+        stream=BytesIO(b'test content'),
+        filename='malware.exe',
+        content_type='application/octet-stream'
+    )
+
+    is_valid, msg = FileUploadValidator.validate_upload(file, category='images')
+    assert not is_valid
+    assert 'not allowed' in msg.lower()
+
+
+def test_file_upload_validator_too_large():
+    """Test file upload validation rejects files over max size."""
+    from io import BytesIO
+    from werkzeug.datastructures import FileStorage
+
+    content = b'a' * (FileUploadValidator.MAX_FILENAME_LENGTH + 1)
+    file = FileStorage(
+        stream=BytesIO(content),
+        filename='test.jpg',
+        content_type='image/jpeg'
+    )
+
+    is_valid, msg = FileUploadValidator.validate_upload(file, category='images', max_size=10)
+    assert not is_valid
+    assert 'too large' in msg.lower()
 
 
 def test_sanitize_path_prevents_traversal():

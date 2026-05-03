@@ -8,7 +8,7 @@ import secrets
 import logging
 from functools import wraps
 from flask import request, abort, session
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Configure security logger
 security_logger = logging.getLogger('security')
@@ -114,32 +114,32 @@ class SecurityLogger:
     @staticmethod
     def log_failed_login(username, ip_address):
         """Log failed login attempt"""
-        security_logger.warning(f"Failed login attempt: username={username}, ip={ip_address}, time={datetime.utcnow()}")
+        security_logger.warning(f"Failed login attempt: username={username}, ip={ip_address}, time={datetime.now(timezone.utc)}")
     
     @staticmethod
     def log_rate_limit_exceeded(endpoint, ip_address):
         """Log rate limit exceeded"""
-        security_logger.warning(f"Rate limit exceeded: endpoint={endpoint}, ip={ip_address}, time={datetime.utcnow()}")
+        security_logger.warning(f"Rate limit exceeded: endpoint={endpoint}, ip={ip_address}, time={datetime.now(timezone.utc)}")
     
     @staticmethod
     def log_unauthorized_access(user, endpoint, ip_address):
         """Log unauthorized access attempt"""
-        security_logger.warning(f"Unauthorized access: user={user}, endpoint={endpoint}, ip={ip_address}, time={datetime.utcnow()}")
+        security_logger.warning(f"Unauthorized access: user={user}, endpoint={endpoint}, ip={ip_address}, time={datetime.now(timezone.utc)}")
     
     @staticmethod
     def log_file_upload(username, filename, size, status):
         """Log file upload"""
-        security_logger.info(f"File upload: user={username}, file={filename}, size={size}, status={status}, time={datetime.utcnow()}")
+        security_logger.info(f"File upload: user={username}, file={filename}, size={size}, status={status}, time={datetime.now(timezone.utc)}")
     
     @staticmethod
     def log_config_change(username, setting, old_value, new_value):
         """Log configuration changes"""
-        security_logger.warning(f"Config changed: user={username}, setting={setting}, old={old_value}, new={new_value}, time={datetime.utcnow()}")
+        security_logger.warning(f"Config changed: user={username}, setting={setting}, old={old_value}, new={new_value}, time={datetime.now(timezone.utc)}")
     
     @staticmethod
     def log_privilege_escalation(username, old_role, new_role):
         """Log privilege changes"""
-        security_logger.warning(f"Privilege changed: user={username}, old_role={old_role}, new_role={new_role}, time={datetime.utcnow()}")
+        security_logger.warning(f"Privilege changed: user={username}, old_role={old_role}, new_role={new_role}, time={datetime.now(timezone.utc)}")
 
 
 class FileUploadValidator:

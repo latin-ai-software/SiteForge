@@ -4,6 +4,7 @@ import json
 import os
 from unittest.mock import patch, MagicMock, ANY
 from flask import Flask
+import lib.routes.admin.manage.settings.index as settings_module
 from lib.routes.admin.manage.settings.index import admin_settings_bp
 
 
@@ -42,42 +43,87 @@ def client(app):
 class TestAdminSettingsRoutes:
     """Test admin settings routes."""
 
-    @pytest.mark.skip(reason="Auth decorator requires complex mocking - integration tests needed")
-    def test_admin_settings_index(self, app, temp_dir):
+    def test_admin_settings_index(self, client, temp_dir):
         """Test admin_settings_index route."""
-        pass
+        with patch('lib.routes.admin.manage.settings.index.render_template', return_value='rendered'):
+            with client.session_transaction() as sess:
+                sess['user'] = 'admin'
+            with patch.object(settings_module.auth, 'get_user_role', return_value='administrator'):
+                response = client.get('/admin/settings/')
 
-    @pytest.mark.skip(reason="Auth decorator requires complex mocking - integration tests needed")
+        assert response.status_code == 200
+        assert response.data == b'rendered'
+
     def test_save_settings_success(self, client, temp_dir):
         """Test save_settings with valid data."""
-        pass
+        with patch('lib.routes.admin.manage.settings.index.CSRFProtection.validate_token', return_value=True), patch('lib.routes.admin.manage.settings.index.rate_limiter.is_rate_limited', return_value=False):
+            with client.session_transaction() as sess:
+                sess['user'] = 'admin'
+            with patch.object(settings_module.auth, 'get_user_role', return_value='administrator'):
+                response = client.post('/admin/settings/', data={
+                    '_csrf_token': 'token',
+                    'site_title': 'Test Site',
+                    'site_description': 'A test site',
+                    'posts_per_page': '10',
+                    'analytics_period_days': '30',
+                    'ses_smtp_port': '587',
+                    'newsletter_sender_email': 'test@example.com',
+                    'analytics_tracking_id': 'G-TESTID',
+                    'enable_analytics': 'on',
+                    'allow_registration': 'on',
+                    'require_comment_approval': 'on',
+                    'allow_robot_indexing': 'on',
+                    'robot_user_agents': 'Googlebot',
+                    'cookie_consent_message': 'Hi',
+                    'require_cookie_consent': 'on',
+                    'embed_favicon_in_html': 'on',
+                    'imprint_enabled': 'on',
+                    'allow_password_change': 'on',
+                    'header_background_enabled': 'on',
+                    'show_social_links': 'on',
+                    'twitter_handle': '@test',
+                    'facebook_page': 'https://facebook.com/test',
+                })
 
-    @pytest.mark.skip(reason="Auth decorator requires complex mocking - integration tests needed")
-    def test_encryption_status(self, client):
-        """Test encryption_status route."""
-        pass
+        assert response.status_code == 200
+        assert response.get_json()['status'] == 'ok'
 
-    @pytest.mark.skip(reason="Auth decorator requires complex mocking - integration tests needed")
-    def test_cache_flush(self, client):
-        """Test cache_flush route."""
-        pass
+        settings_file = os.path.join(temp_dir, 'data', 'settings.json')
+        assert os.path.exists(settings_file)
+        with open(settings_file, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        assert data['site_title'] == 'Test Site'
+        assert data['analytics_tracking_id'] == 'G-TESTID'
 
-    @pytest.mark.skip(reason="Auth decorator requires complex mocking - integration tests needed")
-    def test_cache_stats(self, client):
-        """Test cache_stats route."""
-        pass
+    def test_save_settings_missing_csrf(self, client):
+        """Test save_settings rejects missing CSRF token."""
+        with client.session_transaction() as sess:
+            sess['user'] = 'admin'
+        with patch.object(settings_module.auth, 'get_user_role', return_value='administrator'):
+            response = client.post('/admin/settings/', data={})
 
-    @pytest.mark.skip(reason="Auth decorator requires complex mocking - integration tests needed")
-    def test_update_check(self, client, temp_dir):
-        """Test update_check route."""
-        pass
+        assert response.status_code == 403
 
-    @pytest.mark.skip(reason="Auth decorator requires complex mocking - integration tests needed")
-    def test_update_status(self, client, temp_dir):
-        """Test update_status route."""
-        pass
+    def test_cache_stats_route(self, client):
+        """Test cache_stats route returns cache statistics."""
+        with patch('lib.cache_utils.get_cache_stats', return_value={'hits': 1}):
+            with client.session_transaction() as sess:
+                sess['user'] = 'admin'
+            with patch.object(settings_module.auth, 'get_user_role', return_value='administrator'):
+                response = client.get('/admin/settings/cache/stats')
 
-    @pytest.mark.skip(reason="Auth decorator requires complex mocking - integration tests needed")
-    def test_update_install(self, client):
-        """Test update_install route."""
-        pass
+        assert response.status_code == 200
+        assert response.get_json()['status'] == 'ok'
+        assert response.get_json()['stats'] == {'hits': 1}
+
+    def test_encryption_status_route(self, client):
+        """Test encryption_status route returns config encryption status."""
+        with patch('lib.security.ConfigEncryption') as mock_config_enc:
+            mock_config_enc.return_value.get_status.return_value = {'encryption_enabled': False}
+            with client.session_transaction() as sess:
+                sess['user'] = 'admin'
+            with patch.object(settings_module.auth, 'get_user_role', return_value='administrator'):
+                response = client.get('/admin/settings/encryption/status')
+
+        assert response.status_code == 200
+        assert response.get_json() == {'encryption_enabled': False}

@@ -198,7 +198,7 @@ def save_settings():
 @auth.require_admin
 def encryption_status():
     """Get current encryption status"""
-    from ...security import ConfigEncryption
+    from .....security import ConfigEncryption
     config_enc = ConfigEncryption(BASE_PATH)
     status = config_enc.get_status()
     return jsonify(status)
@@ -208,7 +208,7 @@ def encryption_status():
 @auth.require_admin
 def encryption_enable():
     """Enable encryption for all config files"""
-    from ...security import ConfigEncryption
+    from .....security import ConfigEncryption
     
     # Rate limit encryption changes - max 1 per minute
     if rate_limiter.is_rate_limited(f"encryption_change_{request.remote_addr}"):
