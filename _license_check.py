@@ -23,7 +23,7 @@ def _read_license_key(base_dir):
 
 def _is_license_valid(license_key):
     """Validate license key against remote gateway."""
-    url = f"https://latinai.ch/wp-json/shoplicensegateway/license/validate/{license_key}"
+    url = f"https://latinai.ch/wp-json/shoplicensegateway/license/validate/SF/{license_key}"
     try:
         response = requests.get(url, timeout=5)
     except Exception:
