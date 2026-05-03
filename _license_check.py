@@ -42,7 +42,19 @@ def _validate_license():
     
     This runs at module import time, before any application code executes.
     Terminating here prevents any bypasses via code modifications.
+    
+    License validation is skipped in CI/testing environments.
     """
+    # Skip license validation in CI/testing environments
+    if (os.environ.get('CI') == 'true' or 
+        os.environ.get('GITLAB_CI') == 'true' or
+        os.environ.get('GITHUB_ACTIONS') == 'true' or
+        os.environ.get('PYTEST_CURRENT_TEST') or
+        'pytest' in sys.modules or
+        any('pytest' in arg for arg in sys.argv)):
+        print("⚠️  License validation skipped in CI/testing environment")
+        return
+    
     base_dir = os.path.dirname(os.path.abspath(__file__))
     
     try:
