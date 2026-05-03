@@ -113,8 +113,18 @@ def create_app(config_name=None):
     def health_check():
         return {'status': 'healthy'}, 200
 
+    # Admin help page
+    @app.route('/admin/help')
+    def admin_help():
+        return render_template('admin/help.html')
+
     # Load plugins (keeping existing logic)
     load_plugins(app)
+
+    # Make plugin helpers available in templates
+    @app.context_processor
+    def inject_plugin_check():
+        return dict(is_plugin_loaded=is_plugin_loaded, is_plugin_available=is_plugin_available)
 
     # Setup check middleware
     @app.before_request

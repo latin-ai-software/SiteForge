@@ -45,11 +45,40 @@ def test_post_creation_requires_login(client):
     # Should redirect to login or return error
     assert response.status_code in [302, 403]
 
-def test_post_creation_requires_login(client):
-    """Test that creating a post requires login."""
-    response = client.post('/create/post', data={
-        'title': 'Test Post',
-        'content': 'Test content'
-    })
-    # Should redirect to login or return error
-    assert response.status_code in [302, 403]
+
+def test_admin_help_route_renders(client):
+    """Test that the admin help page is available."""
+    response = client.get('/admin/help')
+    assert response.status_code == 200
+    assert b'Hilfe' in response.data or b'Help' in response.data
+
+
+def test_admin_templates_include_help_link():
+    """Test that admin templates include a link to the help page."""
+    admin_template_files = [
+        'templates/admin/posts/index.html',
+        'templates/admin/settings/index.html',
+        'templates/admin/backup/index.html',
+        'templates/admin/users/index.html',
+        'templates/admin/theme_creator/new.html',
+        'templates/admin/theme_creator/index.html',
+        'templates/admin/theme_creator/edit.html',
+        'templates/admin/backup/remote_settings.html',
+        'templates/admin/manage/templates/index.html',
+        'templates/admin/analytics/index.html',
+        'templates/admin/media/index.html',
+    ]
+    project_root = os.path.dirname(os.path.dirname(__file__))
+    for relative_path in admin_template_files:
+        path = os.path.join(project_root, relative_path)
+        assert os.path.exists(path), f"Missing template file: {relative_path}"
+        content = open(path, encoding='utf-8').read()
+        assert 'url_for(\'admin_help\')' in content or '/admin/help' in content, f"Help link missing in {relative_path}"
+
+
+def test_admin_help_template_exists():
+    """Test that the admin help template exists."""
+    help_template_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates', 'admin', 'help.html')
+    assert os.path.exists(help_template_path)
+    content = open(help_template_path, encoding='utf-8').read()
+    assert 'Hilfe' in content or 'Help' in content
