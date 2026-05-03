@@ -3,6 +3,7 @@ import os
 import json
 from app import create_app
 from config import TestingConfig
+from unittest.mock import patch
 
 @pytest.fixture
 def app():
@@ -14,6 +15,23 @@ def app():
 def client(app):
     """A test client for the app."""
     return app.test_client()
+
+
+@pytest.fixture
+def auth_session(client):
+    """A test client with authenticated session."""
+    with client.session_transaction() as sess:
+        sess['user'] = 'testadmin'
+    return client
+
+
+@pytest.fixture
+def auth_patches():
+    """Patches for auth methods."""
+    with patch('lib.routes.admin.help.auth.current_user', return_value='testadmin'), \
+         patch('lib.routes.admin.help.auth.get_user_role', return_value='administrator'):
+        yield
+
 
 @pytest.fixture(autouse=True)
 def mock_setup_completed():
@@ -30,7 +48,6 @@ def mock_setup_completed():
 
     # Restore original function
     setup_module.is_setup_completed = original_is_setup_completed
-
 def test_home_page(client):
     """Test that home page loads."""
     response = client.get('/')
@@ -46,9 +63,9 @@ def test_post_creation_requires_login(client):
     assert response.status_code in [302, 403]
 
 
-def test_admin_help_route_renders(client):
+def test_admin_help_route_renders(auth_session, auth_patches):
     """Test that the admin help page is available."""
-    response = client.get('/admin/help')
+    response = auth_session.get('/admin/help')
     assert response.status_code == 200
     assert b'Hilfe' in response.data or b'Help' in response.data
 
