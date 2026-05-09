@@ -35,6 +35,7 @@ static/git/
 /tmp_debug.py
 /README.html
 /install.sh
+/pytest_out.txt
 
 # Modern additions
 .env
