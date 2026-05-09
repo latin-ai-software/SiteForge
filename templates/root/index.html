@@ -222,6 +222,9 @@
                         <a href="/admin/posts">Admin</a>
                     {% endif %}
                     <a href="/profile/me">Profile</a>
+                    {% if settings.modmail_enabled %}
+                    <a href="{{ url_for('modmail.modmail_index') }}">Modmail</a>
+                    {% endif %}
                     <a href="/logout">Logout</a>
                 {% else %}
                     <a href="/login">Login</a>

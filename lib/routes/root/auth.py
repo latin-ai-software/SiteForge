@@ -84,13 +84,63 @@ def register_action():
     if rate_limiter.is_rate_limited(f"register_{client_ip}"):
         return render_template("auth/register.html", error="Too many registration attempts. Please try again later."), 429
     
+    # Determine whether this should be the first administrator account
+    role = "subscriber"
+    settings = {}
+    settings_file = os.path.join(BASE_PATH, "data", "settings.json")
+    if os.path.exists(settings_file):
+        try:
+            with open(settings_file, "r", encoding="utf-8") as f:
+                settings = json.load(f)
+        except Exception:
+            settings = {}
+    if not settings.get("setup_completed", False) and not auth.has_administrator():
+        role = "administrator"
+        os.makedirs(os.path.dirname(settings_file), exist_ok=True)
+        default_settings = {
+            "setup_completed": True,
+            "site_title": "My Awesome Site",
+            "site_description": "Welcome to my site",
+            "posts_per_page": 10,
+            "allow_registration": True,
+            "require_comment_approval": True,
+            "allow_robot_indexing": False,
+            "facebook_page": "",
+            "robot_user_agents": "*",
+            "require_cookie_consent": True,
+            "cookie_consent_message": "<p>Please accept cookies to use this site.</p>",
+            "enable_analytics": False,
+            "analytics_provider": "builtin",
+            "analytics_tracking_id": "",
+            "analytics_period_days": 30,
+            "embed_favicon_in_html": True,
+            "imprint_enabled": False,
+            "allow_password_change": False,
+            "domain": "http://localhost",
+            "header_background_enabled": False,
+            "enabled_plugins": {},
+            "newsletter_enabled": False,
+            "newsletter_sender_email": "",
+            "ses_smtp_host": "",
+            "ses_smtp_port": 587,
+            "ses_smtp_username": "",
+            "ses_smtp_password": "",
+            "show_social_links": False,
+            "twitter_handle": ""
+        }
+        try:
+            with open(settings_file, "w", encoding="utf-8") as f:
+                json.dump(default_settings, f, indent=4, ensure_ascii=False)
+        except Exception:
+            pass
+    
     # Use Identitas register - returns token on success
     from provider.api.auth import register as identitas_register
     token = identitas_register(auth.engine, username, password, email)
     
     if token:
-        # Set default role for new users using RBAC
-        auth._assign_role_to_user(username, "subscriber")
+        # Set role for new users using RBAC
+        auth._assign_role_to_user(username, role)
         # Login with the new token
         auth.login_with_token(username, token)
         return redirect(url_for("root.index"))

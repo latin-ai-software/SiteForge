@@ -18,7 +18,7 @@ It maps the existing AuthManager methods to Identitas equivalents:
 import os
 import sys
 from functools import wraps
-from flask import session, redirect, url_for, abort, g
+from flask import session, redirect, url_for, abort, g, flash
 from datetime import datetime
 
 # Add Identitas to path
@@ -35,10 +35,13 @@ from provider.api.rbac import assign_role_to_user as rbac_assign_role_to_user
 from provider.api.rbac import remove_role_from_user as rbac_remove_role_from_user
 from provider.api.rbac import get_user_roles as rbac_get_user_roles
 from provider.api.rbac import get_role_by_name as rbac_get_role_by_name
+from provider.api.rbac import get_users_with_role as rbac_get_users_with_role
 from provider.api.rbac import user_has_right as rbac_user_has_right
 from provider.api.rbac import list_roles as rbac_list_roles
 from provider.backend.db_operations import create_sqlite_database
 from provider.models.user import User
+from provider.models.role import Role  # Import Role model to ensure association table is registered
+from provider.models.modmail import ModmailSubject, ModmailConversation, ModmailMessage  # Import modmail models
 from sqlalchemy.orm import Session as DBSession
 
 
@@ -70,7 +73,8 @@ class IdentitasAuthManager:
             ("administrator", "Full system administration access"),
             ("moderator", "Content moderation and user management"),
             ("contributor", "Can create and edit content"),
-            ("subscriber", "Basic read-only access")
+            ("subscriber", "Basic read-only access"),
+            ("locked", "User in lockdown mode - no access")
         ]
         for role_name, description in default_roles:
             role = rbac_get_role_by_name(self.engine, role_name)
@@ -241,6 +245,14 @@ class IdentitasAuthManager:
     def get_user_role(self, username):
         """Get user's role"""
         return self._get_user_role(username)
+
+    def has_administrator(self) -> bool:
+        """Return True if any administrator user exists."""
+        role = rbac_get_role_by_name(self.engine, "administrator")
+        if not role:
+            return False
+        users = rbac_get_users_with_role(self.engine, role.id)
+        return bool(users)
     
     def update_user_role(self, username, role):
         """Update user's role using RBAC"""
@@ -324,8 +336,15 @@ class IdentitasAuthManager:
         """Decorator to require login for a route"""
         @wraps(f)
         def wrapper(*args, **kwargs):
-            if not self.current_user():
+            username = self.current_user()
+            if not username:
                 return redirect(url_for("auth.login_page"))
+            
+            # Check if user is in lockdown mode
+            if self.get_user_role(username) == "locked":
+                flash("Your account is currently in lockdown. Please contact an administrator to regain access.", "error")
+                return redirect(url_for("auth.login_page"))
+                
             return f(*args, **kwargs)
         return wrapper
     
@@ -336,7 +355,11 @@ class IdentitasAuthManager:
             username = self.current_user()
             if not username:
                 return redirect(url_for("auth.login_page"))
-            if self.get_user_role(username) != "administrator":
+            user_role = self.get_user_role(username)
+            if user_role == "locked":
+                flash("Your account is currently in lockdown. Please contact an administrator to regain access.", "error")
+                return redirect(url_for("auth.login_page"))
+            if user_role != "administrator":
                 abort(403)
             return f(*args, **kwargs)
         return wrapper
@@ -349,7 +372,14 @@ class IdentitasAuthManager:
                 user = session.get("user")
                 if not user:
                     return redirect(url_for("auth.login_page"))
+                
                 user_role = self.get_user_role(user)
+                
+                # Check if user is in lockdown mode
+                if user_role == "locked":
+                    flash("Your account is currently in lockdown. Please contact an administrator to regain access.", "error")
+                    return redirect(url_for("auth.login_page"))
+                    
                 role_hierarchy = {
                     "administrator": 5,
                     "moderator": 4,

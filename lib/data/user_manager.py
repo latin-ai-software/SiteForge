@@ -65,7 +65,7 @@ class UserManager:
             clear_all_caches()
         except Exception:
             pass
-        return success
+        return success, message
 
     def update_user_git_access(self, username, git_access):
         success, message = self.auth.update_user_git_access(username, git_access)
@@ -78,7 +78,7 @@ class UserManager:
             clear_all_caches()
         except Exception:
             pass
-        return success
+        return success, message
 
     def delete_user(self, username):
         result = self.auth.delete_user(username)

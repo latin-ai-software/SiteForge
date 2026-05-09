@@ -20,6 +20,7 @@ def create_app(config_name=None):
     from lib.routes.admin.help import admin_help_bp
     from lib.routes.root.auth import auth_bp
     from lib.routes.data.youtube import youtube_bp
+    from lib.routes.modmail import modmail_bp
     from lib.netdefense.auth.identitas_auth import IdentitasAuthManager
     import os
     from datetime import datetime
@@ -100,6 +101,7 @@ def create_app(config_name=None):
     from lib.routes.admin.manage.backup import backup_bp
     app.register_blueprint(backup_bp)
     app.register_blueprint(youtube_bp)
+    app.register_blueprint(modmail_bp)
 
     # Global variable to track loaded plugins
     loaded_plugins = set()
@@ -167,6 +169,7 @@ from lib.routes.admin.manage.media.index import admin_media_bp
 from lib.routes.admin.help import admin_help_bp
 from lib.routes.root.auth import auth_bp
 from lib.routes.data.youtube import youtube_bp
+from lib.routes.modmail import modmail_bp
 from lib.netdefense.auth.identitas_auth import IdentitasAuthManager
 import os
 from datetime import datetime
@@ -239,6 +242,7 @@ app.register_blueprint(admin_analytics_bp)
 from lib.routes.admin.manage.backup import backup_bp
 app.register_blueprint(backup_bp)
 app.register_blueprint(youtube_bp)
+app.register_blueprint(modmail_bp)
 
 # Global variable to track loaded plugins
 loaded_plugins = set()

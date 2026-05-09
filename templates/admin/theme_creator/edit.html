@@ -216,12 +216,14 @@
             <a href="/admin/manage/templates">Stylesheets</a>
             <a href="/admin/posts">Beiträge</a>
             <a href="/admin/users">Benutzer</a>
+            <a href="/admin/users/roles">Rollen</a>
             <a href="/admin/media">Medien</a>
             <a href="/admin/analytics">Analytics</a>
             {% if is_plugin_loaded('git_repos') %}
             <a href="/admin/git">Git-Repos</a>
             {% endif %}
             <a href="/admin/settings">Einstellungen</a>
+            <a href="{{ url_for('modmail.admin_modmail') }}">Modmail</a>
             <a href="{{ url_for('backup.backup_index') }}">Backups</a>
             <a href="{{ url_for('admin_help') }}">Hilfe</a>
             <a href="{{ url_for('theme_creator.index') }}" class="active">Theme Creator</a>
