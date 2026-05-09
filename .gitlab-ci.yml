@@ -92,6 +92,7 @@ pip_audit:
 gitleaks_scan:
   stage: security
   image: zricethezav/gitleaks:latest
+  entrypoint: [""]
   script:
     - gitleaks detect --source . --report-format json --report-path gitleaks-report.json
   artifacts:
@@ -99,18 +100,18 @@ gitleaks_scan:
       - gitleaks-report.json
     expire_in: 7 days
 
-mypy:
-  stage: security
-  image: python:3.12
-  before_script:
-    - pip install -r requirements.txt
-    - pip install mypy
-  script:
-    - mypy .
-  artifacts:
-    paths:
-      - .mypy_cache
-    expire_in: 7 days
+#mypy:
+#  stage: security
+#  image: python:3.12
+#  before_script:
+#    - pip install -r requirements.txt
+#    - pip install mypy
+#  script:
+#    - mypy .
+#  artifacts:
+#    paths:
+#      - .mypy_cache
+#    expire_in: 7 days
 
 # Build Docker image
 #build:

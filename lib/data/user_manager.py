@@ -2,7 +2,7 @@ import os
 import sys
 import json
 from flask import current_app
-from ..netdefense.auth.identitas_auth import IdentitasAuthManager
+from lib.netdefense.auth.identitas_auth import IdentitasAuthManager
 
 # Add Intermediarium cache
 try:
@@ -35,7 +35,7 @@ class UserManager:
                 return cached_users
         
         from sqlalchemy.orm import Session as DBSession
-        from provider.models.user import User
+        from Identitas.provider.models.user import User
         
         user_list = []
         with DBSession(self.auth.engine) as session:

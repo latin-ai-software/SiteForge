@@ -1,6 +1,6 @@
 import os
 from flask import Blueprint, render_template, request, jsonify, abort, redirect,url_for
-from .....netdefense.auth.identitas_auth import IdentitasAuthManager
+from lib.netdefense.auth.identitas_auth import IdentitasAuthManager
 from .....data.user_manager import UserManager
 
 admin_users_bp = Blueprint("admin_users", __name__, url_prefix="/admin/users")
