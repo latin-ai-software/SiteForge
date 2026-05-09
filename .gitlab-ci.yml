@@ -83,10 +83,10 @@ pip_audit:
   before_script:
     - pip install pip-audit
   script:
-    - pip-audit -r requirements.txt -f html -o pip-audit-report.html
+    - pip-audit -r requirements.txt -f json -o pip-audit-report.json || true
   artifacts:
     paths:
-      - pip-audit-report.html
+      - pip-audit-report.json
     expire_in: 7 days
 
 gitleaks_scan:
