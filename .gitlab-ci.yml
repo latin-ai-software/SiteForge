@@ -1,0 +1,161 @@
+stages:
+  - test
+  - security
+  - build
+  - deploy
+
+variables:
+  DOCKER_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+  DOCKER_TAG: $CI_COMMIT_SHA
+  GIT_SUBMODULE_STRATEGY: recursive
+  # SSH configuration for private repository access
+  GIT_STRATEGY: clone
+  GIT_CHECKOUT: "true"
+  # Skip license validation in CI
+  CI: "true"
+
+# Test stage
+test:
+  stage: test
+  image: python:3.12
+  before_script:
+    # Install SSH client and configure Git for SSH (optional)
+    - apt-get update && apt-get install -y openssh-client git
+    - |
+      if [ -n "$SSH_PRIVATE_KEY" ]; then
+        eval $(ssh-agent -s)
+        echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - || echo "SSH key setup failed, continuing without SSH"
+        mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+        ssh-keyscan -H git.latinai.de >> ~/.ssh/known_hosts || true
+      else
+        echo "No SSH_PRIVATE_KEY provided, skipping SSH setup"
+      fi
+    - git config --global user.email "ci@gitlab.local"
+    - git config --global user.name "GitLab CI"
+    - pip install -r requirements.txt
+    - pip install pytest pytest-cov
+  script:
+    - python -m pytest --cov=lib --cov-report=html --cov-report=term --cov-report=xml:htmlcov/cobertura.xml
+  coverage: '/TOTAL.*\s+(\d+%)$/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: htmlcov/cobertura.xml
+    paths:
+      - htmlcov/
+    expire_in: 7 days
+  only:
+    - merge_requests
+    - main
+
+# Security scanning
+bandit_scan:
+  stage: security
+  image: python:3.12
+  before_script:
+    # Install SSH client and configure Git for SSH (optional)
+    - apt-get update && apt-get install -y openssh-client git
+    - |
+      if [ -n "$SSH_PRIVATE_KEY" ]; then
+        eval $(ssh-agent -s)
+        echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - || echo "SSH key setup failed, continuing without SSH"
+        mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+        ssh-keyscan -H git.latinai.de >> ~/.ssh/known_hosts || true
+      else
+        echo "No SSH_PRIVATE_KEY provided, skipping SSH setup"
+      fi
+    - git config --global user.email "ci@gitlab.local"
+    - git config --global user.name "GitLab CI"
+    - pip install bandit
+  script:
+    - bandit -r . -x Identitas,Intermediarium -f html -o bandit-report.html --exit-zero
+  artifacts:
+    paths:
+      - bandit-report.html
+    expire_in: 7 days
+
+pip_audit:
+  stage: security
+  image: python:3.12
+  before_script:
+    - pip install pip-audit
+  script:
+    - pip-audit -r requirements.txt -f json -o pip-audit-report.json || true
+  artifacts:
+    paths:
+      - pip-audit-report.json
+    expire_in: 7 days
+
+include:
+  - template: Jobs/Secret-Detection.gitlab-ci.yml
+
+#mypy:
+#  stage: security
+#  image: python:3.12
+#  before_script:
+#    - pip install -r requirements.txt
+#    - pip install mypy
+#  script:
+#    - mypy .
+#  artifacts:
+#    paths:
+#      - .mypy_cache
+#    expire_in: 7 days
+
+# Build Docker image
+#build:
+#  stage: build
+#  image: docker:latest
+#  services:
+#    - docker:dind
+#  before_script:
+#    - sleep 5  # Wait for Docker daemon to start
+#    - docker info || sleep 10 && docker info
+#    - |
+#      if [ -n "$CI_REGISTRY" ]; then
+#        echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+#      else
+#        echo "No container registry configured, building locally only"
+#      fi
+#  script:
+#    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG .
+#    - |
+#      if [ -n "$CI_REGISTRY" ]; then
+#        docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+#      else
+#        echo "Skipping push - no container registry configured"
+#        echo "Built image: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
+#      fi
+#  retry: 2
+#  only:
+#    - main
+
+# Deploy to staging
+#deploy_staging:
+#  stage: deploy
+#  script:
+#    - echo "Deploying to staging environment"
+#    - docker pull $DOCKER_IMAGE
+#    - docker-compose -f docker-compose.staging.yml up -d
+#  environment:
+#    name: staging
+#    url: https://staging.siteforge.example.com
+#  only:
+#    - develop
+
+# Deploy to production
+#deploy_production:
+#  stage: deploy
+#  script:
+#    - echo "Deploying to production environment"
+#    - docker pull $DOCKER_IMAGE
+#    - docker-compose -f docker-compose.prod.yml up -d
+#  environment:
+#    name: production
+#    url: https://siteforge.example.com
+#  only:
+#    - main
+#  when: manual

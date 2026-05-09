@@ -2,7 +2,7 @@ import os
 import sys
 import json
 from flask import current_app
-from ..netdefense.auth.identitas_auth import IdentitasAuthManager
+from lib.netdefense.auth.identitas_auth import IdentitasAuthManager
 
 # Add Intermediarium cache
 try:
@@ -11,10 +11,12 @@ try:
 except ImportError:
     _cache_available = False
 
-# Add Identitas to path
-IDENTITAS_PATH = os.path.join(os.path.dirname(__file__), "../../Identitas")
-if IDENTITAS_PATH not in sys.path:
-    sys.path.insert(0, IDENTITAS_PATH)
+# Add Identitas project root to path so Identitas can be imported consistently
+IDENTITAS_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../Identitas"))
+IDENTITAS_ROOT = os.path.abspath(os.path.dirname(IDENTITAS_PATH))
+for path_entry in (IDENTITAS_ROOT, IDENTITAS_PATH):
+    if path_entry not in sys.path:
+        sys.path.insert(0, path_entry)
 
 class UserManager:
     def __init__(self, base_path):
@@ -35,7 +37,7 @@ class UserManager:
                 return cached_users
         
         from sqlalchemy.orm import Session as DBSession
-        from provider.models.user import User
+        from Identitas.provider.models.user import User
         
         user_list = []
         with DBSession(self.auth.engine) as session:
@@ -65,7 +67,7 @@ class UserManager:
             clear_all_caches()
         except Exception:
             pass
-        return success
+        return success, message
 
     def update_user_git_access(self, username, git_access):
         success, message = self.auth.update_user_git_access(username, git_access)
@@ -78,7 +80,7 @@ class UserManager:
             clear_all_caches()
         except Exception:
             pass
-        return success
+        return success, message
 
     def delete_user(self, username):
         result = self.auth.delete_user(username)

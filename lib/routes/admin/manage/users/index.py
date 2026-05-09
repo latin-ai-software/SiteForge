@@ -1,6 +1,6 @@
 import os
 from flask import Blueprint, render_template, request, jsonify, abort, redirect,url_for
-from .....netdefense.auth.identitas_auth import IdentitasAuthManager
+from lib.netdefense.auth.identitas_auth import IdentitasAuthManager
 from .....data.user_manager import UserManager
 
 admin_users_bp = Blueprint("admin_users", __name__, url_prefix="/admin/users")
@@ -15,7 +15,10 @@ user_manager = UserManager(BASE_PATH)
 @auth.require_admin
 def admin_users_index():
     users = user_manager.get_all_users()
-    return render_template("admin/users/index.html", users=users)
+    from Identitas.provider.api.rbac import list_roles
+    roles = list_roles(auth.engine)
+    available_roles = [{"name": role.name, "description": role.description or ""} for role in roles]
+    return render_template("admin/users/index.html", users=users, available_roles=available_roles)
 
 # POST: Benutzerrolle aktualisieren
 @admin_users_bp.route("/update-role/<username>", methods=["POST"])
@@ -68,5 +71,60 @@ def delete_user(username):
     success, msg = user_manager.delete_user(username)
     if success:
         return jsonify({"status": "deleted"})
+    else:
+        return jsonify({"error": msg}), 400
+
+# GET: Rollen verwalten
+@admin_users_bp.route("/roles", methods=["GET"])
+@auth.require_admin
+def admin_roles_index():
+    from Identitas.provider.api.rbac import list_roles
+    roles = list_roles(auth.engine)
+    roles_data = [{"id": role.id, "name": role.name, "description": role.description or ""} for role in roles]
+    return render_template("admin/users/roles.html", roles=roles_data)
+
+# POST: Neue Rolle erstellen
+@admin_users_bp.route("/roles/create", methods=["POST"])
+@auth.require_admin
+def create_role():
+    name = request.form.get("name")
+    description = request.form.get("description", "")
+    
+    if not name:
+        return jsonify({"error": "Rollenname erforderlich"}), 400
+    
+    from Identitas.provider.api.rbac import create_role
+    role = create_role(auth.engine, name, description)
+    if role:
+        return redirect(url_for("admin_users.admin_roles_index"))
+    else:
+        return jsonify({"error": "Rolle konnte nicht erstellt werden"}), 400
+
+# POST: Rolle löschen
+@admin_users_bp.route("/roles/delete/<int:role_id>", methods=["POST"])
+@auth.require_admin
+def delete_role(role_id):
+    from Identitas.provider.api.rbac import delete_role
+    success = delete_role(auth.engine, role_id)
+    if success:
+        return redirect(url_for("admin_users.admin_roles_index"))
+    else:
+        return jsonify({"error": "Rolle konnte nicht gelöscht werden"}), 400
+
+# POST: Benutzer in Lockdown-Modus versetzen
+@admin_users_bp.route("/lockdown/<username>", methods=["POST"])
+@auth.require_admin
+def toggle_lockdown(username):
+    # Check if user is already in lockdown
+    current_role = auth.get_user_role(username)
+    if current_role == "locked":
+        # Unlock user - set to subscriber as default
+        success, msg = user_manager.update_user_role(username, "subscriber")
+    else:
+        # Lock user
+        success, msg = user_manager.update_user_role(username, "locked")
+    
+    if success:
+        return redirect(url_for("admin_users.admin_users_index"))
     else:
         return jsonify({"error": msg}), 400

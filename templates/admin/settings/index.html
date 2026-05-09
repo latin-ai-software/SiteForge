@@ -1,193 +1,10 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <title>Einstellungen</title>
+{% extends "admin/base.html" %}
 
-    <style>
-        body {
-            margin: 0;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: #0f172a;
-            color: #e5e7eb;
-        }
+{% block title %}Einstellungen{% endblock %}
 
-        .layout {
-            display: flex;
-            min-height: 100vh;
-        }
+{% block page_title %}Einstellungen{% endblock %}
 
-        .sidebar {
-            width: 260px;
-            background: #020617;
-            border-right: 1px solid #1f2937;
-            padding: 24px 20px;
-        }
-
-        .sidebar h1 {
-            font-size: 1.3rem;
-            margin: 0 0 1.5rem;
-            color: #f9fafb;
-        }
-
-        .sidebar nav a {
-            display: block;
-            padding: 8px 10px;
-            margin-bottom: 6px;
-            border-radius: 6px;
-            color: #9ca3af;
-            text-decoration: none;
-            font-size: 0.9rem;
-        }
-
-        .sidebar nav a.active,
-        .sidebar nav a:hover {
-            background: #111827;
-            color: #e5e7eb;
-        }
-
-        .main {
-            flex: 1;
-            padding: 24px 32px 40px;
-        }
-
-        .page-title {
-            font-size: 1.6rem;
-            margin: 0 0 1.5rem;
-            color: #f9fafb;
-        }
-
-        .card {
-            background: #020617;
-            border-radius: 10px;
-            border: 1px solid #1f2937;
-            padding: 18px 20px;
-            box-shadow: 0 18px 40px rgba(0,0,0,0.45);
-            margin-bottom: 24px;
-        }
-
-        .card h2 {
-            margin: 0 0 0.75rem;
-            font-size: 1.05rem;
-            color: #e5e7eb;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #e5e7eb;
-        }
-
-        .form-group input[type="text"],
-        .form-group input[type="number"] {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #374151;
-            border-radius: 4px;
-            background: #111827;
-            color: #e5e7eb;
-        }
-
-        .form-group textarea {
-            width: 100%;
-            height: 100px;
-            padding: 8px;
-            border: 1px solid #374151;
-            border-radius: 4px;
-            background: #111827;
-            color: #e5e7eb;
-        }
-
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-        }
-
-        .checkbox-group input[type="checkbox"] {
-            margin-right: 8px;
-        }
-
-        .btn {
-            padding: 7px 14px;
-            border-radius: 6px;
-            border: none;
-            font-size: 0.9rem;
-            cursor: pointer;
-            background: #2563eb;
-            color: #f9fafb;
-        }
-
-        .btn:hover {
-            background: #1d4ed8;
-        }
-
-        /* Mobile responsiveness */
-        @media (max-width: 768px) {
-            .layout {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: 100%;
-                border-right: none;
-                border-bottom: 1px solid #1f2937;
-                padding: 16px;
-            }
-
-            .sidebar nav {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 8px;
-            }
-
-            .sidebar nav a {
-                margin-bottom: 0;
-            }
-
-            .main {
-                padding: 16px;
-            }
-
-            .card {
-                padding: 12px 16px;
-            }
-
-            .form-group textarea {
-                height: 80px;
-            }
-        }
-    </style>
-</head>
-
-<body>
-<div class="layout">
-
-    <aside class="sidebar">
-        <h1 id="start">SiteForge Admin</h1>
-        <nav>
-            <a href="/">Zur Seite</a>
-            <a href="/admin/manage/templates">Stylesheets</a>
-            <a href="/admin/posts">Beiträge</a>
-            <a href="/admin/users">Benutzer</a>
-            <a href="/admin/media">Medien</a>
-            <a href="/admin/analytics">Analytics</a>
-            {% if is_plugin_loaded('git_repos') %}
-            <a href="/admin/git">Git-Repos</a>
-            {% endif %}
-            <a href="/admin/settings" class="active">Einstellungen</a>
-            <a href="{{ url_for('backup.backup_index') }}">Backups</a>
-            <a href="{{ url_for('admin_help') }}">Hilfe</a>
-            <a href="{{ url_for('theme_creator.index') }}">Theme Creator</a>
-        </nav>
-    </aside>
-
-    <main class="main">
-        <h1 class="page-title">Einstellungen</h1>
-
+{% block content %}
         <form id="settingsForm" enctype="multipart/form-data">
             <!-- CSRF Protection Token -->
             <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
@@ -469,6 +286,7 @@
 
 </div>
 
+<a href="{{ url_for('admin_help') }}">Hilfe</a>
 
 <script>
 document.getElementById('settingsForm').addEventListener('submit', async function(e) {
@@ -670,5 +488,4 @@ document.getElementById('installUpdateBtn').addEventListener('click', async func
 // Load update status on page load
 loadUpdateStatus();
 </script>
-</body>
-</html>
+{% endblock %}
