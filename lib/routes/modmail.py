@@ -70,7 +70,7 @@ def view_conversation(conversation_id):
     is_admin = user_role == "administrator"
 
     # Get conversation and verify access
-    from Identitas.provider.models.modmail import ModmailConversation
+    from lib.data.modmail_models import ModmailConversation
     from sqlalchemy.orm import Session as DBSession
 
     with DBSession(auth.engine) as db_session:

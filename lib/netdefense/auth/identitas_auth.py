@@ -43,7 +43,7 @@ from Identitas.provider.api.rbac import list_roles as rbac_list_roles
 from Identitas.provider.backend.db_operations import create_sqlite_database
 from Identitas.provider.models.user import User
 from Identitas.provider.models.role import Role  # Import Role model to ensure association table is registered
-from Identitas.provider.models.modmail import ModmailSubject, ModmailConversation, ModmailMessage  # Import modmail models
+# Removed modmail imports - they are now in the application layer
 from sqlalchemy.orm import Session as DBSession
 
 

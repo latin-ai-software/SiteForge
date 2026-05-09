@@ -168,7 +168,7 @@ def test_encryption():
     print("✓ ALL TESTS PASSED - Encryption system is working!")
     print("="*60 + "\n")
     
-    return True
+    assert True
 
 
 def show_current_status():

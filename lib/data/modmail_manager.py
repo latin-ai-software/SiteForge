@@ -10,7 +10,7 @@ from lib.modmail_crypto import ModmailCrypto
 # Import models to ensure they're registered with SQLAlchemy
 from Identitas.provider.models.user import User
 from Identitas.provider.models.role import Role
-from Identitas.provider.models.modmail import ModmailSubject, ModmailConversation, ModmailMessage
+from lib.data.modmail_models import ModmailSubject, ModmailConversation, ModmailMessage
 
 class ModmailManager:
     """Manager for modmail functionality with end-to-end encryption"""
@@ -59,7 +59,7 @@ class ModmailManager:
 
     def get_subjects(self) -> list:
         """Get all active modmail subjects"""
-        from Identitas.provider.models.modmail import ModmailSubject
+        from lib.data.modmail_models import ModmailSubject
 
         with DBSession(self.auth.engine) as session:
             subjects = session.query(ModmailSubject).filter_by(is_active=True).all()
@@ -71,7 +71,7 @@ class ModmailManager:
 
     def create_subject(self, name: str, description: str = "") -> tuple[bool, str]:
         """Create a new modmail subject"""
-        from Identitas.provider.models.modmail import ModmailSubject
+        from lib.data.modmail_models import ModmailSubject
 
         with DBSession(self.auth.engine) as session:
             # Check if subject already exists
@@ -86,7 +86,7 @@ class ModmailManager:
 
     def update_subject(self, subject_id: int, name: str = None, description: str = None, is_active: bool = None) -> tuple[bool, str]:
         """Update a modmail subject"""
-        from Identitas.provider.models.modmail import ModmailSubject
+        from lib.data.modmail_models import ModmailSubject
 
         with DBSession(self.auth.engine) as session:
             subject = session.query(ModmailSubject).filter_by(id=subject_id).first()
@@ -105,7 +105,7 @@ class ModmailManager:
 
     def delete_subject(self, subject_id: int) -> tuple[bool, str]:
         """Delete a modmail subject"""
-        from Identitas.provider.models.modmail import ModmailSubject
+        from lib.data.modmail_models import ModmailSubject
 
         with DBSession(self.auth.engine) as session:
             subject = session.query(ModmailSubject).filter_by(id=subject_id).first()
@@ -118,11 +118,11 @@ class ModmailManager:
 
     def create_conversation(self, user_id: int, subject_id: int, title: str, initial_message: str, user_password: str) -> tuple[bool, str]:
         """Create a new modmail conversation"""
-        from Identitas.provider.models.modmail import ModmailConversation, ModmailMessage
+        from lib.data.modmail_models import ModmailConversation, ModmailMessage
 
         with DBSession(self.auth.engine) as session:
             # Verify subject exists
-            from Identitas.provider.models.modmail import ModmailSubject
+            from lib.data.modmail_models import ModmailSubject
             subject = session.query(ModmailSubject).filter_by(id=subject_id, is_active=True).first()
             if not subject:
                 return False, "Invalid subject"
@@ -154,7 +154,7 @@ class ModmailManager:
 
     def add_message(self, conversation_id: int, sender_id: int, content: str, password: str, is_from_admin: bool = False) -> tuple[bool, str]:
         """Add a message to a conversation"""
-        from Identitas.provider.models.modmail import ModmailConversation, ModmailMessage
+        from lib.data.modmail_models import ModmailConversation, ModmailMessage
 
         with DBSession(self.auth.engine) as session:
             # Verify conversation exists and is open
@@ -180,7 +180,7 @@ class ModmailManager:
 
     def get_conversations_for_user(self, user_id: int) -> list:
         """Get all conversations for a user"""
-        from Identitas.provider.models.modmail import ModmailConversation
+        from lib.data.modmail_models import ModmailConversation
 
         with DBSession(self.auth.engine) as session:
             conversations = session.query(ModmailConversation).filter_by(user_id=user_id).all()
@@ -195,7 +195,7 @@ class ModmailManager:
 
     def get_conversations_for_admin(self) -> list:
         """Get all conversations for admin view"""
-        from Identitas.provider.models.modmail import ModmailConversation
+        from lib.data.modmail_models import ModmailConversation
 
         with DBSession(self.auth.engine) as session:
             conversations = session.query(ModmailConversation).all()
@@ -211,7 +211,7 @@ class ModmailManager:
 
     def get_conversation_messages(self, conversation_id: int, password: str) -> list:
         """Get decrypted messages for a conversation"""
-        from Identitas.provider.models.modmail import ModmailMessage
+        from lib.data.modmail_models import ModmailMessage
 
         with DBSession(self.auth.engine) as session:
             messages = session.query(ModmailMessage).filter_by(conversation_id=conversation_id).order_by(ModmailMessage.created_at).all()
@@ -247,7 +247,7 @@ class ModmailManager:
 
     def close_conversation(self, conversation_id: int) -> tuple[bool, str]:
         """Close a modmail conversation"""
-        from Identitas.provider.models.modmail import ModmailConversation
+        from lib.data.modmail_models import ModmailConversation
 
         with DBSession(self.auth.engine) as session:
             conversation = session.query(ModmailConversation).filter_by(id=conversation_id).first()
