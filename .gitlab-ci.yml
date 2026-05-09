@@ -89,15 +89,8 @@ pip_audit:
       - pip-audit-report.json
     expire_in: 7 days
 
-gitleaks_scan:
-  stage: security
-  image: ghcr.io/gitleaks/gitleaks:latest
-  script:
-    - gitleaks detect --source . --report-format json --report-path gitleaks-report.json
-  artifacts:
-    paths:
-      - gitleaks-report.json
-    expire_in: 7 days
+include:
+  - template: Jobs/Secret-Detection.gitlab-ci.yml
 
 #mypy:
 #  stage: security
