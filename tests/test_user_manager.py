@@ -67,7 +67,7 @@ class TestUserManager:
         user_manager = UserManager(temp_dir)
 
         result = user_manager.update_user_role("testuser", "admin")
-        assert result is True
+        assert result == (True, "Success")
         mock_auth.update_user_role.assert_called_once_with("testuser", "admin")
 
     @patch('lib.data.user_manager.IdentitasAuthManager')
@@ -81,7 +81,7 @@ class TestUserManager:
         user_manager = UserManager(temp_dir)
 
         result = user_manager.update_user_git_access("testuser", True)
-        assert result is True
+        assert result == (True, "Success")
         mock_auth.update_user_git_access.assert_called_once_with("testuser", True)
 
     @patch('lib.data.user_manager.IdentitasAuthManager')
