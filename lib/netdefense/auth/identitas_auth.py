@@ -22,8 +22,8 @@ from flask import session, redirect, url_for, abort, g, flash
 from datetime import datetime
 
 # Add Identitas to path
-IDENTITAS_PATH = os.path.join(os.path.dirname(__file__), "../../../Identitas")
-IDENTITAS_ROOT = os.path.dirname(IDENTITAS_PATH)
+IDENTITAS_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../Identitas"))
+IDENTITAS_ROOT = os.path.abspath(os.path.dirname(IDENTITAS_PATH))
 for path_entry in (IDENTITAS_ROOT, IDENTITAS_PATH):
     if path_entry not in sys.path:
         sys.path.insert(0, path_entry)
