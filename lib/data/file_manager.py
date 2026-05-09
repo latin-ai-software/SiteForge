@@ -2,7 +2,7 @@ import os
 import uuid
 import mimetypes
 from werkzeug.utils import secure_filename
-from ..netdefense.check import MalwareChecker
+from lib.netdefense.check import MalwareChecker
 
 # Add Intermediarium cache
 try:

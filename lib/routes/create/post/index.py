@@ -1,7 +1,7 @@
 import os
 from flask import Blueprint, request, jsonify, render_template, current_app, abort, redirect, url_for, make_response, session
-from ....netdefense.check import MalwareChecker
-from ....netdefense.auth.identitas_auth import IdentitasAuthManager
+from lib.netdefense.check import MalwareChecker
+from lib.netdefense.auth.identitas_auth import IdentitasAuthManager
 from ....data.post_manager import PostManager
 from ....data.comment_manager import CommentManager
 import json
