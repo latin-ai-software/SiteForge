@@ -23,25 +23,27 @@ from datetime import datetime
 
 # Add Identitas to path
 IDENTITAS_PATH = os.path.join(os.path.dirname(__file__), "../../../Identitas")
-if IDENTITAS_PATH not in sys.path:
-    sys.path.insert(0, IDENTITAS_PATH)
+IDENTITAS_ROOT = os.path.dirname(IDENTITAS_PATH)
+for path_entry in (IDENTITAS_ROOT, IDENTITAS_PATH):
+    if path_entry not in sys.path:
+        sys.path.insert(0, path_entry)
 
-from provider.api.auth import register as identitas_register
-from provider.api.auth import login as identitas_login
-from provider.api.auth import logout as identitas_logout
-from provider.api.auth import validate_token as identitas_validate_token
-from provider.api.rbac import create_role as rbac_create_role
-from provider.api.rbac import assign_role_to_user as rbac_assign_role_to_user
-from provider.api.rbac import remove_role_from_user as rbac_remove_role_from_user
-from provider.api.rbac import get_user_roles as rbac_get_user_roles
-from provider.api.rbac import get_role_by_name as rbac_get_role_by_name
-from provider.api.rbac import get_users_with_role as rbac_get_users_with_role
-from provider.api.rbac import user_has_right as rbac_user_has_right
-from provider.api.rbac import list_roles as rbac_list_roles
-from provider.backend.db_operations import create_sqlite_database
-from provider.models.user import User
-from provider.models.role import Role  # Import Role model to ensure association table is registered
-from provider.models.modmail import ModmailSubject, ModmailConversation, ModmailMessage  # Import modmail models
+from Identitas.provider.api.auth import register as identitas_register
+from Identitas.provider.api.auth import login as identitas_login
+from Identitas.provider.api.auth import logout as identitas_logout
+from Identitas.provider.api.auth import validate_token as identitas_validate_token
+from Identitas.provider.api.rbac import create_role as rbac_create_role
+from Identitas.provider.api.rbac import assign_role_to_user as rbac_assign_role_to_user
+from Identitas.provider.api.rbac import remove_role_from_user as rbac_remove_role_from_user
+from Identitas.provider.api.rbac import get_user_roles as rbac_get_user_roles
+from Identitas.provider.api.rbac import get_role_by_name as rbac_get_role_by_name
+from Identitas.provider.api.rbac import get_users_with_role as rbac_get_users_with_role
+from Identitas.provider.api.rbac import user_has_right as rbac_user_has_right
+from Identitas.provider.api.rbac import list_roles as rbac_list_roles
+from Identitas.provider.backend.db_operations import create_sqlite_database
+from Identitas.provider.models.user import User
+from Identitas.provider.models.role import Role  # Import Role model to ensure association table is registered
+from Identitas.provider.models.modmail import ModmailSubject, ModmailConversation, ModmailMessage  # Import modmail models
 from sqlalchemy.orm import Session as DBSession
 
 
@@ -165,7 +167,7 @@ class IdentitasAuthManager:
                 return False, "User not found"
             
             # Use Identitas password hashing
-            from provider.api.auth import _hash_password
+            from Identitas.provider.api.auth import _hash_password
             hashed_pw, salt = _hash_password(new_password)
             user.password = hashed_pw
             user.salt = salt

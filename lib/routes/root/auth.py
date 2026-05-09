@@ -40,7 +40,7 @@ def login_action():
         return render_template("auth/login.html", error="Too many login attempts. Please try again later."), 429
     
     # Use Identitas login - returns token on success
-    from provider.api.auth import login as identitas_login
+    from Identitas.provider.api.auth import login as identitas_login
     token = identitas_login(auth.engine, username, password)
     
     if token:
@@ -135,7 +135,7 @@ def register_action():
             pass
     
     # Use Identitas register - returns token on success
-    from provider.api.auth import register as identitas_register
+    from Identitas.provider.api.auth import register as identitas_register
     token = identitas_register(auth.engine, username, password, email)
     
     if token:
@@ -180,7 +180,7 @@ def change_password():
             error = "New passwords do not match"
         else:
             # Use Identitas login to verify old password
-            from provider.api.auth import login as identitas_login
+            from Identitas.provider.api.auth import login as identitas_login
             token = identitas_login(auth.engine, session["user"], old_password)
             if not token:
                 error = "Old password is incorrect"
