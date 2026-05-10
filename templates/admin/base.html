@@ -46,6 +46,19 @@
             color: #e5e7eb;
         }
 
+        .notification-badge {
+            background: #ef4444;
+            color: white;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-left: 8px;
+            display: inline-block;
+            min-width: 16px;
+            text-align: center;
+        }
+
         .main {
             flex: 1;
             padding: 24px 32px 40px;
@@ -256,6 +269,12 @@
                 {% if is_plugin_loaded('git_repos') %}
                 <a href="/admin/git" {% if request.endpoint and request.endpoint.startswith('admin_git') %}class="active"{% endif %}>Git-Repos</a>
                 {% endif %}
+                <a href="/admin/notifications" {% if request.endpoint and request.endpoint.startswith('admin_notifications') %}class="active"{% endif %}>
+                    Benachrichtigungen
+                    {% if notification_unread_count > 0 %}
+                        <span class="notification-badge">{{ notification_unread_count }}</span>
+                    {% endif %}
+                </a>
                 <a href="/admin/settings" {% if request.endpoint and request.endpoint.startswith('admin_settings') %}class="active"{% endif %}>Einstellungen</a>
                 <a href="{{ url_for('modmail.admin_modmail') }}" {% if request.endpoint and request.endpoint.startswith('modmail.admin') %}class="active"{% endif %}>Modmail</a>
                 <a href="{{ url_for('backup.backup_index') }}" {% if request.endpoint and request.endpoint.startswith('backup') %}class="active"{% endif %}>Backups</a>

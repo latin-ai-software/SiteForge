@@ -53,10 +53,10 @@ def _validate_license():
         sys.exit(1)
     
     if not _is_license_valid(license_key):
-        print("❌ Lizenz ungültig — Anwendung wird beendet.")
+        print("X License invalid - Application will terminate.")
         sys.exit(1)
-    
-    print("✔ Lizenz gültig — Anwendung startet.")
+
+    print("OK License valid - Application starting.")
 
 
 # Run validation at import time - this cannot be bypassed

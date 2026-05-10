@@ -1,234 +1,306 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <title>Medienbibliothek</title>
+{% extends "admin/base.html" %}
 
-    <style>
-        body {
-            margin: 0;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: #0f172a;
-            color: #e5e7eb;
+{% block title %}Medienbibliothek{% endblock %}
+
+{% block page_title %}Medienbibliothek{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h2>Alle Medien</h2>
+
+    <!-- FILTERBAR -->
+    <form method="get" class="filter-bar">
+        <input type="text"
+               name="q"
+               placeholder="Dateiname…"
+               value="{{ q }}">
+
+        <select name="type">
+            <option value="">Alle Typen</option>
+            <option value="png" {% if filetype == "png" %}selected{% endif %}>PNG</option>
+            <option value="jpg" {% if filetype == "jpg" %}selected{% endif %}>JPG</option>
+            <option value="jpeg" {% if filetype == "jpeg" %}selected{% endif %}>JPEG</option>
+            <option value="pdf" {% if filetype == "pdf" %}selected{% endif %}>PDF</option>
+        </select>
+
+        <select name="date">
+            <option value="">Alle Zeiträume</option>
+            <option value="today" {% if date_filter == "today" %}selected{% endif %}>Heute</option>
+            <option value="7d" {% if date_filter == "7d" %}selected{% endif %}>Letzte 7 Tage</option>
+            <option value="30d" {% if date_filter == "30d" %}selected{% endif %}>Letzte 30 Tage</option>
+        </select>
+
+        <button class="btn" type="submit">Filtern</button>
+    </form>
+
+    {% if files %}
+        <div class="files-grid">
+            {% for file in files %}
+                <div class="file-card">
+                    <div class="file-preview">
+                        {% if file.is_image %}
+                            🖼️
+                        {% elif file.is_video %}
+                            🎥
+                        {% elif file.is_document %}
+                            📄
+                        {% else %}
+                            📎
+                        {% endif %}
+                    </div>
+                    <div class="file-info">
+                        <div class="file-name" title="{{ file.filename }}">{{ file.filename }}</div>
+                        <div class="file-size">{{ "%.1f" % (file.size / 1024) }} KB</div>
+
+                        <div class="file-usage">
+                            {% if file.usage_count > 0 %}
+                                <strong style="color: #10b981;">{{ file.usage_count }}</strong>
+                                Verwendung{{ file.usage_count != 1 and 'en' or '' }}
+                            {% else %}
+                                <strong style="color: #f59e0b;">Nicht verwendet</strong>
+                            {% endif %}
+                        </div>
+
+                        <div class="file-actions">
+                            <a href="/admin/media/file/{{ file.filename|urlencode }}"
+                               class="btn"
+                               style="text-align: center; text-decoration: none;">
+                                Details
+                            </a>
+                            <button class="btn"
+                                    type="button"
+                                    onclick="renameFile('{{ file.filename|urlencode }}', '{{ file.filename }}')">
+                                Umbenennen
+                            </button>
+                            <button class="btn btn-danger"
+                                    type="button"
+                                    onclick="deleteFile('{{ file.filename|urlencode }}', '{{ file.filename }}')">
+                                Löschen
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty">
+            <p>Keine Medien vorhanden.</p>
+        </div>
+    {% endif %}
+</section>
+
+<style>
+.filter-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.filter-bar input,
+.filter-bar select {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #1f2937;
+    background: #0f172a;
+    color: #e5e7eb;
+    font-size: 0.9rem;
+}
+
+.btn {
+    padding: 7px 14px;
+    border-radius: 6px;
+    border: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+    background: #2563eb;
+    color: #f9fafb;
+}
+
+.btn:hover {
+    background: #1d4ed8;
+}
+
+.btn-danger {
+    background: #dc2626;
+}
+
+.btn-danger:hover {
+    background: #b91c1c;
+}
+
+.files-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.file-card {
+    background: #111827;
+    border: 1px solid #1f2937;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.file-preview {
+    width: 100%;
+    height: 150px;
+    background: #0f172a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: #374151;
+}
+
+.file-info {
+    padding: 12px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.file-name {
+    font-weight: bold;
+    color: #e5e7eb;
+    margin-bottom: 4px;
+    word-break: break-all;
+    font-size: 0.9rem;
+}
+
+.file-size {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    margin-bottom: 8px;
+}
+
+.file-usage {
+    font-size: 0.8rem;
+    color: #60a5fa;
+    margin-bottom: 10px;
+}
+
+.file-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: auto;
+}
+
+.file-actions button {
+    flex: 1;
+    padding: 6px 8px;
+    font-size: 0.8rem;
+}
+
+.empty {
+    text-align: center;
+    padding: 40px;
+    color: #9ca3af;
+}
+
+@media (max-width: 768px) {
+    .files-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+function deleteFile(encoded_filename, display_name) {
+    if (!confirm(`Datei "${display_name}" wirklich löschen?`)) return;
+
+    fetch(`/admin/media/delete/${encoded_filename}`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'deleted') {
+            alert('Datei gelöscht');
+            location.reload();
+        } else {
+            alert('Fehler: ' + data.error);
         }
+    })
+    .catch(error => {
+        alert('Fehler beim Löschen: ' + error);
+    });
+}
 
-        .layout {
-            display: flex;
-            min-height: 100vh;
+function renameFile(encoded_filename, display_name) {
+    const newName = prompt("Neuer Dateiname:", display_name);
+    if (!newName) return;
+
+    const formData = new FormData();
+    formData.append("new_name", newName);
+
+    fetch(`/admin/media/rename/${encoded_filename}`, {
+        method: "POST",
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === "renamed") {
+            alert("Datei umbenannt");
+            location.reload();
+        } else {
+            alert("Fehler: " + data.error);
         }
+    })
+    .catch(error => {
+        alert("Fehler beim Umbenennen: " + error);
+    });
+}
 
-        .sidebar {
-            width: 260px;
-            background: #020617;
-            border-right: 1px solid #1f2937;
-            padding: 24px 20px;
-        }
+// Ganze Seite akzeptiert Drag & Drop
+document.addEventListener("dragover", (e) => {
+    e.preventDefault();
+});
 
-        .sidebar h1 {
-            font-size: 1.3rem;
-            margin: 0 0 1.5rem;
-            color: #f9fafb;
-        }
+document.addEventListener("drop", (e) => {
+    e.preventDefault();
 
-        .sidebar nav a {
-            display: block;
-            padding: 8px 10px;
-            margin-bottom: 6px;
-            border-radius: 6px;
-            color: #9ca3af;
-            text-decoration: none;
-            font-size: 0.9rem;
-        }
+    // Nur Dateien akzeptieren
+    if (!e.dataTransfer || !e.dataTransfer.files.length) return;
 
-        .sidebar nav a.active,
-        .sidebar nav a:hover {
-            background: #111827;
-            color: #e5e7eb;
-        }
+    uploadFiles(e.dataTransfer.files);
+});
 
-        .main {
-            flex: 1;
-            padding: 24px 32px 40px;
-        }
+// Upload Funktion
+function uploadFiles(files) {
+    let successCount = 0;
+    let errorCount = 0;
 
-        .page-title {
-            font-size: 1.6rem;
-            margin: 0 0 1.5rem;
-            color: #f9fafb;
-        }
+    for (let file of files) {
+        const formData = new FormData();
+        formData.append("file", file);
 
-        .card {
-            background: #020617;
-            border-radius: 10px;
-            border: 1px solid #1f2937;
-            padding: 18px 20px;
-            box-shadow: 0 18px 40px rgba(0,0,0,0.45);
-            margin-bottom: 24px;
-        }
-
-        .card h2 {
-            margin: 0 0 0.75rem;
-            font-size: 1.05rem;
-            color: #e5e7eb;
-        }
-
-        .filter-bar {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .filter-bar input,
-        .filter-bar select {
-            padding: 8px 10px;
-            border-radius: 6px;
-            border: 1px solid #1f2937;
-            background: #0f172a;
-            color: #e5e7eb;
-            font-size: 0.9rem;
-        }
-
-        .btn {
-            padding: 7px 14px;
-            border-radius: 6px;
-            border: none;
-            font-size: 0.9rem;
-            cursor: pointer;
-            background: #2563eb;
-            color: #f9fafb;
-        }
-
-        .btn:hover {
-            background: #1d4ed8;
-        }
-
-        .btn-danger {
-            background: #dc2626;
-        }
-
-        .btn-danger:hover {
-            background: #b91c1c;
-        }
-
-        .files-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 16px;
-            margin-top: 16px;
-        }
-
-        .file-card {
-            background: #111827;
-            border: 1px solid #1f2937;
-            border-radius: 8px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .file-preview {
-            width: 100%;
-            height: 150px;
-            background: #0f172a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            color: #374151;
-        }
-
-        .file-info {
-            padding: 12px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .file-name {
-            font-weight: bold;
-            color: #e5e7eb;
-            margin-bottom: 4px;
-            word-break: break-all;
-            font-size: 0.9rem;
-        }
-
-        .file-size {
-            font-size: 0.8rem;
-            color: #9ca3af;
-            margin-bottom: 8px;
-        }
-
-        .file-usage {
-            font-size: 0.8rem;
-            color: #60a5fa;
-            margin-bottom: 10px;
-        }
-
-        .file-actions {
-            display: flex;
-            gap: 6px;
-            margin-top: auto;
-        }
-
-        .file-actions button {
-            flex: 1;
-            padding: 6px 8px;
-            font-size: 0.8rem;
-        }
-
-        .empty {
-            text-align: center;
-            padding: 40px;
-            color: #9ca3af;
-        }
-
-        @media (max-width: 768px) {
-            .layout {
-                flex-direction: column;
+        fetch("/admin/media/upload", {
+            method: "POST",
+            body: formData
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === "ok") {
+                successCount++;
+                if (successCount + errorCount === files.length) {
+                    alert(`Upload abgeschlossen: ${successCount} erfolgreich, ${errorCount} Fehler`);
+                    if (successCount > 0) location.reload();
+                }
+            } else {
+                errorCount++;
+                console.error("Fehler bei " + file.name + ": " + data.error);
             }
-
-            .sidebar {
-                width: 100%;
-                padding: 16px;
-            }
-
-            .main {
-                padding: 16px;
-            }
-
-            .files-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-</head>
-
-<body>
-<div class="layout">
-
-    <aside class="sidebar">
-        <h1>SiteForge Admin</h1>
-        <nav>
-            <a href="/">Zur Seite</a>
-            <a href="/admin/manage/templates">Stylesheets</a>
-            <a href="/admin/posts">Beiträge</a>
-            <a href="/admin/users">Benutzer</a>
-            <a href="/admin/users/roles">Rollen</a>
-            <a href="/admin/media" class="active">Medien</a>
-            <a href="/admin/analytics">Analytics</a>
-            {% if is_plugin_loaded('git_repos') %}
-            <a href="/admin/git">Git-Repos</a>
-            {% endif %}
-            <a href="/admin/settings">Einstellungen</a>
-            <a href="{{ url_for('modmail.admin_modmail') }}">Modmail</a>
-            <a href="{{ url_for('backup.backup_index') }}">Backups</a>
-            <a href="{{ url_for('admin_help') }}">Hilfe</a>
-            <a href="{{ url_for('theme_creator.index') }}">Theme Creator</a>
-    
-    </aside>
-
-    <main class="main">
-        <h1 class="page-title">Medienbibliothek</h1>
+        })
+        .catch(err => {
+            errorCount++;
+            console.error("Upload-Fehler für " + file.name + ": " + err);
+        });
+    }
+}
+</script>
+{% endblock %}
 
         <section class="card">
             <h2>Alle Medien</h2>

@@ -1,10 +1,10 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <title>Theme bearbeiten</title>
+{% extends "admin/base.html" %}
 
-    <style>
+{% block title %}Theme bearbeiten{% endblock %}
+
+{% block page_title %}Theme bearbeiten: {{ name }}{% endblock %}
+
+{% block content %}
         body {
             margin: 0;
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -206,32 +206,155 @@
         }
     </style>
 </head>
-<body>
-<div class="layout">
+{% block content %}
+<div class="card">
+    <form method="POST" action="{{ url_for('theme_creator.edit', name=name) }}">
+        
+        <div class="vars-grid">
+            {% for v in vars %}
+            <div class="var-item">
+                <label for="{{ v.name }}">{{ v.label }}</label>
+                {% if v.type == 'color' %}
+                    <div class="color-input">
+                        <input type="color" id="{{ v.name }}_picker" value="{{ v.value }}">
+                        <input type="text" id="{{ v.name }}" name="{{ v.name }}" value="{{ v.value }}">
+                    </div>
+                {% else %}
+                    <input type="text" id="{{ v.name }}" name="{{ v.name }}" value="{{ v.value }}">
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
 
-    <aside class="sidebar">
-        <h1 id="start">SiteForge Admin</h1>
-        <nav>
-            <a href="/">Zur Seite</a>
-            <a href="/admin/manage/templates">Stylesheets</a>
-            <a href="/admin/posts">Beiträge</a>
-            <a href="/admin/users">Benutzer</a>
-            <a href="/admin/users/roles">Rollen</a>
-            <a href="/admin/media">Medien</a>
-            <a href="/admin/analytics">Analytics</a>
-            {% if is_plugin_loaded('git_repos') %}
-            <a href="/admin/git">Git-Repos</a>
-            {% endif %}
-            <a href="/admin/settings">Einstellungen</a>
-            <a href="{{ url_for('modmail.admin_modmail') }}">Modmail</a>
-            <a href="{{ url_for('backup.backup_index') }}">Backups</a>
-            <a href="{{ url_for('admin_help') }}">Hilfe</a>
-            <a href="{{ url_for('theme_creator.index') }}" class="active">Theme Creator</a>
-        </nav>
-    </aside>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fa fa-save"></i> Änderungen speichern
+            </button>
+            <a href="{{ url_for('theme_creator.index') }}" class="btn btn-secondary">
+                <i class="fa fa-times"></i> Abbrechen
+            </a>
+        </div>
 
-    <main class="main">
-        <h1 class="page-title">Theme bearbeiten: {{ name }}</h1>
+    </form>
+</div>
+
+<style>
+.card {
+    background: #020617;
+    border-radius: 10px;
+    border: 1px solid #1f2937;
+    padding: 18px 20px;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+    margin-bottom: 24px;
+}
+
+.vars-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.var-item {
+    background: #111827;
+    padding: 12px;
+    border-radius: 6px;
+}
+
+.var-item label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+    color: #9ca3af;
+}
+
+.var-item input[type="text"] {
+    width: 100%;
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid #374151;
+    background: #020617;
+    color: #e5e7eb;
+    font-size: 0.9rem;
+}
+
+.color-input {
+    display: flex;
+    gap: 10px;
+}
+
+.color-input input[type="color"] {
+    width: 40px;
+    height: 35px;
+    padding: 0;
+    border: none;
+    cursor: pointer;
+}
+
+.color-input input[type="text"] {
+    flex: 1;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn {
+    padding: 7px 14px;
+    border-radius: 6px;
+    border: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: #2563eb;
+    color: #f9fafb;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+}
+
+.btn-secondary {
+    background: #374151;
+    color: #e5e7eb;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .vars-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+// Sync color picker with text input
+document.querySelectorAll('.color-input').forEach(container => {
+    const picker = container.querySelector('input[type="color"]');
+    const text = container.querySelector('input[type="text"]');
+    
+    picker.addEventListener('input', () => {
+        text.value = picker.value;
+    });
+    
+    text.addEventListener('input', () => {
+        if (/^#[0-9A-Fa-f]{6}$/.test(text.value)) {
+            picker.value = text.value;
+        }
+    });
+});
+</script>
+{% endblock %}
 
         <div class="card">
             <form method="POST" action="{{ url_for('theme_creator.edit', name=name) }}">
