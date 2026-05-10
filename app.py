@@ -17,6 +17,7 @@ def create_app(config_name=None):
     from lib.routes.admin.manage.analytics.index import admin_analytics_bp
     from lib.routes.admin.manage.settings.index import admin_settings_bp
     from lib.routes.admin.manage.media.index import admin_media_bp
+    from lib.routes.admin.manage.notifications.index import admin_notifications_bp
     from lib.routes.admin.help import admin_help_bp
     from lib.routes.root.auth import auth_bp
     from lib.routes.data.youtube import youtube_bp
@@ -24,6 +25,9 @@ def create_app(config_name=None):
     from lib.netdefense.auth.identitas_auth import IdentitasAuthManager
     import os
     from datetime import datetime
+
+    # Import models to ensure they're registered with SQLAlchemy
+    from lib.data import modmail_models, notification_models
 
     # Load environment variables
     try:
@@ -98,6 +102,7 @@ def create_app(config_name=None):
     app.register_blueprint(admin_help_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_analytics_bp)
+    app.register_blueprint(admin_notifications_bp)
     from lib.routes.admin.manage.backup import backup_bp
     app.register_blueprint(backup_bp)
     app.register_blueprint(youtube_bp)
@@ -125,7 +130,30 @@ def create_app(config_name=None):
     # Make plugin helpers available in templates
     @app.context_processor
     def inject_plugin_check():
-        return dict(is_plugin_loaded=is_plugin_loaded, is_plugin_available=is_plugin_available)
+        from flask import session
+        from lib.data.notification_manager import NotificationManager
+        from lib.netdefense.auth.identitas_auth import IdentitasAuthManager
+
+        # Get notification count for admin users
+        notification_count = 0
+        try:
+            # Check if user is logged in and is admin
+            if 'user' in session:
+                base_path = os.path.abspath(os.path.dirname(__file__))
+                auth = IdentitasAuthManager(base_path)
+                user_role = auth.get_user_role(session['user'])
+                if user_role == 'administrator':
+                    notification_manager = NotificationManager(base_path)
+                    notification_count = notification_manager.get_unread_count()
+        except Exception as e:
+            # Silently fail if notifications aren't available or there's an error
+            pass
+
+        return dict(
+            is_plugin_loaded=is_plugin_loaded,
+            is_plugin_available=is_plugin_available,
+            notification_unread_count=notification_count
+        )
 
     # Setup check middleware
     @app.before_request
@@ -166,6 +194,7 @@ from lib.routes.admin.manage.users.index import admin_users_bp
 from lib.routes.admin.manage.analytics.index import admin_analytics_bp
 from lib.routes.admin.manage.settings.index import admin_settings_bp
 from lib.routes.admin.manage.media.index import admin_media_bp
+from lib.routes.admin.manage.notifications.index import admin_notifications_bp
 from lib.routes.admin.help import admin_help_bp
 from lib.routes.root.auth import auth_bp
 from lib.routes.data.youtube import youtube_bp
@@ -239,6 +268,7 @@ app.register_blueprint(admin_media_bp)
 app.register_blueprint(admin_help_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(admin_analytics_bp)
+app.register_blueprint(admin_notifications_bp)
 from lib.routes.admin.manage.backup import backup_bp
 app.register_blueprint(backup_bp)
 app.register_blueprint(youtube_bp)
@@ -337,7 +367,30 @@ def is_plugin_available(plugin_name):
 # Make plugin check available to templates
 @app.context_processor
 def inject_plugin_check():
-    return dict(is_plugin_loaded=is_plugin_loaded, is_plugin_available=is_plugin_available)
+    from flask import session
+    from lib.data.notification_manager import NotificationManager
+    from lib.netdefense.auth.identitas_auth import IdentitasAuthManager
+
+    # Get notification count for admin users
+    notification_count = 0
+    try:
+        # Check if user is logged in and is admin
+        if 'user' in session:
+            base_path = os.path.abspath(os.path.dirname(__file__))
+            auth = IdentitasAuthManager(base_path)
+            user_role = auth.get_user_role(session['user'])
+            if user_role == 'administrator':
+                notification_manager = NotificationManager(base_path)
+                notification_count = notification_manager.get_unread_count()
+    except Exception as e:
+        # Silently fail if notifications aren't available or there's an error
+        pass
+
+    return dict(
+        is_plugin_loaded=is_plugin_loaded,
+        is_plugin_available=is_plugin_available,
+        notification_unread_count=notification_count
+    )
 
 # Setup check middleware - redirect to setup if not completed
 @app.before_request

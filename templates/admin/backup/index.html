@@ -1,234 +1,278 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <title>Backups</title>
+{% extends "admin/base.html" %}
+{# Help link: url_for('admin_help') #}
+{% block title %}Backups{% endblock %}
 
-    <style>
-        body {
-            margin: 0;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: #0f172a;
-            color: #e5e7eb;
+{% block page_title %}Backups verwalten{% endblock %}
+
+{% block content %}
+<div id="alert-container"></div>
+
+<div class="card">
+    <div style="margin-bottom: 20px; display: flex; gap: 12px; align-items: center;">
+        <a href="{{ url_for('backup.backup_create') }}" class="btn btn-primary">
+            <i class="fa fa-plus"></i> Neues Backup erstellen
+        </a>
+        <a href="{{ url_for('backup.remote_settings') }}" class="btn btn-secondary">
+            <i class="fa fa-cog"></i> Remote-Einstellungen
+        </a>
+    </div>
+
+    {% if backups %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Datei</th>
+                <th>Größe</th>
+                <th>Datum</th>
+                <th>Aktionen</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for b in backups %}
+            <tr>
+                <td>{{ b.name }}</td>
+                <td>{{ (b.size / 1024 / 1024) | round(2) }} MB</td>
+                <td>{{ b.mtime.strftime("%Y-%m-%d %H:%M:%S") }}</td>
+                <td>
+                    <div class="actions-cell">
+                        <a href="{{ url_for('backup.backup_download', name=b.name) }}" class="btn btn-secondary btn-sm">
+                            <i class="fa fa-download"></i> Download
+                        </a>
+
+                        <button onclick="pushToRemote('{{ b.name }}')" class="btn btn-primary btn-sm" id="push-btn-{{ b.name }}">
+                            <i class="fa fa-upload"></i> Push Remote
+                        </button>
+
+                        <a href="{{ url_for('backup.backup_delete', name=b.name) }}"
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm('Backup wirklich löschen?');">
+                            <i class="fa fa-trash"></i> Löschen
+                        </a>
+                    </div>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    {% else %}
+        <div class="empty-state">
+            <i class="fa fa-folder-open"></i>
+            <p>Keine Backups vorhanden.</p>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.btn {
+    padding: 7px 14px;
+    border-radius: 6px;
+    border: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: #2563eb;
+    color: #f9fafb;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+}
+
+.btn-secondary {
+    background: #374151;
+    color: #e5e7eb;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+}
+
+.btn-danger {
+    background: #dc2626;
+    color: #f9fafb;
+}
+
+.btn-danger:hover {
+    background: #b91c1c;
+}
+
+.btn-sm {
+    padding: 4px 10px;
+    font-size: 0.8rem;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #1f2937;
+}
+
+.table th {
+    background: #111827;
+    color: #e5e7eb;
+    font-weight: 600;
+}
+
+.table td {
+    color: #9ca3af;
+}
+
+.table tr:hover td {
+    background: #111827;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #6b7280;
+}
+
+.empty-state i {
+    font-size: 40px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.actions-cell {
+    display: flex;
+    gap: 8px;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn.loading {
+    position: relative;
+}
+
+.btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    margin: auto;
+    border: 2px solid transparent;
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.alert {
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    border-radius: 6px;
+    border-left: 4px solid;
+}
+
+.alert-success {
+    background: #064e3b;
+    border-color: #10b981;
+    color: #d1fae5;
+}
+
+.alert-error {
+    background: #7f1d1d;
+    border-color: #ef4444;
+    color: #fecaca;
+}
+</style>
+
+<script>
+function showAlert(message, type = 'success') {
+    const container = document.getElementById('alert-container');
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type}`;
+    alert.textContent = message;
+
+    container.appendChild(alert);
+
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        alert.remove();
+    }, 5000);
+}
+
+async function pushToRemote(backupName) {
+    const button = document.getElementById(`push-btn-${backupName}`);
+    const originalText = button.innerHTML;
+
+    // Disable button and show loading
+    button.disabled = true;
+    button.classList.add('loading');
+    button.innerHTML = '<i class="fa fa-spinner"></i> Uploading...';
+
+    try {
+        const response = await fetch(`/admin/manage/backup/api/upload-remote/${backupName}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            let successCount = 0;
+            let totalCount = 0;
+            let messages = [];
+
+            // Count successful uploads
+            Object.keys(data.results).forEach(protocol => {
+                const protocolResults = data.results[protocol];
+                if (Array.isArray(protocolResults)) {
+                    totalCount += protocolResults.length;
+                    protocolResults.forEach(result => {
+                        if (result[1]) { // success flag
+                            successCount++;
+                        } else {
+                            messages.push(`${protocol.toUpperCase()}: ${result[1]}`);
+                        }
+                    });
+                }
+            });
+
+            if (successCount > 0) {
+                showAlert(`Backup "${backupName}" erfolgreich zu ${successCount}/${totalCount} Remote-Servern hochgeladen.`, 'success');
+            } else {
+                showAlert(`Backup "${backupName}" konnte nicht hochgeladen werden.`, 'error');
+            }
+
+            // Show detailed error messages if any
+            messages.forEach(msg => showAlert(msg, 'error'));
+
+        } else {
+            showAlert(`Fehler beim Hochladen: ${data.message}`, 'error');
         }
 
-        .layout {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            width: 260px;
-            background: #020617;
-            border-right: 1px solid #1f2937;
-            padding: 24px 20px;
-        }
-
-        .sidebar h1 {
-            font-size: 1.3rem;
-            margin: 0 0 1.5rem;
-            color: #f9fafb;
-        }
-
-        .sidebar nav a {
-            display: block;
-            padding: 8px 10px;
-            margin-bottom: 6px;
-            border-radius: 6px;
-            color: #9ca3af;
-            text-decoration: none;
-            font-size: 0.9rem;
-        }
-
-        .sidebar nav a.active,
-        .sidebar nav a:hover {
-            background: #111827;
-            color: #e5e7eb;
-        }
-
-        .main {
-            flex: 1;
-            padding: 24px 32px 40px;
-        }
-
-        .page-title {
-            font-size: 1.6rem;
-            margin: 0 0 1.5rem;
-            color: #f9fafb;
-        }
-
-        .card {
-            background: #020617;
-            border-radius: 10px;
-            border: 1px solid #1f2937;
-            padding: 18px 20px;
-            box-shadow: 0 18px 40px rgba(0,0,0,0.45);
-            margin-bottom: 24px;
-        }
-
-        .card h2 {
-            margin: 0 0 0.75rem;
-            font-size: 1.05rem;
-            color: #e5e7eb;
-        }
-
-        .btn {
-            padding: 7px 14px;
-            border-radius: 6px;
-            border: none;
-            font-size: 0.9rem;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .btn-primary {
-            background: #2563eb;
-            color: #f9fafb;
-        }
-
-        .btn-primary:hover {
-            background: #1d4ed8;
-        }
-
-        .btn-secondary {
-            background: #374151;
-            color: #e5e7eb;
-        }
-
-        .btn-secondary:hover {
-            background: #4b5563;
-        }
-
-        .btn-danger {
-            background: #dc2626;
-            color: #f9fafb;
-        }
-
-        .btn-danger:hover {
-            background: #b91c1c;
-        }
-
-        .btn-sm {
-            padding: 4px 10px;
-            font-size: 0.8rem;
-        }
-
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .table th,
-        .table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #1f2937;
-        }
-
-        .table th {
-            background: #111827;
-            color: #e5e7eb;
-            font-weight: 600;
-        }
-
-        .table td {
-            color: #9ca3af;
-        }
-
-        .table tr:hover td {
-            background: #111827;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: #6b7280;
-        }
-
-        .empty-state i {
-            font-size: 40px;
-            margin-bottom: 10px;
-            display: block;
-        }
-
-        .actions-cell {
-            display: flex;
-            gap: 8px;
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .btn.loading {
-            position: relative;
-        }
-
-        .btn.loading::after {
-            content: '';
-            position: absolute;
-            width: 12px;
-            height: 12px;
-            margin: auto;
-            border: 2px solid transparent;
-            border-top-color: #ffffff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .alert {
-            padding: 12px 16px;
-            margin-bottom: 16px;
-            border-radius: 6px;
-            border-left: 4px solid;
-        }
-
-        .alert-success {
-            background: #064e3b;
-            border-color: #10b981;
-            color: #d1fae5;
-        }
-
-        .alert-error {
-            background: #7f1d1d;
-            border-color: #ef4444;
-            color: #fecaca;
-        }
-    </style>
-</head>
-<body>
-<div class="layout">
-
-    <aside class="sidebar">
-        <h1 id="start">SiteForge Admin</h1>
-        <nav>
-            <a href="/">Zur Seite</a>
-            <a href="/admin/manage/templates">Stylesheets</a>
-            <a href="/admin/posts">Beiträge</a>
-            <a href="/admin/users">Benutzer</a>
-            <a href="/admin/users/roles">Rollen</a>
-            <a href="/admin/media">Medien</a>
-            <a href="/admin/analytics">Analytics</a>
-            {% if is_plugin_loaded('git_repos') %}
-            <a href="/admin/git">Git-Repos</a>
-            {% endif %}
-            <a href="/admin/settings">Einstellungen</a>
-            <a href="{{ url_for('modmail.admin_modmail') }}">Modmail</a>
-            <a href="{{ url_for('backup.backup_index') }}"  class="active">Backups</a>
-            <a href="{{ url_for('admin_help') }}">Hilfe</a>
-            <a href="{{ url_for('theme_creator.index') }}">Theme Creator</a>
-        </nav>
-    </aside>
-
-    <main class="main">
-        <h1 class="page-title">Backups verwalten</h1>
+    } catch (error) {
+        showAlert(`Netzwerkfehler: ${error.message}`, 'error');
+    } finally {
+        // Re-enable button and restore original text
+        button.disabled = false;
+        button.classList.remove('loading');
+        button.innerHTML = originalText;
+    }
+}
+</script>
+{% endblock %}
         
         <div id="alert-container"></div>
 

@@ -1,199 +1,123 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <title>Theme Creator</title>
+{% extends "admin/base.html" %}
+{# Help link: url_for('admin_help') #}
+{% block title %}Theme Creator{% endblock %}
 
-    <style>
-        body {
-            margin: 0;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: #0f172a;
-            color: #e5e7eb;
-        }
+{% block page_title %}Theme Creator{% endblock %}
 
-        .layout {
-            display: flex;
-            min-height: 100vh;
-        }
+{% block content %}
+<div class="card">
+    <div style="margin-bottom: 15px;">
+        <a href="{{ url_for('theme_creator.new') }}" class="btn btn-primary">
+            <i class="fa fa-plus"></i> Neues Theme erstellen
+        </a>
+    </div>
 
-        .sidebar {
-            width: 260px;
-            background: #020617;
-            border-right: 1px solid #1f2937;
-            padding: 24px 20px;
-        }
+    {% if themes %}
+    <table class="themes-table">
+        <thead>
+            <tr>
+                <th><i class="fa fa-file-code"></i> Theme</th>
+                <th><i class="fa fa-cog"></i> Aktionen</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for theme in themes %}
+            <tr>
+                <td>{{ theme }}</td>
+                <td>
+                    <a href="{{ url_for('theme_creator.edit', name=theme) }}" class="btn btn-secondary btn-sm">
+                        <i class="fa fa-edit"></i> Bearbeiten
+                    </a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
 
-        .sidebar h1 {
-            font-size: 1.3rem;
-            margin: 0 0 1.5rem;
-            color: #f9fafb;
-        }
+    {% else %}
+        <div class="empty-state">
+            <i class="fa fa-folder-open"></i>
+            <p>Keine Themes vorhanden. Erstelle ein neues Theme.</p>
+        </div>
+    {% endif %}
+</div>
 
-        .sidebar nav a {
-            display: block;
-            padding: 8px 10px;
-            margin-bottom: 6px;
-            border-radius: 6px;
-            color: #9ca3af;
-            text-decoration: none;
-            font-size: 0.9rem;
-        }
+<style>
+.btn {
+    padding: 7px 14px;
+    border-radius: 6px;
+    border: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
 
-        .sidebar nav a.active,
-        .sidebar nav a:hover {
-            background: #111827;
-            color: #e5e7eb;
-        }
+.btn-primary {
+    background: #2563eb;
+    color: #f9fafb;
+}
 
-        .main {
-            flex: 1;
-            padding: 24px 32px 40px;
-        }
+.btn-primary:hover {
+    background: #1d4ed8;
+}
 
-        .page-title {
-            font-size: 1.6rem;
-            margin: 0 0 1.5rem;
-            color: #f9fafb;
-        }
+.btn-secondary {
+    background: #374151;
+    color: #e5e7eb;
+}
 
-        .card {
-            background: #020617;
-            border-radius: 10px;
-            border: 1px solid #1f2937;
-            padding: 18px 20px;
-            box-shadow: 0 18px 40px rgba(0,0,0,0.45);
-            margin-bottom: 24px;
-        }
+.btn-secondary:hover {
+    background: #4b5563;
+}
 
-        .card h2 {
-            margin: 0 0 0.75rem;
-            font-size: 1.05rem;
-            color: #e5e7eb;
-        }
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 0.8rem;
+}
 
-        .btn {
-            padding: 7px 14px;
-            border-radius: 6px;
-            border: none;
-            font-size: 0.9rem;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-        }
+.themes-table {
+    width: 100%;
+    border-collapse: collapse;
+}
 
-        .btn-primary {
-            background: #2563eb;
-            color: #f9fafb;
-        }
+.themes-table th,
+.themes-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #1f2937;
+}
 
-        .btn-primary:hover {
-            background: #1d4ed8;
-        }
+.themes-table th {
+    color: #9ca3af;
+    font-weight: 500;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+}
 
-        .btn-secondary {
-            background: #374151;
-            color: #e5e7eb;
-        }
+.themes-table tr:hover td {
+    background: #111827;
+}
 
-        .btn-secondary:hover {
-            background: #4b5563;
-        }
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #9ca3af;
+}
 
-        .themes-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+.empty-state i {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    display: block;
+}
 
-        .themes-table th,
-        .themes-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #1f2937;
-        }
-
-        .themes-table th {
-            color: #9ca3af;
-            font-weight: 500;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-        }
-
-        .themes-table tr:hover td {
-            background: #111827;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: #9ca3af;
-        }
-
-        .empty-state i {
-            font-size: 2rem;
-            margin-bottom: 10px;
-            display: block;
-        }
-
-        /* Mobile responsiveness */
-        @media (max-width: 768px) {
-            .layout {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: 100%;
-                border-right: none;
-                border-bottom: 1px solid #1f2937;
-                padding: 16px;
-            }
-
-            .sidebar nav {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 8px;
-            }
-
-            .sidebar nav a {
-                margin-bottom: 0;
-            }
-
-            .main {
-                padding: 16px;
-            }
-
-            .themes-table {
-                font-size: 0.9rem;
-            }
-        }
-    </style>
-</head>
-<body>
-<div class="layout">
-
-    <aside class="sidebar">
-        <h1 id="start">SiteForge Admin</h1>
-        <nav>
-            <a href="/">Zur Seite</a>
-            <a href="/admin/manage/templates">Stylesheets</a>
-            <a href="/admin/posts">Beiträge</a>
-            <a href="/admin/users">Benutzer</a>
-            <a href="/admin/users/roles">Rollen</a>
-            <a href="/admin/media">Medien</a>
-            <a href="/admin/analytics">Analytics</a>
-            {% if is_plugin_loaded('git_repos') %}
-            <a href="/admin/git">Git-Repos</a>
-            {% endif %}
-            <a href="/admin/settings">Einstellungen</a>
-            <a href="{{ url_for('modmail.admin_modmail') }}">Modmail</a>
-            <a href="{{ url_for('backup.backup_index') }}">Backups</a>
-            <a href="{{ url_for('admin_help') }}">Hilfe</a>
-            <a href="{{ url_for('theme_creator.index') }}" class="active">Theme Creator</a>
-        </nav>
-    </aside>
-
-    <main class="main">
-        <h1 class="page-title">Theme Creator</h1>
+@media (max-width: 768px) {
+    .themes-table {
+        font-size: 0.9rem;
+    }
+}
+</style>
+{% endblock %}
 
         <div class="card">
             <div style="margin-bottom: 15px;">
