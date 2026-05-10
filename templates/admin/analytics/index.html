@@ -1,202 +1,167 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <title>Analytics - {{ settings.site_title }}</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: #0f172a;
-            color: #e5e7eb;
-        }
+{% extends "admin/base.html" %}
 
-        .layout {
-            display: flex;
-            min-height: 100vh;
-        }
+{% block title %}Analytics - {{ settings.site_title }}{% endblock %}
 
-        .sidebar {
-            width: 260px;
-            background: #020617;
-            border-right: 1px solid #1f2937;
-            padding: 24px 20px;
-        }
+{% block page_title %}Analytics Dashboard{% endblock %}
 
-        .sidebar h1 {
-            font-size: 1.3rem;
-            margin: 0 0 1.5rem;
-            color: #f9fafb;
-        }
+{% block content %}
+{% if not analytics_enabled %}
+<div class="card">
+    <h2>Analytics deaktiviert</h2>
+    <p>Analytics ist derzeit deaktiviert. Aktivieren Sie Analytics in den <a href="/admin/settings">Einstellungen</a>
+    <a href="{{ url_for('backup.backup_index') }}">Backups</a>, um Besucherstatistiken zu sammeln.</p>
+    <p><strong>Hinweis:</strong> Analytics funktioniert nur, wenn Benutzer der Cookie-Zustimmung zugestimmt haben.</p>
+</div>
+{% else %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Besucher (letzte {{ settings.analytics_period_days }} Tage)</h3>
+        <div class="stat-number">{{ visitor_count }}</div>
+    </div>
 
-        .sidebar nav a {
-            display: block;
-            padding: 8px 10px;
-            margin-bottom: 6px;
-            border-radius: 6px;
-            color: #9ca3af;
-            text-decoration: none;
-            font-size: 0.9rem;
-        }
+    <div class="stat-card">
+        <h3>Gesamte Kommentare</h3>
+        <div class="stat-number">{{ comments_count }}</div>
+    </div>
+</div>
 
-        .sidebar nav a.active,
-        .sidebar nav a:hover {
-            background: #111827;
-            color: #e5e7eb;
-        }
+<div class="analytics-sections">
+    <section class="card">
+        <h2>Besucher-Übersicht</h2>
+        <p>Zeigt die letzten Besucher der letzten {{ settings.analytics_period_days }} Tage an.</p>
 
-        .main {
-            flex: 1;
-            padding: 24px 32px 40px;
-        }
+        {% if recent_visitors %}
+        <div class="visitor-list">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Datum/Zeit</th>
+                        <th>IP-Adresse</th>
+                        <th>User-Agent</th>
+                        <th>Seite</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for visitor in recent_visitors %}
+                    <tr>
+                        <td>{{ visitor.timestamp }}</td>
+                        <td>{{ visitor.ip }}</td>
+                        <td class="user-agent">{{ visitor.user_agent[:50] }}{% if visitor.user_agent|length > 50 %}...{% endif %}</td>
+                        <td>{{ visitor.path }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p>Noch keine Besucher in diesem Zeitraum.</p>
+        {% endif %}
+    </section>
 
-        .page-title {
-            font-size: 1.6rem;
-            margin: 0 0 1.5rem;
-            color: #f9fafb;
-        }
+    <section class="card">
+        <h2>Kommentar-Management</h2>
+        <p>Verwalten Sie Kommentare auf Ihrer Website.</p>
+        <a href="/admin/analytics/comments" class="btn btn-primary">Kommentare verwalten</a>
+    </section>
+</div>
+{% endif %}
 
-        .card {
-            background: #020617;
-            border-radius: 10px;
-            border: 1px solid #1f2937;
-            padding: 18px 20px;
-            box-shadow: 0 18px 40px rgba(0,0,0,0.45);
-            margin-bottom: 24px;
-        }
+<style>
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
 
-        .card h2 {
-            margin: 0 0 0.75rem;
-            font-size: 1.05rem;
-            color: #e5e7eb;
-        }
+.stat-card {
+    background: #020617;
+    border-radius: 10px;
+    border: 1px solid #1f2937;
+    padding: 20px;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+    text-align: center;
+}
 
-        .card p {
-            margin: 0.25rem 0 0.75rem;
-            font-size: 0.9rem;
-            color: #9ca3af;
-        }
+.stat-card h3 {
+    margin: 0 0 10px 0;
+    color: #9ca3af;
+    font-size: 14px;
+    text-transform: uppercase;
+}
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
+.stat-number {
+    font-size: 48px;
+    font-weight: bold;
+    color: #3b82f6;
+    margin: 0;
+}
 
-        .stat-card {
-            background: #020617;
-            border-radius: 10px;
-            border: 1px solid #1f2937;
-            padding: 20px;
-            box-shadow: 0 18px 40px rgba(0,0,0,0.45);
-            text-align: center;
-        }
+.analytics-sections {
+    display: grid;
+    gap: 20px;
+}
 
-        .stat-card h3 {
-            margin: 0 0 10px 0;
-            color: #9ca3af;
-            font-size: 14px;
-            text-transform: uppercase;
-        }
+.visitor-list {
+    margin-top: 20px;
+}
 
-        .stat-number {
-            font-size: 48px;
-            font-weight: bold;
-            color: #3b82f6;
-            margin: 0;
-        }
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
 
-        .analytics-sections {
-            display: grid;
-            gap: 20px;
-        }
+.data-table th,
+.data-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #1f2937;
+}
 
-        .visitor-list {
-            margin-top: 20px;
-        }
+.data-table th {
+    background-color: #111827;
+    font-weight: 600;
+    color: #e5e7eb;
+}
 
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
+.data-table td {
+    color: #e5e7eb;
+}
 
-        .data-table th,
-        .data-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #1f2937;
-        }
+.user-agent {
+    font-family: monospace;
+    font-size: 12px;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
-        .data-table th {
-            background-color: #111827;
-            font-weight: 600;
-            color: #e5e7eb;
-        }
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background: #2563eb;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
 
-        .data-table td {
-            color: #e5e7eb;
-        }
+.btn:hover {
+    background: #1d4ed8;
+}
 
-        .user-agent {
-            font-family: monospace;
-            font-size: 12px;
-            max-width: 300px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+.btn-primary {
+    background: #059669;
+}
 
-        .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            background: #2563eb;
-            color: white;
-            text-decoration: none;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-
-        .btn:hover {
-            background: #1d4ed8;
-        }
-
-        .btn-primary {
-            background: #059669;
-        }
-
-        .btn-primary:hover {
-            background: #047857;
-        }
-    </style>
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
-</head>
-<body>
-<div class="layout">
-    <aside class="sidebar">
-        <h1>{{ settings.site_title or 'SiteForge' }} Admin</h1>
-        <nav>
-            <a href="/">Zur Seite</a>
-            <a href="/admin/manage/templates">Stylesheets</a>
-            <a href="/admin/posts">Beiträge</a>
-            <a href="/admin/users">Benutzer</a>
-            <a href="/admin/media">Medien</a>
-            <a href="/admin/analytics" class="active">Analytics</a>
-            {% if is_plugin_loaded('git_repos') %}
-            <a href="/admin/git">Git-Repos</a>
-            {% endif %}
-            <a href="/admin/settings">Einstellungen</a>
-            <a href="{{ url_for('modmail.admin_modmail') }}">Modmail</a>
-            <a href="{{ url_for('backup.backup_index') }}">Backups</a>
-            <a href="{{ url_for('admin_help') }}">Hilfe</a>
-            <a href="{{ url_for('theme_creator.index') }}">Theme Creator</a>
-        </nav>
-    </aside>
-
-    <main class="main">
-        <h1 class="page-title">Analytics Dashboard</h1>
+.btn-primary:hover {
+    background: #047857;
+}
+</style>
+{% endblock %}
 
         {% if not analytics_enabled %}
         <div class="card">
