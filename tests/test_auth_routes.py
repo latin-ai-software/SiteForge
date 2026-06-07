@@ -47,16 +47,17 @@ def test_login_action_rate_limited_ip(app):
 
 def test_login_action_success(app):
     with app.test_request_context("/login", method="POST", data={"username": "testuser", "password": "secret"}, environ_overrides={"REMOTE_ADDR": "127.0.0.1"}):
-        with patch.object(auth_module, "InputValidator") as mock_validator, patch.object(auth_module, "rate_limiter") as mock_rate_limiter, patch("Identitas.provider.api.auth.login", return_value="token") as mock_login, patch.object(auth_module, "auth") as mock_auth, patch.object(auth_module, "redirect", return_value="redirected") as mock_redirect, patch.object(auth_module, "url_for", return_value="/admin"):
+        with patch.object(auth_module, "InputValidator") as mock_validator, patch.object(auth_module, "rate_limiter") as mock_rate_limiter, patch("Identitas.provider.api.auth.login", return_value="token") as mock_login, patch.object(auth_module, "auth") as mock_auth, patch.object(auth_module, "redirect", return_value="redirected") as mock_redirect, patch.object(auth_module, "url_for", return_value="/") as mock_url_for:
             mock_validator.validate_username.return_value = True
             mock_rate_limiter.check_login_attempt.return_value = (False, None)
             mock_rate_limiter.is_rate_limited.return_value = False
-            mock_auth.login_with_token.return_value = None
+            mock_auth.login_with_token.return_value = True
 
             result = auth_module.login_action()
 
             assert result == "redirected"
             mock_auth.login_with_token.assert_called_once_with("testuser", "token")
+            mock_url_for.assert_called_once_with("root.index")
 
 
 def test_register_action_missing_fields(app):
