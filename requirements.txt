@@ -18,6 +18,7 @@ Flask-Mail>=0.9.0
 python-dotenv>=1.0.0
 
 requests>=2.31.0  # For update checking and external API calls
+beautifulsoup4>=4.12.2  # HTML parsing for SEO analyzer
 
 # Development and deployment
 gunicorn>=21.2.0  # WSGI server
