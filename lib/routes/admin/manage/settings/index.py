@@ -6,6 +6,7 @@ from flask import Blueprint, render_template, request, jsonify, current_app, abo
 from .....netdefense.auth.identitas_auth import IdentitasAuthManager
 from .....data.file_manager import FileManager
 from .....security import RateLimiter, InputValidator, validate_input, CSRFProtection, SecurityLogger
+from werkzeug.utils import secure_filename
 import json
 
 admin_settings_bp = Blueprint("admin_settings", __name__, url_prefix="/admin/settings")
@@ -64,12 +65,14 @@ def save_settings():
     # Input validation and sanitization
     site_title = validate_input(request.form.get("site_title", "SiteForge"), max_length=255)
     site_description = validate_input(request.form.get("site_description", ""), max_length=1000)
+    site_keywords = validate_input(request.form.get("site_keywords", ""), max_length=1000) or ""
     domain = validate_input(request.form.get("domain", ""), max_length=255)
     
     try:
         posts_per_page = int(request.form.get("posts_per_page", 10))
         analytics_period_days = int(request.form.get("analytics_period_days", 30))
         ses_smtp_port = int(request.form.get("ses_smtp_port", 587) or 587)
+        slideshow_interval = int(request.form.get("slideshow_interval", 10) or 10)
         
         if not (1 <= posts_per_page <= 100):
             return jsonify({"status": "error", "message": "Posts per page must be 1-100"}), 400
@@ -77,6 +80,8 @@ def save_settings():
             return jsonify({"status": "error", "message": "Analytics period must be 1-365 days"}), 400
         if not (1 <= ses_smtp_port <= 65535):
             return jsonify({"status": "error", "message": "Invalid SMTP port"}), 400
+        if not (3 <= slideshow_interval <= 120):
+            return jsonify({"status": "error", "message": "Slideshow interval must be between 3 and 120 seconds"}), 400
     except (ValueError, TypeError):
         return jsonify({"status": "error", "message": "Invalid numeric values"}), 400
     
@@ -93,6 +98,7 @@ def save_settings():
     settings = {
         "site_title": site_title or "SiteForge",
         "site_description": site_description or "",
+        "site_keywords": site_keywords or "",
         "posts_per_page": posts_per_page,
         "allow_registration": request.form.get("allow_registration") == "on",
         "require_comment_approval": request.form.get("require_comment_approval") == "on",
@@ -109,6 +115,12 @@ def save_settings():
         "allow_password_change": request.form.get("allow_password_change") == "on",
         "domain": domain or "",
         "header_background_enabled": request.form.get("header_background_enabled") == "on",
+        "slideshow_enabled": request.form.get("slideshow_enabled") == "on",
+        "slideshow_interval": slideshow_interval,
+        "slideshow_header": validate_input(request.form.get("slideshow_header", ""), max_length=255) or "",
+        "slideshow_subtitle": validate_input(request.form.get("slideshow_subtitle", ""), max_length=1000) or "",
+        "slideshow_images": [],
+        "slideshow_background_image": "",
         "setup_completed": True,
         "show_social_links": request.form.get("show_social_links") == "on",
         "twitter_handle": validate_input(request.form.get("twitter_handle", ""), max_length=100) or "",
@@ -124,6 +136,8 @@ def save_settings():
         with open(settings_file, "r", encoding="utf-8") as f:
             old_settings = json.load(f)
     old_enabled_plugins = old_settings.get("enabled_plugins", {})
+    previous_slideshow_images = old_settings.get("slideshow_images", []) or []
+    previous_slideshow_background = old_settings.get("slideshow_background_image", "")
 
     # Preserve SES password if the admin leaves the field blank
     ses_password = request.form.get("ses_smtp_password", "").strip()
@@ -138,6 +152,8 @@ def save_settings():
         "ses_smtp_username": validate_input(request.form.get("ses_smtp_username", ""), max_length=255) or "",
         "ses_smtp_password": ses_password,
         "youtube_channel_id": validate_input(request.form.get("youtube_channel_id", ""), max_length=255) or "",
+        "slideshow_images": previous_slideshow_images,
+        "slideshow_background_image": previous_slideshow_background,
     })
 
     plugin_changed = False
@@ -179,6 +195,33 @@ def save_settings():
         header_bg_file.save(target_path)
         settings["header_background_filename"] = "header-background.jpg"
         settings["header_background_original_name"] = header_bg_file.filename
+
+    # Slideshow background upload (validate JPG/PNG)
+    slideshow_bg_file = request.files.get("slideshow_background_image")
+    if slideshow_bg_file and slideshow_bg_file.filename:
+        if not slideshow_bg_file.filename.lower().endswith(('.jpg', '.jpeg', '.png')):
+            return jsonify({"status": "error", "message": "Slideshow background must be a JPG or PNG file"}), 400
+        slides_dir = os.path.join(current_app.root_path, "static", "slideshow")
+        os.makedirs(slides_dir, exist_ok=True)
+        filename = secure_filename(slideshow_bg_file.filename)
+        target_path = os.path.join(slides_dir, filename)
+        slideshow_bg_file.save(target_path)
+        settings["slideshow_background_image"] = filename
+
+    # Upload additional slideshow slides (PNG only)
+    slide_files = request.files.getlist("slideshow_images")
+    if slide_files:
+        slides_dir = os.path.join(current_app.root_path, "static", "slideshow")
+        os.makedirs(slides_dir, exist_ok=True)
+        for slide_file in slide_files:
+            if slide_file and slide_file.filename:
+                if not slide_file.filename.lower().endswith('.png'):
+                    return jsonify({"status": "error", "message": "Slideshow images must be PNG files"}), 400
+                filename = secure_filename(slide_file.filename)
+                target_path = os.path.join(slides_dir, filename)
+                slide_file.save(target_path)
+                if filename not in settings["slideshow_images"]:
+                    settings["slideshow_images"].append(filename)
 
     settings_file = os.path.join(current_app.root_path, "data", "settings.json")
     os.makedirs(os.path.dirname(settings_file), exist_ok=True)

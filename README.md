@@ -1,4 +1,8 @@
 # SiteForge
+[![coverage report](https://git.latinai.de/latin-ai-software/latinmagazine/badges/main/coverage.svg)](https://git.latinai.de/latin-ai-software/latinmagazine/-/commits/main)
+[![Latest Release](https://git.latinai.de/latin-ai-software/latinmagazine/-/badges/release.svg)](https://git.latinai.de/latin-ai-software/latinmagazine/-/releases)
+[![pipeline status](https://git.latinai.de/latin-ai-software/latinmagazine/badges/main/pipeline.svg)](https://git.latinai.de/latin-ai-software/latinmagazine/-/commits/main)
+
 Kundenauftrag
 
 Website: latinai.net

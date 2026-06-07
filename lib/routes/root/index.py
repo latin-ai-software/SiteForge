@@ -59,9 +59,17 @@ def index():
     # Ensure all required settings keys exist with defaults
     settings.setdefault('embed_favicon_in_html', True)
     settings.setdefault('site_title', 'My Site')
+    settings.setdefault('site_description', '')
+    settings.setdefault('site_keywords', '')
     settings.setdefault('require_cookie_consent', True)
     settings.setdefault('enable_analytics', False)
     settings.setdefault('youtube_channel_id', '')
+    settings.setdefault('slideshow_enabled', False)
+    settings.setdefault('slideshow_interval', 10)
+    settings.setdefault('slideshow_header', '')
+    settings.setdefault('slideshow_subtitle', '')
+    settings.setdefault('slideshow_images', [])
+    settings.setdefault('slideshow_background_image', '')
 
     # Aktives Stylesheet laden
     active_theme_path = os.path.join(current_app.root_path, "data", "active_theme.txt")

@@ -63,13 +63,13 @@ class SecureConfig:
     @staticmethod
     def get_config(base_path):
         """Get secure Flask configuration"""
-        environment = os.environ.get('FLASK_ENV', 'production')
+        environment = os.environ.get('FLASK_ENV') or 'development'
         
         return {
             'SECRET_KEY': SecureConfig.get_secret_key(base_path),
             'DEBUG': environment == 'development' and os.environ.get('FLASK_DEBUG', 'False') == 'True',
             'TESTING': environment == 'testing',
-            'SESSION_COOKIE_SECURE': os.environ.get('SESSION_COOKIE_SECURE', 'True') == 'True',
+            'SESSION_COOKIE_SECURE': os.environ.get('SESSION_COOKIE_SECURE', 'True' if environment == 'production' else 'False') == 'True',
             'SESSION_COOKIE_HTTPONLY': os.environ.get('SESSION_COOKIE_HTTPONLY', 'True') == 'True',
             'SESSION_COOKIE_SAMESITE': os.environ.get('SESSION_COOKIE_SAMESITE', 'Lax'),
             'PERMANENT_SESSION_LIFETIME': int(os.environ.get('PERMANENT_SESSION_LIFETIME', 3600)),

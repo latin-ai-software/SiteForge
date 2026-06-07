@@ -43,11 +43,9 @@ def login_action():
     from Identitas.provider.api.auth import login as identitas_login
     token = identitas_login(auth.engine, username, password)
     
-    if token:
+    if token and auth.login_with_token(username, token):
         rate_limiter.reset_login_attempts(username)
-        # Use the new login_with_token method to store both username and token
-        auth.login_with_token(username, token)
-        return redirect(url_for("admin_posts.admin_posts_index"))
+        return redirect(url_for("root.index"))
     else:
         # Record failed login attempt
         rate_limiter.record_failed_login(username, max_attempts=5, lockout_duration=300)
@@ -138,11 +136,9 @@ def register_action():
     from Identitas.provider.api.auth import register as identitas_register
     token = identitas_register(auth.engine, username, password, email)
     
-    if token:
+    if token and auth.login_with_token(username, token):
         # Set role for new users using RBAC
         auth._assign_role_to_user(username, role)
-        # Login with the new token
-        auth.login_with_token(username, token)
         return redirect(url_for("root.index"))
     else:
         return render_template("auth/register.html", error="Username already taken or password too weak"), 400

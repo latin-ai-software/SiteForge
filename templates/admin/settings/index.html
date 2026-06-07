@@ -24,6 +24,11 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="site_keywords">Meta-Schlüsselwörter:</label>
+                    <input type="text" id="site_keywords" name="site_keywords" value="{{ settings.site_keywords or '' }}" placeholder="keyword1, keyword2, keyword3">
+                </div>
+
+                <div class="form-group">
                     <label for="posts_per_page">Posts pro Seite:</label>
                     <input type="number" id="posts_per_page" name="posts_per_page" value="{{ settings.posts_per_page or 10 }}">
                 </div>
@@ -50,16 +55,62 @@
                     <label for="header-background">Header-Hintergrund (JPG Datei):</label>
                     <input type="file" id="header-background" name="header-background" accept=".jpg, .jpeg">
                     {% if settings.header_background_filename %}
-                    <p>Aktueller Header-Hintergrund: <br><img src="/static/header-background.jpg"width="64" height="64"></p>
+                    <p>Aktueller Header-Hintergrund: <br><img src="/static/header-background.jpg" width="64" height="64"></p>
                     {% endif %}
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="embed_favicon_in_html" name="embed_favicon_in_html" {% if settings.embed_favicon_in_html %}checked{% endif %}>
-                        <label for="embed_favicon_in_html">Favicon in HTML einbetten</label>
-                    </div>
                     <div class="checkbox-group">
                         <input type="checkbox" id="header_background_enabled" name="header_background_enabled" {% if settings.header_background_enabled %}checked{% endif %}>
                         <label for="header_background_enabled">Header-Hintergrund anzeigen</label>
                     </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>Startseiten-Slideshow</h2>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="slideshow_enabled" name="slideshow_enabled" {% if settings.slideshow_enabled %}checked{% endif %}>
+                        <label for="slideshow_enabled">Slideshow auf der Startseite aktivieren</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="slideshow_interval">Slideshow-Intervall (Sekunden):</label>
+                    <input type="number" id="slideshow_interval" name="slideshow_interval" value="{{ settings.slideshow_interval or 10 }}" min="3" max="120">
+                </div>
+
+                <div class="form-group">
+                    <label for="slideshow_header">Slideshow-Titel:</label>
+                    <input type="text" id="slideshow_header" name="slideshow_header" value="{{ settings.slideshow_header or '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="slideshow_subtitle">Slideshow-Untertitel:</label>
+                    <textarea id="slideshow_subtitle" name="slideshow_subtitle">{{ settings.slideshow_subtitle or '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="slideshow_background_image">Hintergrundbild für die Slideshow (JPG/PNG):</label>
+                    <input type="file" id="slideshow_background_image" name="slideshow_background_image" accept=".jpg, .jpeg, .png">
+                    {% if settings.slideshow_background_image %}
+                    <p>Aktuelles Slideshow-Hintergrundbild: <br><img src="/static/slideshow/{{ settings.slideshow_background_image }}" width="64" height="64"></p>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="slideshow_images">PowerPoint-Slides als PNG-Dateien hochladen:</label>
+                    <input type="file" id="slideshow_images" name="slideshow_images" accept=".png" multiple>
+                    {% if settings.slideshow_images %}
+                    <p>Aktuelle Slideshow-Bilder:</p>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px;">
+                        {% for slide in settings.slideshow_images %}
+                        <div style="text-align: center; width: 80px;">
+                            <img src="/static/slideshow/{{ slide }}" alt="Slide {{ loop.index }}" width="80" style="border-radius: 4px; border: 1px solid #2d3748;">
+                            <div style="font-size: 0.75rem; margin-top: 4px;">{{ slide }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </div>
             </section>
 

@@ -266,6 +266,8 @@
                 <a href="/admin/users/roles" {% if request.endpoint and request.endpoint.endswith('roles') %}class="active"{% endif %}>Rollen</a>
                 <a href="/admin/media" {% if request.endpoint and request.endpoint.startswith('admin_media') %}class="active"{% endif %}>Medien</a>
                 <a href="/admin/analytics" {% if request.endpoint and request.endpoint.startswith('admin_analytics') %}class="active"{% endif %}>Analytics</a>
+                <a href="/admin/seo" {% if request.endpoint and request.endpoint.startswith('admin_seo') %}class="active"{% endif %}>SEO</a>
+                <a href="/admin/api-docs" {% if request.endpoint and request.endpoint.startswith('admin_api_docs') %}class="active"{% endif %}>API Docs</a>
                 {% if is_plugin_loaded('git_repos') %}
                 <a href="/admin/git" {% if request.endpoint and request.endpoint.startswith('admin_git') %}class="active"{% endif %}>Git-Repos</a>
                 {% endif %}

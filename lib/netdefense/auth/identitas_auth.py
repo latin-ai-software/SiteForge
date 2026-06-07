@@ -219,6 +219,7 @@ class IdentitasAuthManager:
         session[self._session_user_key] = username
         session[self._session_token_key] = token
         session.permanent = True
+        session.modified = True
         return True
     
     def logout(self):

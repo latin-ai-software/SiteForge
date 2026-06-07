@@ -46,7 +46,7 @@ def test_get_config_returns_dict():
             assert isinstance(config, dict)
             assert 'SECRET_KEY' in config
             assert 'DEBUG' in config
-            assert config['SESSION_COOKIE_SECURE'] is True
+            assert config['SESSION_COOKIE_SECURE'] is False
             assert config['SESSION_COOKIE_HTTPONLY'] is True
             assert config['SESSION_COOKIE_SAMESITE'] == 'Lax'
             assert config['MAX_CONTENT_LENGTH'] == 52428800

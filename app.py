@@ -18,6 +18,8 @@ def create_app(config_name=None):
     from lib.routes.admin.manage.settings.index import admin_settings_bp
     from lib.routes.admin.manage.media.index import admin_media_bp
     from lib.routes.admin.manage.notifications.index import admin_notifications_bp
+    from lib.routes.admin.manage.seo.index import admin_seo_bp
+    from lib.routes.admin.manage.api_docs.index import admin_api_docs_bp
     from lib.routes.admin.help import admin_help_bp
     from lib.routes.root.auth import auth_bp
     from lib.routes.data.youtube import youtube_bp
@@ -103,6 +105,8 @@ def create_app(config_name=None):
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_analytics_bp)
     app.register_blueprint(admin_notifications_bp)
+    app.register_blueprint(admin_seo_bp)
+    app.register_blueprint(admin_api_docs_bp)
     from lib.routes.admin.manage.backup import backup_bp
     app.register_blueprint(backup_bp)
     app.register_blueprint(youtube_bp)
@@ -195,6 +199,8 @@ from lib.routes.admin.manage.analytics.index import admin_analytics_bp
 from lib.routes.admin.manage.settings.index import admin_settings_bp
 from lib.routes.admin.manage.media.index import admin_media_bp
 from lib.routes.admin.manage.notifications.index import admin_notifications_bp
+from lib.routes.admin.manage.seo.index import admin_seo_bp
+from lib.routes.admin.manage.api_docs.index import admin_api_docs_bp
 from lib.routes.admin.help import admin_help_bp
 from lib.routes.root.auth import auth_bp
 from lib.routes.data.youtube import youtube_bp
@@ -269,6 +275,8 @@ app.register_blueprint(admin_help_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(admin_analytics_bp)
 app.register_blueprint(admin_notifications_bp)
+app.register_blueprint(admin_seo_bp)
+app.register_blueprint(admin_api_docs_bp)
 from lib.routes.admin.manage.backup import backup_bp
 app.register_blueprint(backup_bp)
 app.register_blueprint(youtube_bp)
@@ -676,6 +684,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--debug", action="store_true", help="Enable debug mode")
+    parser.add_argument("--prod", action="store_true", help="Enable production mode and secure session cookies")
     parser.add_argument("--ssl", action="store_true", help="Enable SSL")
     parser.add_argument("--cert", type=str, help="Path to SSL certificate")
     parser.add_argument("--key", type=str, help="Path to SSL private key")
@@ -688,6 +697,9 @@ if __name__ == "__main__":
         if not args.cert or not args.key:
             raise ValueError("SSL requires --cert and --key")
         ssl_context = (args.cert, args.key)
+
+    if args.prod:
+        app.config["SESSION_COOKIE_SECURE"] = True
 
     app.run(
         debug=args.debug,

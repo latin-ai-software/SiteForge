@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+    <meta name="keywords" content="{{ settings.site_keywords or 'keyword1, keyword2, keyword3' }}">
+    <meta name="description" content="{{ settings.site_description or 'Add a short site description here' }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ settings.site_title if settings.site_title else 'SiteForge' }} - Startseite</title>
@@ -235,6 +237,32 @@
     </nav>
 
     <div class="container">
+        {% if settings.slideshow_enabled %}
+        <header class="hero" style="position: relative; overflow: hidden; margin-bottom: 3rem; border-radius: 1rem;">
+            <div class="hero-layer" style="position: absolute; inset: 0; z-index: 0; background: #0f172a; background-size: cover; background-position: center; {% if settings.slideshow_images %}background-color: #0f172a;{% elif settings.slideshow_background_image %}background-image: url('/static/slideshow/{{ settings.slideshow_background_image }}');{% elif settings.header_background_enabled %}background-image: url('/static/header-background.jpg');{% endif %}"></div>
+            {% if settings.slideshow_images %}
+            {% for slide in settings.slideshow_images %}
+            <div class="slideshow-slide" data-background="/static/slideshow/{{ slide }}" style="position:absolute; inset:0; background: url('/static/slideshow/{{ slide }}') no-repeat center/cover; opacity: {{ '1' if loop.first else '0' }}; transition: opacity 0.8s ease;"></div>
+            {% endfor %}
+            {% endif %}
+            <div class="hero-copy" style="position: relative; z-index: 1; padding: 4rem 2rem; text-align: center; color: white; text-shadow: 0 2px 8px rgba(0,0,0,0.7);">
+                <h1 class="title-main-index">{{ settings.site_title if settings.site_title else 'SiteForge' }}</h1>
+                {% if settings.slideshow_header %}
+                <p class="subtitle" style="font-size: 1.5rem; margin-top: 1rem;">{{ settings.slideshow_header }}</p>
+                {% endif %}
+                {% if settings.slideshow_subtitle %}
+                <p class="subtitle" style="margin-top: 1rem;">{{ settings.slideshow_subtitle }}</p>
+                {% elif settings.site_description %}
+                <p class="subtitle" style="margin-top: 1rem;">{{ settings.site_description }}</p>
+                {% endif %}
+                {% if session.user %}
+                    <p style="margin-top: 1rem; color: rgba(255,255,255,0.85);">
+                        Welcome back, <strong>{{ session.user }}</strong>! {% if auth.get_user_role(session.user) == 'administrator' %}<a href="/admin/posts" style="color: #fde68a;">Go to Admin</a>{% endif %}
+                    </p>
+                {% endif %}
+            </div>
+        </header>
+        {% else %}
         <header style="text-align: center; margin-bottom: 3rem;{% if settings.header_background_enabled %} background: url('/static/header-background.jpg') no-repeat center/cover; padding: 4rem 2rem; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.5);{% endif %}">
             <h1 class="title-main-index">{{ settings.site_title if settings.site_title else 'SiteForge' }}</h1>
             {% if settings.site_description %}
@@ -246,6 +274,7 @@
                 </p>
             {% endif %}
         </header>
+        {% endif %}
 
         <div style="background: white; border-radius: 0.5rem; padding: 1.5rem; margin-bottom: 2rem; box-shadow: var(--shadow);">
             <form action="/search" method="GET" style="display: flex; gap: 0.5rem;">
@@ -470,6 +499,24 @@
         }
 
         updateCookieBanner();
+
+        {% if settings.slideshow_enabled and settings.slideshow_images %}
+        (function() {
+            const slides = Array.from(document.querySelectorAll('.slideshow-slide'));
+            let activeIndex = 0;
+            function showSlide(index) {
+                slides.forEach((slide, idx) => {
+                    slide.style.opacity = idx === index ? '1' : '0';
+                });
+            }
+            if (slides.length > 1) {
+                setInterval(() => {
+                    activeIndex = (activeIndex + 1) % slides.length;
+                    showSlide(activeIndex);
+                }, {{ settings.slideshow_interval or 10 }} * 1000);
+            }
+        })();
+        {% endif %}
     </script>
 </body>
 </html>
