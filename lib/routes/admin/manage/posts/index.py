@@ -20,7 +20,6 @@ media_manager = MediaManager(BASE_PATH)
 def posts_dir():
     return os.path.join(current_app.root_path, "data", "posts")
 
-
 # CREATE: Neuen Beitrag erstellen
 @admin_posts_bp.route("/create", methods=["GET"])
 @auth.require_role("author")
@@ -128,6 +127,8 @@ def create_post():
 
 
 # LISTE: Alle Beiträge anzeigen (HTML)
+# And how to fix jinja2.exceptions.UndefinedError: 't' is undefined in this route https://flask-translator.readthedocs.io/en/latest/#usage-in-templates
+# And how exactly? Use a context processor in the main app to inject the translator's 't' function into all templates, including those rendered by Blueprints. This way, you can use {{ t("your_translation_key") }} in any template without needing to import or initialize the translator in each Blueprint separately.
 @admin_posts_bp.route("/", methods=["GET"])
 @auth.require_role("author")
 def admin_posts_index():

@@ -1,9 +1,9 @@
 {% extends "admin/base.html" %}
 {# Help link: url_for('admin_help') #}
 
-{% block title %}Einstellungen{% endblock %}
+{% block title %}{{ t("settings") }}{% endblock %}
 
-{% block page_title %}Einstellungen{% endblock %}
+{% block page_title %}{{ t("settings") }}{% endblock %}
 
 {% block content %}
         <form id="settingsForm" enctype="multipart/form-data">
@@ -11,86 +11,97 @@
             <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
             
             <section class="card">
-                <h2>Allgemeine Einstellungen</h2>
+                <h2>{{ t("general_settings") }}</h2>
 
                 <div class="form-group">
-                    <label for="site_title">Seitentitel:</label>
+                    <label for="site_title">{{ t("site_title")}}:</label>
                     <input type="text" id="site_title" name="site_title" value="{{ settings.site_title }}">
                 </div>
 
                 <div class="form-group">
-                    <label for="site_description">Seitenbeschreibung:</label>
+                    <label for="site_description">{{ t("site_description") }}:</label>
                     <textarea id="site_description" name="site_description">{{ settings.site_description }}</textarea>
                 </div>
 
                 <div class="form-group">
-                    <label for="site_keywords">Meta-Schlüsselwörter:</label>
+                    <label for="site_keywords">{{ t("meta_keywords") }}:</label>
                     <input type="text" id="site_keywords" name="site_keywords" value="{{ settings.site_keywords or '' }}" placeholder="keyword1, keyword2, keyword3">
                 </div>
 
                 <div class="form-group">
-                    <label for="posts_per_page">Posts pro Seite:</label>
+                    <label for="posts_per_page">{{ t("ppp") }}:</label>
                     <input type="number" id="posts_per_page" name="posts_per_page" value="{{ settings.posts_per_page or 10 }}">
                 </div>
+
                 <div class="form-group">
-                    <label for="domain">Domäne:</label>
+                    <label for="site_language">{{ t("site_language") }}:</label>
+                    <select id="site_language" name="site_language">
+                        <option value="auto" {% if settings.site_language == 'auto' or not settings.site_language %}selected{% endif %}>Auto ({{ t("browser_setting") }})</option>
+                        {% for lang_code, lang_name in available_languages.items() | sort %}
+                            <option value="{{ lang_code }}" {% if settings.site_language == lang_code %}selected{% endif %}>{{ lang_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="domain">{{ t("domain") }}:</label>
                     <input type="text" id="domain" name="domain" value="{{ settings.domain }}">
                 </div>
 
                 <div class="form-group">
                     <div class="checkbox-group">
                         <input type="checkbox" id="embed_favicon_in_html" name="embed_favicon_in_html" {% if settings.embed_favicon_in_html %}checked{% endif %}>
-                        <label for="embed_favicon_in_html">Favicon in HTML einbetten</label>
+                        <label for="embed_favicon_in_html">{{ t("embed_favicon_in_html") }}</label>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="favicon">Favicon hochladen:</label>
+                    <label for="favicon">{{ t("upload_favicon")}}:</label>
                     <input type="file" id="favicon" name="favicon" accept="image/*">
                     {% if settings.favicon_filename %}
-                    <p>Aktuelles Favicon: <br><img src="/static/favicon.ico" alt="{{ settings.favicon_original_name }}" width="64" height="64"></p>
+                    <p>{{ t("current_favicon") }}: <br><img src="/static/favicon.ico" alt="{{ settings.favicon_original_name }}" width="64" height="64"></p>
                     {% endif %}
                 </div>
                 <div class="form-group">
-                    <label for="header-background">Header-Hintergrund (JPG Datei):</label>
+                    <label for="header-background">{{t("header_background")}} ({{t("jpg_file")}}):</label>
                     <input type="file" id="header-background" name="header-background" accept=".jpg, .jpeg">
                     {% if settings.header_background_filename %}
-                    <p>Aktueller Header-Hintergrund: <br><img src="/static/header-background.jpg" width="64" height="64"></p>
+                    <p>{{ t("current_header_background")}}: <br><img src="/static/header-background.jpg" width="64" height="64"></p>
                     {% endif %}
                     <div class="checkbox-group">
                         <input type="checkbox" id="header_background_enabled" name="header_background_enabled" {% if settings.header_background_enabled %}checked{% endif %}>
-                        <label for="header_background_enabled">Header-Hintergrund anzeigen</label>
+                        <label for="header_background_enabled">{{ t("show_header_background") }}</label>
                     </div>
                 </div>
             </section>
 
             <section class="card">
-                <h2>Startseiten-Slideshow</h2>
+                <h2>{{ t("homepage_slideshow") }}</h2>
 
                 <div class="form-group">
                     <div class="checkbox-group">
                         <input type="checkbox" id="slideshow_enabled" name="slideshow_enabled" {% if settings.slideshow_enabled %}checked{% endif %}>
-                        <label for="slideshow_enabled">Slideshow auf der Startseite aktivieren</label>
+                        <label for="slideshow_enabled">{{ t("activate_slideshow_on_homepage") }}</label>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="slideshow_interval">Slideshow-Intervall (Sekunden):</label>
+                    <label for="slideshow_interval">{{ t("slideshow_interval")}} ({{ t("seconds")}}):</label>
                     <input type="number" id="slideshow_interval" name="slideshow_interval" value="{{ settings.slideshow_interval or 10 }}" min="3" max="120">
                 </div>
 
                 <div class="form-group">
-                    <label for="slideshow_header">Slideshow-Titel:</label>
+                    <label for="slideshow_header">{{ t("slideshow_header")}}:</label>
                     <input type="text" id="slideshow_header" name="slideshow_header" value="{{ settings.slideshow_header or '' }}">
                 </div>
 
                 <div class="form-group">
-                    <label for="slideshow_subtitle">Slideshow-Untertitel:</label>
+                    <label for="slideshow_subtitle">{{ t("slideshow_subtitle")}}:</label>
                     <textarea id="slideshow_subtitle" name="slideshow_subtitle">{{ settings.slideshow_subtitle or '' }}</textarea>
                 </div>
 
                 <div class="form-group">
-                    <label for="slideshow_background_image">Hintergrundbild für die Slideshow (JPG/PNG):</label>
+                    <label for="slideshow_background_image">{{ t("slideshow_background_image")}}:</label>
                     <input type="file" id="slideshow_background_image" name="slideshow_background_image" accept=".jpg, .jpeg, .png">
                     {% if settings.slideshow_background_image %}
                     <p>Aktuelles Slideshow-Hintergrundbild: <br><img src="/static/slideshow/{{ settings.slideshow_background_image }}" width="64" height="64"></p>
@@ -98,96 +109,128 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="slideshow_images">PowerPoint-Slides als PNG-Dateien hochladen:</label>
+                    <label for="slideshow_images">{{ t("upload_powerpoint_slides_as_png")}}:</label>
                     <input type="file" id="slideshow_images" name="slideshow_images" accept=".png" multiple>
                     {% if settings.slideshow_images %}
-                    <p>Aktuelle Slideshow-Bilder:</p>
+                    <p>{{ t("current_slideshow_pictures")}}:</p>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px;">
                         {% for slide in settings.slideshow_images %}
-                        <div style="text-align: center; width: 80px;">
-                            <img src="/static/slideshow/{{ slide }}" alt="Slide {{ loop.index }}" width="80" style="border-radius: 4px; border: 1px solid #2d3748;">
-                            <div style="font-size: 0.75rem; margin-top: 4px;">{{ slide }}</div>
+                        <div style="text-align: center; width: 140px;">
+                            <img src="/static/slideshow/{{ slide }}" alt="Slide {{ loop.index }}" width="120" style="border-radius: 4px; border: 1px solid #2d3748;">
+                            <div style="font-size: 0.75rem; margin-top: 4px; word-break: break-all;">{{ slide }}</div>
+                            <div style="display: flex; gap: 4px; justify-content: center; margin-top: 6px;">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="previewSlide('{{ slide }}')">Vorschau</button>
+                                <button type="button" class="btn btn-danger btn-sm" onclick="removeSlideshowImage('{{ slide }}')">Entfernen</button>
+                            </div>
                         </div>
                         {% endfor %}
                     </div>
                     {% endif %}
                 </div>
+
+                <div class="form-group">
+                    <label for="site_rating">{{ t("website_rating")}}:</label>
+                    <select id="site_rating" name="site_rating">
+                        <option value="G" {% if settings.site_rating == 'G' %}selected{% endif %}>G - Alle Altersklassen</option>
+                        <option value="PG-13" {% if settings.site_rating == 'PG-13' %}selected{% endif %}>PG-13 - Nicht empfohlen für Kinder unter 13</option>
+                        <option value="R" {% if settings.site_rating == 'R' %}selected{% endif %}>R - Nicht empfohlen für Kinder unter 17</option>
+                        <option value="18+" {% if settings.site_rating == '18+' %}selected{% endif %}>18+ - Nur für Erwachsene</option>
+                    </select>
+                    <small>{{t("website_rating_hint")}}</small>
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="age_restriction_enabled" name="age_restriction_enabled" {% if settings.age_restriction_enabled %}checked{% endif %}>
+                        <label for="age_restriction_enabled">{{ t("age_restriction_enabled") }}</label>
+                    </div>
+                    <small>{{ t("age_restriction_hint") }}</small>
+                </div>
+
+                <!-- Age Restriction Disclaimer for Hosters -->
+                <div id="ageRestrictionDisclaimer" style="background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px; padding: 14px; margin-top: 12px; display: none;">
+                    <div style="color: #991b1b; font-weight: 600; margin-bottom: 8px;">⚠️ Haftungsausschluss und rechtliche Verantwortung</div>
+                    <div style="color: #7f1d1d; font-size: 0.9rem; line-height: 1.5;">
+                        <p style="margin: 0 0 10px 0;"><strong>{{t("disclaimer_i")}}</strong> {{t("disclaimer_ii")}}</p>
+                        <p style="margin: 0;"><strong>{{t("disclaimer_iii")}}</strong> {{t("disclaimer_iv")}}</p>
+                    </div>
+                </div>
             </section>
 
             <section class="card">
-                <h2>Benutzer und Kommentare</h2>
+                <h2>{{ t("users_comments") }}</h2>
 
                 <div class="form-group">
                     <div class="checkbox-group">
                         <input type="checkbox" id="allow_registration" name="allow_registration" {% if settings.allow_registration %}checked{% endif %}>
-                        <label for="allow_registration">Benutzerregistrierung erlauben</label>
+                        <label for="allow_registration">{{ t("allow_registration") }}</label>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <div class="checkbox-group">
                         <input type="checkbox" id="require_comment_approval" name="require_comment_approval" {% if settings.require_comment_approval %}checked{% endif %}>
-                        <label for="require_comment_approval">Kommentare müssen freigegeben werden</label>
+                        <label for="require_comment_approval">{{ t("require_comment_approval") }}</label>
                     </div>
                 </div>
             </section>
             <section class="card">
-                <h2>Impressum</h2>
+                <h2>{{ t("imprint") }}</h2>
                 <input type="checkbox" id="imprint_enabled" name="imprint_enabled" {% if settings.imprint_enabled %}checked{% endif %}>
-                        <label for="imprint_enabled">Impressum anzeigen</label>
+                        <label for="imprint_enabled">{{ t("imprint_enabled") }}</label>
                 <div class="form-group">
-                    <label for="imprint">Impressum (.html) hochladen:</label>
+                    <label for="imprint">{{t("upload_imprint")}}:</label>
                     <input type="file" id="imprint" name="imprint" accept=".html,text/html">
                 </div>
 
                 {% if settings.imprint_enabled %}
-                    <p>Aktuelles Impressum: 
-                        <a href="/static/imprint.html" target="_blank">anzeigen</a>
+                    <p>{{ t("current_imprint") }}: <br>
+                        <a href="/static/imprint.html" target="_blank">{{ t("show") }}</a>
                     </p>
                 {% else %}
-                    <p style="color: #888;">Noch kein Impressum hochgeladen.</p>
+                    <p style="color: #888;">{{ t("no_imprint")}}</p>
                 {% endif %}
             </section>
             <section class="card">
-                <h2>SEO & Robots</h2>
+                <h2>{{ t("seo")}} & {{ t("robots") }}</h2>
 
                 <div class="form-group">
                     <div class="checkbox-group">
                         <input type="checkbox" id="allow_robot_indexing" name="allow_robot_indexing" {% if settings.allow_robot_indexing %}checked{% endif %}>
-                        <label for="allow_robot_indexing">Suchmaschinenindexierung erlauben</label>
+                        <label for="allow_robot_indexing">{{ t("allow_robot_indexing") }}</label>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="robot_user_agents">Zugelassene Robots (User-Agents):</label>
+                    <label for="robot_user_agents">{{ t("allowed_robots")}}:</label>
                     <textarea id="robot_user_agents" name="robot_user_agents" placeholder="* oder Googlebot">{{ settings.robot_user_agents or '' }}</textarea>
-                    <small>Jede Zeile ein User-Agent. Wird nur verwendet, wenn Indexierung erlaubt ist.</small>
+                    <small>{{ t("robot_user_agents_help") }}</small>
                 </div>
             </section>
             <section class="card">
-                <h2>Benutzerkontoverwaltung</h2>
+                <h2>{{ t("user_account_administration") }}</h2>
 
                 <div class="form-group">
                     <div class="checkbox-group">
                         <input type="checkbox" id="allow_password_change" name="allow_password_change" {% if settings.allow_password_change %}checked{% endif %}>
-                        <label for="allow_password_change">Passwortänderungen erlauben</label>
+                        <label for="allow_password_change">{{ t("allow_password_change") }}</label>
                     </div>
                 </div>
             </section>
             <section class="card">
-                <h2>Cookie-Hinweis</h2>
+                <h2>{{ t("cookie_notice") }}</h2>
 
                 <div class="form-group">
                     <div class="checkbox-group">
                         <input type="checkbox" id="require_cookie_consent" name="require_cookie_consent" {% if settings.require_cookie_consent or settings.enable_analytics %}checked{% endif %}>
-                        <label for="require_cookie_consent">Cookie-Zustimmung erforderlich machen</label>
+                        <label for="require_cookie_consent">{{ t("require_cookie_consent") }}</label>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="cookie_consent_message">Cookie-Benachrichtigungstext:</label>
+                    <label for="cookie_consent_message">{{ t("cookie_consent_message") }}:</label>
                     <textarea id="cookie_consent_message" name="cookie_consent_message" rows="10" style="width: 100%; background: #111827; color: #e5e7eb; border: 1px solid #374151; border-radius: 4px; padding: 8px;">{{ (settings.cookie_consent_message or '') | safe }}</textarea>
-                    <small>Diese Nachricht wird sichtbar, wenn Cookie-Zustimmung aktiviert ist.</small>
+                    <small>{{ t("cookie_consent_message_hint") }}</small>
                 </div>
             </section>
 
@@ -331,7 +374,7 @@
                 </div>
             </section>
 
-            <button type="submit" class="btn">Einstellungen speichern</button>
+                <button type="submit" class="btn">{{ t("save") }}</button>
         </form>
 
     </main>
@@ -417,6 +460,39 @@ document.getElementById('flushCacheBtn').addEventListener('click', async functio
 
 // Load cache stats on page load
 loadCacheStats();
+
+function previewSlide(filename) {
+    window.open('/static/slideshow/' + encodeURIComponent(filename), '_blank');
+}
+
+async function removeSlideshowImage(filename) {
+    const tokenInput = document.querySelector('input[name="_csrf_token"]');
+    const csrfToken = tokenInput ? tokenInput.value : '';
+
+    if (!confirm('Möchten Sie dieses Slideshow-Bild wirklich entfernen?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch('/admin/settings/slideshow/remove', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrfToken
+            },
+            body: JSON.stringify({ filename })
+        });
+        const result = await response.json();
+        if (result.status === 'ok') {
+            alert('Bild erfolgreich entfernt. Die Seite wird neu geladen.');
+            window.location.reload();
+        } else {
+            alert('Fehler: ' + result.message);
+        }
+    } catch (e) {
+        alert('Fehler: ' + e.message);
+    }
+}
 
 // Update functions
 async function loadUpdateStatus() {
@@ -539,5 +615,26 @@ document.getElementById('installUpdateBtn').addEventListener('click', async func
 
 // Load update status on page load
 loadUpdateStatus();
+
+// Age Restriction Disclaimer Toggle
+const ageRestrictionCheckbox = document.getElementById('age_restriction_enabled');
+const ageRestrictionDisclaimer = document.getElementById('ageRestrictionDisclaimer');
+
+if (ageRestrictionCheckbox) {
+    // Show/hide disclaimer based on checkbox state
+    function toggleAgeRestrictionDisclaimer() {
+        if (ageRestrictionCheckbox.checked) {
+            ageRestrictionDisclaimer.style.display = 'block';
+        } else {
+            ageRestrictionDisclaimer.style.display = 'none';
+        }
+    }
+    
+    // Initialize disclaimer visibility on page load
+    toggleAgeRestrictionDisclaimer();
+    
+    // Toggle disclaimer when checkbox changes
+    ageRestrictionCheckbox.addEventListener('change', toggleAgeRestrictionDisclaimer);
+}
 </script>
 {% endblock %}

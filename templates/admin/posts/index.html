@@ -1,19 +1,19 @@
 {% extends "admin/base.html" %}
 {# Help link: url_for('admin_help') #}
-{% block title %}Beiträge verwalten{% endblock %}
+{% block title %}{{ t("post_management")}}{% endblock %}
 
-{% block page_title %}Beiträge verwalten{% endblock %}
+{% block page_title %}{{ t("post_management")}}{% endblock %}
 
 {% block content %}
 <section class="card">
-    <h2>Neuen Beitrag erstellen</h2>
+    <h2>{{ t("create_post_title") }}</h2>
     <a href="/admin/posts/create">
-        <button class="btn">Beitrag erstellen</button>
+        <button class="btn">{{ t("create_post") }}</button>
     </a>
 </section>
 
 <section class="card">
-    <h2>Alle Beiträge</h2>
+    <h2>{{ t("all_posts") }}</h2>
 
     {% if posts %}
         <ul class="list">
@@ -22,9 +22,9 @@
                     <div class="post-info">
                         <div class="post-title">{{ post.title or post.id }}</div>
                         <div class="post-meta">
-                            <span>by {{ post.author }}</span>
+                            <span>{{ t("by") }} {{ post.author }}</span>
                             <span>• {{ post.created_at[:10] if post.created_at else 'Unknown' }}</span>
-                            <span>• Status: {{ post.status }}</span>
+                            <span>• {{ t("status") }}: {{ post.status }}</span>
                         </div>
                         {% if post.categories %}
                             <div>
@@ -42,30 +42,30 @@
                         {% endif %}
                         {% if post.survey %}
                             <div style="margin-top: 0.75rem; color: #9ca3af; font-size: 0.9rem;">
-                                <strong>Umfrage:</strong> {{ post.survey.question }}<br>
+                                <strong>{{ t("Survey") }}:</strong> {{ post.survey.question }}<br>
                                 {% set total_votes = post.survey.votes|length if post.survey.votes else 0 %}
-                                <span>{{ total_votes }} Stimme{{ '' if total_votes == 1 else 'n' }}</span>
+                                <span>{{ total_votes }} {{ t("votes") }}{{ '' if total_votes == 1 else 'n' }}</span>
                             </div>
                         {% endif %}
                     </div>
 
                     <div class="actions">
                         <a href="/post/{{ post.slug }}" target="_blank">
-                            <button class="btn-ghost" title="View Post">👁️</button>
+                            <button class="btn-ghost" title="{{ t("view_post") }}">👁️</button>
                         </a>
                         <a href="/admin/posts/edit/{{ post.id }}">
-                            <button class="btn-ghost">Bearbeiten</button>
+                            <button class="btn-ghost">{{ t("edit") }}</button>
                         </a>
 
                         <form action="/admin/posts/delete/{{ post.id }}" method="POST" style="display: inline;">
-                            <button class="btn-ghost" onclick="return confirm('Wirklich löschen?')">Löschen</button>
+                            <button class="btn-ghost" onclick="return confirm('{{ t("confirm_delete") }}')">{{ t("delete") }}</button>
                         </form>
                     </div>
                 </li>
             {% endfor %}
         </ul>
     {% else %}
-        <p class="empty">Keine Beiträge vorhanden.</p>
+        <p class="empty">{{ t("no_posts") }}</p>
     {% endif %}
 </section>
 
@@ -161,13 +161,13 @@
 {% endblock %}
 
         <section class="card">
-            <h2>Neuen Beitrag erstellen</h2>
+            <h2>{{ t("create_post_title") }}</h2>
             <a href="/admin/posts/create">
-                <button class="btn">Beitrag erstellen</button>
+                <button class="btn">{{ t("create_post") }}</button>
             </a>
         </section>
 
-        <section class="card">
+        <!--<section class="card">
             <h2>Alle Beiträge</h2>
 
             {% if posts %}
@@ -220,7 +220,7 @@
             {% else %}
                 <p class="empty">Keine Beiträge vorhanden.</p>
             {% endif %}
-        </section>
+        </section>-->
 
     </main>
 

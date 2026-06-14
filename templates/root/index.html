@@ -469,6 +469,12 @@
 
             </div>
         {% endif %}
+
+        {% if settings.site_rating and settings.site_rating != 'G' %}
+            <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: var(--gray-300);">
+                Website-Bewertung: {{ settings.site_rating }}. {% if settings.site_rating == 'PG-13' %}Nicht empfohlen für Kinder unter 13 Jahren.{% elif settings.site_rating == 'R' %}Nicht empfohlen für Kinder unter 17 Jahren.{% elif settings.site_rating == '18+' %}Inhalte nur für Erwachsene geeignet.{% endif %}
+            </p>
+        {% endif %}
     </div>
 </footer>
 
@@ -518,5 +524,40 @@
         })();
         {% endif %}
     </script>
+
+    {% if settings.age_restriction_enabled and settings.site_rating == '18+' %}
+    <div id="ageGateOverlay" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); color: white; display: none; z-index: 99999; align-items: center; justify-content: center; text-align: center; padding: 2rem;">
+        <div style="max-width: 520px; margin: auto; background: rgba(17, 24, 39, 0.98); border: 1px solid #374151; border-radius: 16px; padding: 2rem; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);">
+            <h2 style="margin-top: 0;">Altersüberprüfung erforderlich</h2>
+            <p style="margin-bottom: 1rem; color: #d1d5db;">Diese Website enthält Inhalte, die nur für volljährige Besucher geeignet sind. Bitte bestätigen Sie, dass Sie mindestens 18 Jahre alt sind, um fortzufahren.</p>
+            <p style="margin-bottom: 1.5rem; color: #cbd5e1; font-size: 0.95rem; line-height: 1.4; text-align: left;">Informieren Sie sich bitte über die geltenden lokalen Gesetze und Beschränkungen in Ihrem Land oder Ihrer Region. Veröffentlichen Sie keine Inhalte, die gegen Bestimmungen oder ethische Richtlinien verstoßen.</p>
+            <button onclick="acceptAgeGate()" style="background: #10b981; color: white; border: none; padding: 10px 18px; border-radius: 10px; cursor: pointer; margin-right: 0.75rem;">Ich bin 18+</button>
+            <button onclick="rejectAgeGate()" style="background: #ef4444; color: white; border: none; padding: 10px 18px; border-radius: 10px; cursor: pointer;">Website verlassen</button>
+        </div>
+    </div>
+    <script>
+        function acceptAgeGate() {
+            localStorage.setItem('ageGateAccepted18Plus', 'true');
+            document.getElementById('ageGateOverlay').style.display = 'none';
+        }
+
+        function rejectAgeGate() {
+            window.location.href = 'https://www.google.com/search?q=adult+content';
+        }
+
+        function showAgeGateIfNeeded() {
+            const ageGateAccepted = localStorage.getItem('ageGateAccepted18Plus') === 'true';
+            if (!ageGateAccepted) {
+                document.getElementById('ageGateOverlay').style.display = 'flex';
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', showAgeGateIfNeeded);
+        } else {
+            showAgeGateIfNeeded();
+        }
+    </script>
+    {% endif %}
 </body>
 </html>

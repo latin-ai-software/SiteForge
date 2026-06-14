@@ -1,7 +1,7 @@
 {% extends "admin/base.html" %}
 
-{% block title %}SEO Analysis{% endblock %}
-{% block page_title %}SEO Analysis Dashboard{% endblock %}
+{% block title %}{{ t("seo_analysis") }}{% endblock %}
+{% block page_title %}{{ t("seo_analysis_dashboard") }}{% endblock %}
 
 {% block content %}
 <style>
@@ -214,19 +214,19 @@
 
 <div class="loading" id="loading">
     <div class="spinner"></div>
-    <p>Analyzing your website for SEO...</p>
+    <p>{{ t("seo_analysis_pending") }}</p>
 </div>
 
 <div id="content" style="display: block;">
     <div class="button-group">
-        <button class="btn-primary" onclick="runAnalysis()">Run Analysis</button>
-        <button class="btn-secondary" onclick="viewRecommendations()">View Recommendations</button>
+        <button class="btn-primary" onclick="runAnalysis()">{{ t("run_analysis") }}</button>
+        <button class="btn-secondary" onclick="viewRecommendations()">{{ t("view_recommendations") }}</button>
     </div>
 
     <!-- Main SEO Score -->
     <div class="card">
         <div style="text-align: center;">
-            <h2>Overall SEO Score</h2>
+            <h2>{{ t("seo_score") }}</h2>
             <div class="seo-score-circle seo-score-{% if analysis.seo_grade %}{{ analysis.seo_grade|lower }}{% else %}f{% endif %}">
                 {{ analysis.seo_score|default(0) }}/100
                 <br>
@@ -234,15 +234,15 @@
             </div>
             <p style="color: #9ca3af; margin-top: 12px;">
                 {% if analysis.seo_score >= 90 %}
-                    Excellent SEO optimization! Your site is well-configured.
+                    {{ t("excellent_seo_score") }}
                 {% elif analysis.seo_score >= 80 %}
-                    Good SEO score. Some improvements can help boost rankings.
+                    {{ t("good_seo_score") }}
                 {% elif analysis.seo_score >= 70 %}
-                    Fair SEO score. Review recommendations for improvements.
+                    {{ t("fair_seo_score") }}
                 {% elif analysis.seo_score >= 60 %}
-                    Below average SEO score. Implement recommendations.
+                    {{ t("below_average_seo_score") }}
                 {% else %}
-                    Poor SEO score. Significant improvements needed.
+                    {{ t("poor_seo_score") }}
                 {% endif %}
             </p>
         </div>
@@ -252,20 +252,59 @@
     <div class="stats-grid">
         <div class="stat-box">
             <div class="stat-value">{{ analysis.metrics.meta_tags.percentage|int }}%</div>
-            <div class="stat-label">Meta Tags</div>
+            <div class="stat-label">{{ t("meta_tags") }}</div>
         </div>
         <div class="stat-box">
             <div class="stat-value">{{ analysis.metrics.mobile_friendly.percentage|int }}%</div>
-            <div class="stat-label">Mobile Friendly</div>
+            <div class="stat-label">{{ t("mobile_friendly") }}</div>
         </div>
         <div class="stat-box">
             <div class="stat-value">{{ analysis.metrics.performance.percentage|int }}%</div>
-            <div class="stat-label">Performance</div>
+            <div class="stat-label">{{ t("performance") }}</div>
         </div>
         <div class="stat-box">
             <div class="stat-value">{{ analysis.metrics.security.percentage|int }}%</div>
-            <div class="stat-label">Security</div>
+            <div class="stat-label">{{ t("security") }}</div>
         </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-header">
+            <span class="metric-title">{{ t("sitemap_management")}}</span>
+            <span class="metric-percentage">{{ analysis.metrics.sitemap.percentage|int }}%</span>
+        </div>
+        <p style="color: #9ca3af; margin-bottom: 12px;">
+            {% if analysis.metrics.sitemap.exists %}
+                {{t("site_map_success")}} {{ analysis.metrics.sitemap.modified_at or 'unbekannt' }}
+            {% else %}
+                {{t("site_map_not_found")}}
+            {% endif %}
+        </p>
+        <div class="button-group" style="flex-wrap: wrap; gap: 8px;">
+            <button class="btn-secondary" onclick="generateSitemap()">{{ t("generate_sitemap") }}</button>
+            {% if analysis.metrics.sitemap.exists %}
+            <a class="btn-secondary" href="/static/sitemap.xml" target="_blank">{{ t("view_sitemap") }}</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <h3>{{ t("security_header_guidance") }}</h3>
+        <p style="color: #9ca3af; margin-bottom: 12px;">{{ t("security_header_guidance_description_i") }} <code>lib/security/headers.py</code> {{t("security_header_guidance_description_ii") }}</p>
+        <pre style="background:#0f172a; border:1px solid #1f2937; padding:16px; overflow-x:auto; color:#e5e7eb; border-radius:8px; font-size:0.9rem;">
+X-Frame-Options: SAMEORIGIN
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self';
+        </pre>
+        {% if analysis.metrics.security.hints %}
+        <ul class="issue-list" style="margin-top: 12px;">
+            {% for hint in analysis.metrics.security.hints %}
+            <li class="issue-warning">{{ hint }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
     </div>
 
     <!-- Detailed Metrics -->
@@ -273,7 +312,7 @@
 
     <div class="metric-card">
         <div class="metric-header">
-            <span class="metric-title">Meta Tags & Markup</span>
+            <span class="metric-title">{{ t("meta_tags") }} & {{ t("markup")}}</span>
             <span class="metric-percentage">{{ analysis.metrics.meta_tags.percentage|int }}%</span>
         </div>
         <div class="progress-bar">
@@ -283,7 +322,7 @@
 
     <div class="metric-card">
         <div class="metric-header">
-            <span class="metric-title">Mobile Optimization</span>
+            <span class="metric-title">{{ t("mobile_optimization") }}</span>
             <span class="metric-percentage">{{ analysis.metrics.mobile_friendly.percentage|int }}%</span>
         </div>
         <div class="progress-bar">
@@ -293,7 +332,7 @@
 
     <div class="metric-card">
         <div class="metric-header">
-            <span class="metric-title">Site Performance</span>
+            <span class="metric-title">{{ t("site_performance") }}</span>
             <span class="metric-percentage">{{ analysis.metrics.performance.percentage|int }}%</span>
         </div>
         <div class="progress-bar">
@@ -303,7 +342,7 @@
 
     <div class="metric-card">
         <div class="metric-header">
-            <span class="metric-title">Security Headers</span>
+            <span class="metric-title">{{ t("security_headers") }}</span>
             <span class="metric-percentage">{{ analysis.metrics.security.percentage|int }}%</span>
         </div>
         <div class="progress-bar">
@@ -313,7 +352,7 @@
 
     <div class="metric-card">
         <div class="metric-header">
-            <span class="metric-title">Content Quality</span>
+            <span class="metric-title">{{ t("content_quality") }}</span>
             <span class="metric-percentage">{{ analysis.metrics.content.percentage|int }}%</span>
         </div>
         <div class="progress-bar">
@@ -323,7 +362,7 @@
 
     <div class="metric-card">
         <div class="metric-header">
-            <span class="metric-title">Site Structure</span>
+            <span class="metric-title">{{ t("site_structure") }}</span>
             <span class="metric-percentage">{{ analysis.metrics.structure.percentage|int }}%</span>
         </div>
         <div class="progress-bar">
@@ -333,7 +372,7 @@
 
     <div class="metric-card">
         <div class="metric-header">
-            <span class="metric-title">Sitemap</span>
+            <span class="metric-title">{{ t("sitemap") }}</span>
             <span class="metric-percentage">{{ analysis.metrics.sitemap.percentage|int }}%</span>
         </div>
         <div class="progress-bar">
@@ -343,7 +382,7 @@
 
     <div class="metric-card">
         <div class="metric-header">
-            <span class="metric-title">Robots.txt</span>
+            <span class="metric-title">{{ t("robots_txt") }}</span>
             <span class="metric-percentage">{{ analysis.metrics.robots_txt.percentage|int }}%</span>
         </div>
         <div class="progress-bar">
@@ -352,11 +391,11 @@
     </div>
 
     <!-- Issues & Suggestions -->
-    <h2>Analysis Details</h2>
+    <h2>{{ t("analysis_details") }}</h2>
 
     {% if analysis.success %}
     <div class="metric-card">
-        <h3>✓ Passed Checks</h3>
+        <h3>✓ {{ t("passed_checks") }}:</h3>
         <ul class="issue-list">
             {% for item in analysis.success %}
             <li class="issue-success">{{ item }}</li>
@@ -367,7 +406,7 @@
 
     {% if analysis.warnings %}
     <div class="metric-card">
-        <h3>⚠ Warnings</h3>
+        <h3>⚠ {{ t("warnings") }}</h3>
         <ul class="issue-list">
             {% for item in analysis.warnings %}
             <li class="issue-warning">
@@ -383,7 +422,7 @@
 
     {% if analysis.issues %}
     <div class="metric-card">
-        <h3>✗ Issues to Fix</h3>
+        <h3>✗ {{ t("issues") }} to Fix</h3>
         <ul class="issue-list">
             {% for item in analysis.issues %}
             <li class="issue-error">
@@ -399,7 +438,7 @@
 
     <!-- Recommendations Section -->
     <div class="recommendations" id="recommendations" style="display: none;">
-        <h2>SEO Improvement Recommendations</h2>
+        <h2>{{ t("seo_improvement_recommendations") }}</h2>
         <div id="recommendationsContent"></div>
     </div>
 </div>
@@ -467,6 +506,28 @@ function viewRecommendations() {
     } else {
         recommendations.style.display = 'none';
     }
+}
+
+function generateSitemap() {
+    fetch('{{ url_for("admin_seo.generate_sitemap") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert('Sitemap successfully generated.');
+            location.reload();
+        } else {
+            alert('Error generating sitemap: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error generating sitemap');
+    });
 }
 
 function applyFix(fixKey) {

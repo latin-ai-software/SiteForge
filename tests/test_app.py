@@ -1,6 +1,8 @@
 import pytest
 import os
 import json
+import re
+from flask import render_template
 from app import create_app
 from config import TestingConfig
 from unittest.mock import patch
@@ -97,6 +99,30 @@ def test_admin_templates_include_help_link():
         assert os.path.exists(path), f"Missing template file: {relative_path}"
         content = open(path, encoding='utf-8').read()
         assert 'url_for(\'admin_help\')' in content or '/admin/help' in content, f"Help link missing in {relative_path}"
+
+
+def test_admin_stylesheet_page_uses_shared_admin_layout(app):
+    """Stylesheet management should render through the shared admin sidebar."""
+    with app.test_request_context('/admin/manage/templates'):
+        html = render_template('admin/manage/templates/index.html', stylesheets=[], active_theme=None)
+        assert 'SiteForge Admin' in html
+        assert 'Stylesheet Verwaltung' in html
+        assert 'href="/admin/manage/templates"' in html
+
+
+def test_admin_help_page_highlights_help_tab(app):
+    """The help page should mark the help entry as active in the shared sidebar."""
+    with app.test_request_context('/admin/help'):
+        html = render_template('admin/help.html')
+        assert re.search(r'<a href="/admin/help"[^>]*class="active"', html, re.S)
+
+
+def test_admin_roles_page_highlights_roles_tab(app):
+    """The roles page should activate the roles link instead of the users link."""
+    with app.test_request_context('/admin/users/roles'):
+        html = render_template('admin/base.html')
+        assert re.search(r'<a href="/admin/users/roles"[^>]*class="active"', html, re.S)
+        assert not re.search(r'<a href="/admin/users"[^>]*class="active"', html, re.S)
 
 
 def test_license_validation_skipped_in_ci():

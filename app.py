@@ -27,6 +27,7 @@ def create_app(config_name=None):
     from lib.netdefense.auth.identitas_auth import IdentitasAuthManager
     import os
     from datetime import datetime
+    from flask_translator import Translator
 
     # Import models to ensure they're registered with SQLAlchemy
     from lib.data import modmail_models, notification_models
@@ -40,7 +41,24 @@ def create_app(config_name=None):
 
     # Initialize Flask app
     app = Flask(__name__)
-
+    app.config['DEFAULT_LANG'] = 'en'
+#    app.config['LANG_INITIALIZER'] = 'headers'
+    app.config['DEFAULT_MESSAGE'] = 'Translation Error'
+    app.config['TRANSLATIONS_PATH'] = 'translations'
+    t = Translator()
+    t.init_app(app)
+    @app.context_processor
+    def inject_translator():
+        return dict(t=t.translate)
+    # And how do I make t available in all blueprint's and their templates? 
+    # Because otherwise I get jinja2.exceptions.UndefinedError: 't' is undefined when I try to use {{ t("all_posts") }} in templates rendered by Blueprints.
+    # The solution is to use a context processor in the main app to inject the translator's 't' function into all templates, including those rendered by Blueprints. This way, you can use {{ t("your_translation_key") }} in any template without needing to import or initialize the translator in each Blueprint separately.
+    # How to fix jinja2.exceptions.UndefinedError: 't' is undefined: https://flask-translator.readthedocs.io/en/latest/#usage-in-templates
+    # Add the translator's 't' function to the template context
+    # And how to do that in Blueprints? Use a context processor
+#    @app.context_processor
+    #def inject_translator():
+    #    return dict(t=translator.t)
     # Get base path for security configuration
     base_path = os.path.abspath(os.path.dirname(__file__))
 
@@ -218,6 +236,58 @@ except ImportError:
 
 # Initialize Flask app
 app = Flask(__name__)
+
+# Configure UTF-8 encoding for all responses
+app.config['JSON_AS_ASCII'] = False
+app.jinja_env.enable_async = False
+import sys
+if sys.stdout.encoding != 'utf-8':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
+# Configure and initialize translator
+app.config['DEFAULT_LANG'] = 'en'
+app.config['DEFAULT_MESSAGE'] = 'Translation Error'
+app.config['TRANSLATIONS_PATH'] = 'translations'
+from flask_translator import Translator
+t = Translator()
+t.init_app(app)
+
+@app.context_processor
+def inject_translator():
+    from flask import request
+    import json
+    
+    # Try to get language preference from settings
+    lang = app.config.get('DEFAULT_LANG', 'en')
+    try:
+        settings_file = os.path.join(app.root_path, 'data', 'settings.json')
+        if os.path.exists(settings_file):
+            with open(settings_file, 'r', encoding='utf-8') as f:
+                settings = json.load(f)
+                # If site_language is set to a specific language, use it
+                if settings.get('site_language') and settings.get('site_language') != 'auto':
+                    lang = settings.get('site_language', 'en')
+                else:
+                    # Extract language from Accept-Language header
+                    if t._language is not None:
+                        lang_raw = t._language
+                        if ',' in lang_raw:
+                            lang = lang_raw.split(',')[0].strip()
+                        elif ';' in lang_raw:
+                            lang = lang_raw.split(';')[0].strip()
+                        else:
+                            lang = lang_raw.strip()
+                        
+                        # Ensure it's a valid language code (just the base language, no country)
+                        if '-' in lang:
+                            lang = lang.split('-')[0]
+    except Exception:
+        pass
+    
+    # Set the translator language to the parsed language code
+    t._language = lang
+    return dict(t=t.translate)
 
 # Get base path for security configuration
 base_path = os.path.abspath(os.path.dirname(__file__))
