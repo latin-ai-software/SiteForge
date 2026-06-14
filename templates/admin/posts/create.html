@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neuen Beitrag erstellen</title>
+    <title>{{ t("create_post") }}</title>
     <link rel="stylesheet" href="/static/theme.css">
 
     <!-- Quill -->
@@ -108,20 +108,20 @@
 
 <div class="container">
     <div class="admin-header">
-        <h1>Neuen Beitrag erstellen</h1>
-        <p class="subtitle">Erstelle einen neuen Blog-Beitrag mit Text, Bildern und Formatierung</p>
+        <h1>{{ t("create_post_title") }}</h1>
+        <p class="subtitle">{{ t("create_post_subtitle") }}</p>
     </div>
 
     <div class="form-card">
         <form action="/admin/posts/create" method="POST" enctype="multipart/form-data" class="post-form" onsubmit="saveContent()">
 
             <div class="form-group">
-                <label for="title">Titel *</label>
+                <label for="title">{{ t("title") }} *</label>
                 <input type="text" id="title" name="title" class="form-input" required>
             </div>
 
             <div class="form-group">
-                <label for="content">Inhalt *</label>
+                <label for="content">{{ t("content") }} *</label>
 
                 <!-- Quill Editor -->
                 <div id="editor"></div>
@@ -132,66 +132,66 @@
 
             <div class="form-row">
                     <div class="form-group">
-                        <label for="categories">Kategorien</label>
+                        <label for="categories">{{ t("categories") }}</label>
                         <input type="text" id="categories" name="categories" class="form-input">
-                        <small class="form-hint">Kommagetrennt</small>
+                        <small class="form-hint">{{ t("comma_separated") }}</small>
                     </div>
 
                     <div class="form-group">
-                        <label for="tags">Tags</label>
+                        <label for="tags">{{ t("tags") }}</label>
                         <input type="text" id="tags" name="tags" class="form-input">
-                        <small class="form-hint">Kommagetrennt</small>
+                        <small class="form-hint">{{ t("comma_separated") }}</small>
                     </div>
                 </div>
 
             <div class="form-group">
                 <label>
                     <input type="checkbox" id="survey_enabled" name="survey_enabled">
-                    Umfrage zum Beitrag hinzufügen
+                    {{ t("enable_survey")}}
                 </label>
             </div>
 
             <div class="form-group">
-                <label for="survey_question">Umfragefrage</label>
-                <input type="text" id="survey_question" name="survey_question" class="form-input" placeholder="Welche Frage möchtest du stellen?">
+                <label for="survey_question">{{ t("survey_question") }}</label>
+                <input type="text" id="survey_question" name="survey_question" class="form-input" placeholder="{{ t("survey_question_placeholder") }}">
             </div>
 
             <div class="form-group">
-                <label for="survey_options">Umfrageoptionen</label>
-                <textarea id="survey_options" name="survey_options" class="form-input" rows="4" placeholder="Eine Option pro Zeile"></textarea>
-                <small class="form-hint">Gib mindestens zwei Optionen ein, jeweils eine pro Zeile.</small>
+                <label for="survey_options">{{ t("survey_options") }}</label>
+                <textarea id="survey_options" name="survey_options" class="form-input" rows="4" placeholder="{{ t("survey_options_placeholder") }}"></textarea>
+                <small class="form-hint">{{ t("survey_options_hint") }}</small>
             </div>
 
             <div class="form-group">
-                <label for="existing_files">Existierende Dateien hinzufügen</label>
+                <label for="existing_files">{{ t("attachments") }}</label>
                 <select id="existing_files" name="existing_files" class="form-input" multiple>
                     <!-- Wird via JavaScript geladen -->
                 </select>
-                <small class="form-hint">Wähle eine oder mehrere bereits hochgeladene Dateien aus, um sie mit diesem Beitrag zu verknüpfen.</small>
+                <small class="form-hint">{{ t("existing_files_hint") }}</small>
             </div>
 
             <div class="form-group">
-                <label for="attachments">Neue Dateien hochladen</label>
+                <label for="attachments">{{ t("upload_file") }}</label>
                 <input type="file" id="attachments" name="attachments" class="form-input" multiple>
-                <small class="form-hint">Wähle eine oder mehrere Dateien aus, um sie hochzuladen und mit dem Beitrag zu verknüpfen.</small>
+                <small class="form-hint">{{ t("upload_file_hint") }}</small>
             </div>
 
             {% if git_plugin_available %}
             <div class="form-group">
-                <label for="git_repository">Git-Repository (optional)</label>
+                <label for="git_repository">{{ t("git_repository") }}</label>
                 <select id="git_repository" name="git_repository" class="form-input">
-                    <option value="">Kein Repository auswählen</option>
+                    <option value="">{{ t("git_repository_no") }}</option>
                     {% for repo in git_repos %}
                     <option value="{{ user }}/{{ repo }}">{{ repo }}</option>
                     {% endfor %}
                 </select>
-                <small class="form-hint">Wähle ein Repository aus, um diesen Beitrag mit einem Repo zu verknüpfen.</small>
+                <small class="form-hint">{{ t("git_repository_hint") }}</small>
             </div>
 
             <div class="form-group">
-                <label for="release_tag">Release / Tag (optional)</label>
-                <input type="text" id="release_tag" name="release_tag" class="form-input" placeholder="z.B. v1.0.0">
-                <small class="form-hint">Optionaler Release- oder Tag-Name, der mit dem Beitrag verknüpft ist.</small>
+                <label for="release_tag">{{ t("release_tag") }}</label>
+                <input type="text" id="release_tag" name="release_tag" class="form-input" placeholder="{{ t("release_tag_placeholder") }}">
+                <small class="form-hint">{{ t("release_tag_hint") }}</small>
             </div>
             {% endif %}
 

@@ -15,8 +15,8 @@
                     <div class="user-info">
                         <div class="user-details">
                             <h3>{{ user.username }}</h3>
-                            <p>Rolle: {{ user.role if user.role else 'Keine Rolle' }}</p>
-                            <p>Erstellt: {{ user.created_at if user.created_at != 'Unknown' else 'Unbekannt' }}</p>
+                            <p>{{ t("role") }}: {{ user.role if user.role else 'Keine Rolle' }}</p>
+                            <p>{{ t("created_at") }}: {{ user.created_at if user.created_at != 'Unknown' else t("unknown") }}</p>
                         </div>
                         <div class="user-actions">
                             <form action="{{ url_for('admin_users.update_user_role', username=user.username) }}" method="POST" style="display: inline;">

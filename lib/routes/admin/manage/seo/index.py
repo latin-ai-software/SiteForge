@@ -4,6 +4,7 @@ import os
 import json
 from flask import Blueprint, render_template, request, jsonify, current_app
 from .....netdefense.auth.identitas_auth import IdentitasAuthManager
+from .....data.post_manager import PostManager
 from .....seo_analyzer import SEOAnalyzer
 
 admin_seo_bp = Blueprint("admin_seo", __name__, url_prefix="/admin/seo")
@@ -85,7 +86,47 @@ def _create_file_if_missing(file_path, content):
     return True
 
 
-def _apply_fix(base_path, fix_key):
+def _load_settings(base_path):
+    settings_file = os.path.join(base_path, 'data', 'settings.json')
+    if os.path.exists(settings_file):
+        try:
+            with open(settings_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    return {}
+
+
+def _normalize_base_url(url):
+    if not url:
+        return 'http://localhost:5000'
+    normalized = url.strip()
+    if normalized.endswith('/'):
+        normalized = normalized[:-1]
+    if not normalized.startswith(('http://', 'https://')):
+        normalized = f'https://{normalized}'
+    return normalized
+
+
+def _generate_sitemap_content(base_url):
+    manager = PostManager(BASE_PATH)
+    posts = manager.get_posts(status='publish')
+    urls = [f"{base_url}/"]
+    for post in posts:
+        urls.append(f"{base_url}/post/{post.get('slug')}")
+    url_entries = []
+    for url in sorted(set(urls)):
+        url_entries.append(
+            '    <url>\n'
+            f'        <loc>{url}</loc>\n'
+            '        <changefreq>daily</changefreq>\n'
+            '        <priority>0.7</priority>\n'
+            '    </url>'
+        )
+    return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + '\n'.join(url_entries) + '\n</urlset>\n'
+
+
+def _apply_fix(base_path, fix_key, base_url='http://localhost:5000'):
     root_index = os.path.join(base_path, 'templates', 'root', 'index.html')
     base_template = os.path.join(base_path, 'templates', 'base.html')
     robots_file = os.path.join(base_path, 'static', 'robots.txt')
@@ -104,7 +145,8 @@ def _apply_fix(base_path, fix_key):
     if fix_key == 'create_robots_txt':
         return _create_file_if_missing(robots_file, 'User-agent: *\nDisallow: /admin\nDisallow: /uploads\n')
     if fix_key == 'create_sitemap_xml':
-        return _create_file_if_missing(sitemap_file, '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n    <url>\n        <loc>http://localhost:5000/</loc>\n        <changefreq>daily</changefreq>\n    </url>\n</urlset>\n')
+        normalized = _normalize_base_url(base_url)
+        return _create_file_if_missing(sitemap_file, _generate_sitemap_content(normalized))
     return False
 
 
@@ -112,14 +154,26 @@ def _apply_fix(base_path, fix_key):
 @auth.require_admin
 def seo_index():
     """SEO Analysis Dashboard."""
-    analyzer = SEOAnalyzer(current_app.root_path)
+    settings_file = os.path.join(current_app.root_path, 'data', 'settings.json')
+    site_url = request.host_url.rstrip('/')
+    if os.path.exists(settings_file):
+        try:
+            with open(settings_file, 'r', encoding='utf-8') as f:
+                settings = json.load(f)
+                if settings.get('domain'):
+                    site_url = _normalize_base_url(settings.get('domain'))
+        except Exception:
+            pass
+
+    analyzer = SEOAnalyzer(current_app.root_path, site_url=site_url)
     analysis_results = analyzer.analyze()
     fix_actions = _get_fix_actions(analysis_results)
     
     return render_template(
         "admin/manage/seo/index.html",
         analysis=analysis_results,
-        fix_actions=fix_actions
+        fix_actions=fix_actions,
+        site_url=site_url
     )
 
 
@@ -128,7 +182,18 @@ def seo_index():
 def run_seo_analysis():
     """Run SEO analysis and return results as JSON."""
     try:
-        analyzer = SEOAnalyzer(current_app.root_path)
+        settings_file = os.path.join(current_app.root_path, 'data', 'settings.json')
+        site_url = request.host_url.rstrip('/')
+        if os.path.exists(settings_file):
+            try:
+                with open(settings_file, 'r', encoding='utf-8') as f:
+                    settings = json.load(f)
+                    if settings.get('domain'):
+                        site_url = _normalize_base_url(settings.get('domain'))
+            except Exception:
+                pass
+
+        analyzer = SEOAnalyzer(current_app.root_path, site_url=site_url)
         analysis_results = analyzer.analyze()
         
         # Save analysis to file
@@ -162,7 +227,18 @@ def seo_fix_issue():
                 "message": "Missing fix_key"
             }), 400
 
-        success = _apply_fix(current_app.root_path, fix_key)
+        base_url = request.host_url.rstrip('/')
+        settings_file = os.path.join(current_app.root_path, 'data', 'settings.json')
+        if os.path.exists(settings_file):
+            try:
+                with open(settings_file, 'r', encoding='utf-8') as f:
+                    settings = json.load(f)
+                    if settings.get('domain'):
+                        base_url = _normalize_base_url(settings.get('domain'))
+            except Exception:
+                pass
+
+        success = _apply_fix(current_app.root_path, fix_key, base_url)
         if not success:
             return jsonify({
                 "status": "error",
@@ -172,6 +248,40 @@ def seo_fix_issue():
         return jsonify({
             "status": "success",
             "message": "Quick fix applied successfully. Run analysis again to verify."
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+
+@admin_seo_bp.route("/api/sitemap/generate", methods=["POST"])
+@auth.require_admin
+def generate_sitemap():
+    """Generate or refresh sitemap.xml for the site."""
+    try:
+        settings_file = os.path.join(current_app.root_path, 'data', 'settings.json')
+        base_url = request.host_url.rstrip('/')
+        if os.path.exists(settings_file):
+            try:
+                with open(settings_file, 'r', encoding='utf-8') as f:
+                    settings = json.load(f)
+                    if settings.get('domain'):
+                        base_url = _normalize_base_url(settings.get('domain'))
+            except Exception:
+                pass
+
+        sitemap_file = os.path.join(current_app.root_path, 'static', 'sitemap.xml')
+        sitemap_content = _generate_sitemap_content(base_url)
+        os.makedirs(os.path.dirname(sitemap_file), exist_ok=True)
+        with open(sitemap_file, 'w', encoding='utf-8') as f:
+            f.write(sitemap_content)
+
+        return jsonify({
+            "status": "success",
+            "message": "Sitemap generated successfully.",
+            "sitemap_url": f"{base_url}/static/sitemap.xml"
         })
     except Exception as e:
         return jsonify({

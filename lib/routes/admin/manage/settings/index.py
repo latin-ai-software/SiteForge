@@ -37,9 +37,33 @@ def admin_settings_index():
         with open(settings_file, "r", encoding="utf-8") as f:
             settings = json.load(f)
 
+    # Get available languages from translations folder
+    translations_dir = os.path.join(current_app.root_path, "translations")
+    available_languages = {}
+    if os.path.exists(translations_dir):
+        for filename in os.listdir(translations_dir):
+            if filename.startswith("messages.") and filename.endswith(".yaml"):
+                # Extract language code (e.g., "en" from "messages.en.yaml")
+                lang_code = filename.replace("messages.", "").replace(".yaml", "")
+                # Format as display name (e.g., "en" -> "English")
+                lang_names = {
+                    "en": "English",
+                    "de": "Deutsch",
+                    "fr": "Français",
+                    "es": "Español",
+                    "it": "Italiano",
+                    "pt": "Português",
+                    "nl": "Nederlands",
+                    "ru": "Русский",
+                    "ja": "日本語",
+                    "zh": "中文",
+                }
+                display_name = lang_names.get(lang_code, lang_code.upper())
+                available_languages[lang_code] = display_name
+    
     # Get available plugins
     available_plugins = getattr(current_app, 'available_plugins', set())
-    return render_template("admin/settings/index.html", settings=settings, available_plugins=list(available_plugins))
+    return render_template("admin/settings/index.html", settings=settings, available_plugins=list(available_plugins), available_languages=available_languages)
 
 # POST: Einstellungen speichern
 @admin_settings_bp.route("/", methods=["POST"])
@@ -95,10 +119,24 @@ def save_settings():
     if analytics_tracking_id and not analytics_tracking_id.startswith(('G-', 'UA-')):
         return jsonify({"status": "error", "message": "Invalid Google Analytics ID format"}), 400
 
+    # Validate language selection
+    selected_language = request.form.get("site_language", "en").strip()
+    translations_dir = os.path.join(current_app.root_path, "translations")
+    valid_languages = set()
+    if os.path.exists(translations_dir):
+        for filename in os.listdir(translations_dir):
+            if filename.startswith("messages.") and filename.endswith(".yaml"):
+                lang_code = filename.replace("messages.", "").replace(".yaml", "")
+                valid_languages.add(lang_code)
+    
+    if selected_language not in valid_languages and selected_language != "auto":
+        selected_language = "en"
+
     settings = {
         "site_title": site_title or "SiteForge",
         "site_description": site_description or "",
         "site_keywords": site_keywords or "",
+        "site_language": selected_language,
         "posts_per_page": posts_per_page,
         "allow_registration": request.form.get("allow_registration") == "on",
         "require_comment_approval": request.form.get("require_comment_approval") == "on",
@@ -125,6 +163,8 @@ def save_settings():
         "show_social_links": request.form.get("show_social_links") == "on",
         "twitter_handle": validate_input(request.form.get("twitter_handle", ""), max_length=100) or "",
         "facebook_page": validate_input(request.form.get("facebook_page", ""), max_length=255) or "",
+        "site_rating": request.form.get("site_rating", "G") if request.form.get("site_rating", "G") in ["G", "PG-13", "R", "18+"] else "G",
+        "age_restriction_enabled": request.form.get("age_restriction_enabled") == "on",
     }
 
     # Load existing settings to preserve secret fields when left blank
@@ -234,6 +274,46 @@ def save_settings():
         return jsonify({"status": "ok", "restart": True})
 
     return jsonify({"status": "ok"})
+
+
+@admin_settings_bp.route("/slideshow/remove", methods=["POST"])
+@auth.require_admin
+def remove_slideshow_image():
+    """Remove an uploaded slideshow image from settings and disk."""
+    data = request.get_json(silent=True) or {}
+    csrf_token = data.get("_csrf_token") or request.headers.get("X-CSRF-Token")
+    if not csrf_token or not CSRFProtection.validate_token(csrf_token):
+        abort(403)
+
+    filename = data.get("filename")
+    if not filename:
+        return jsonify({"status": "error", "message": "Missing filename"}), 400
+
+    settings_file = os.path.join(current_app.root_path, "data", "settings.json")
+    if not os.path.exists(settings_file):
+        return jsonify({"status": "error", "message": "Settings file not found"}), 404
+
+    with open(settings_file, "r", encoding="utf-8") as f:
+        settings = json.load(f)
+
+    slideshow_images = settings.get("slideshow_images", []) or []
+    if filename not in slideshow_images:
+        return jsonify({"status": "error", "message": "Image not found in slideshow"}), 404
+
+    slideshow_images = [slide for slide in slideshow_images if slide != filename]
+    settings["slideshow_images"] = slideshow_images
+
+    image_path = os.path.join(current_app.root_path, "static", "slideshow", filename)
+    if os.path.exists(image_path):
+        try:
+            os.remove(image_path)
+        except Exception:
+            pass
+
+    with open(settings_file, "w", encoding="utf-8") as f:
+        json.dump(settings, f, indent=4)
+
+    return jsonify({"status": "ok", "message": "Image removed"})
 
 
 # Encryption management endpoints

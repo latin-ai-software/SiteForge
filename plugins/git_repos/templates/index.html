@@ -1,153 +1,117 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <title>Git-Repositories verwalten</title>
-    <style>
-        body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0f172a; color: #e5e7eb; }
-        .layout { display: flex; min-height: 100vh; }
-        .sidebar { width: 260px; background: #020617; border-right: 1px solid #1f2937; padding: 24px 20px; }
-        .sidebar h1 { font-size: 1.3rem; margin: 0 0 1.5rem; color: #f9fafb; }
-        .sidebar nav a { display: block; padding: 8px 10px; margin-bottom: 6px; border-radius: 6px; color: #9ca3af; text-decoration: none; font-size: 0.9rem; }
-        .sidebar nav a.active, .sidebar nav a:hover { background: #111827; color: #e5e7eb; }
-        .main { flex: 1; padding: 24px 32px 40px; }
-        .page-title { font-size: 1.6rem; margin: 0 0 1.5rem; color: #f9fafb; }
-        .card { background: #020617; border-radius: 10px; border: 1px solid #1f2937; padding: 18px 20px; box-shadow: 0 18px 40px rgba(0,0,0,0.45); margin-bottom: 24px; }
-        .card h2 { margin: 0 0 0.75rem; font-size: 1.05rem; color: #e5e7eb; }
-        .form-group { margin-bottom: 16px; }
-        label { display: block; font-size: 0.95rem; margin-bottom: 6px; }
-        .form-input, select, textarea { width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid #374151; background: #111827; color: #e5e7eb; }
-        .btn { padding: 10px 16px; border-radius: 6px; border: none; font-size: 0.95rem; cursor: pointer; background: #2563eb; color: #f9fafb; }
-        .btn:hover { background: #1d4ed8; }
-        .repo-table { width: 100%; border-collapse: collapse; }
-        .repo-table th, .repo-table td { padding: 12px 10px; border-bottom: 1px solid #1f2937; }
-        .repo-table th { text-align: left; color: #9ca3af; font-weight: 600; }
-        .repo-table td { color: #e5e7eb; }
-        .status-chip { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px; background: #111827; color: #d1d5db; font-size: 0.85rem; }
-        td .btn {
-            white-space: nowrap;
-        }
-    </style>
-</head>
-<body>
-<div class="layout">
-    <aside class="sidebar">
-        <h1>Git-Integration</h1>
-        <nav>
-            <a href="/">Zur Seite</a>
-            <a href="/admin/manage/templates">Stylesheets</a>
-            <a href="/admin/posts">Beiträge</a>
-            <a href="/admin/users">Benutzer</a>
-            <a href="/admin/users/roles">Rollen</a>
-            <a href="/admin/media">Medien</a>
-            <a href="/admin/analytics">Analytics</a>
-            <a href="/admin/git" class="active">Git-Repos</a>
-            <a href="/admin/settings">Einstellungen</a>
-            <a href="{{ url_for('modmail.admin_modmail') }}">Modmail</a>
-            <a href="{{ url_for('backup.backup_index') }}">Backups</a>
-            <a href="{{ url_for('admin_help') }}">Hilfe</a>
-            <a href="{{ url_for('theme_creator.index') }}">Theme Creator</a>
-        </nav>
-    </aside>
-    <main class="main">
-        <h1 class="page-title">Git-Repositories verwalten</h1>
+{% extends "admin/base.html" %}
 
-        <div class="card">
-            <h2>Repositiories</h2>
-            {% if repos %}
-                <table class="repo-table">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Pfad</th>
-                            <th>Remote</th>
-                            <th>Branch</th>
-                            <th>Clone-URL</th>
-                            <th>Aktionen</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for repo in repos %}
-                            <tr>
-                                <td>{{ repo.name }}</td>
-                                <td>{{ repo.path }}</td>
-                                <td>{{ repo.remote }}</td>
-                                <td>{{ repo.branch }}</td>
-                                <td>{{ settings.domain }}{{ repo.clone_url }}</td>
-                                <td><a href="/admin/git/files/{{ repo.name }}" class="btn">Dateien verwalten</a></td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <p>Keine Git-Repositories konfiguriert. Lege ein neues Repository an.</p>
-            {% endif %}
-        </div>
+{% block title %}Git-Repositories verwalten{% endblock %}
 
-        <div class="card">
-            <h2>Neues Repository hinzufügen</h2>
-            <form id="addRepoForm" action="/admin/git/add" method="POST">
-                <div class="form-group">
-                    <label for="repo_name">Repo-Name</label>
-                    <input type="text" id="repo_name" name="repo_name" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label for="repo_url">Clone-URL (optional)</label>
-                    <input type="text" id="repo_url" name="repo_url" class="form-input">
-                </div>
-                <div class="form-group">
-                    <label for="branch">Standardbranch</label>
-                    <input type="text" id="branch" name="branch" class="form-input" value="main">
-                </div>
-                <button type="submit" class="btn">Repository hinzufügen</button>
-            </form>
-        </div>
+{% block page_title %}Git-Repositories verwalten{% endblock %}
 
-        <div class="card">
-            <h2>Pull Request erstellen</h2>
-            <form id="createPrForm" action="/admin/git/pr" method="POST">
-                <div class="form-group">
-                    <label for="pr_repo_name">Repo-Name</label>
-                    <input type="text" id="pr_repo_name" name="repo_name" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label for="pr_title">Titel</label>
-                    <input type="text" id="pr_title" name="pr_title" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label for="source_branch">Quellbranch</label>
-                    <input type="text" id="source_branch" name="source_branch" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label for="target_branch">Zielbranch</label>
-                    <input type="text" id="target_branch" name="target_branch" class="form-input" value="main">
-                </div>
-                <div class="form-group">
-                    <label for="pr_description">Beschreibung</label>
-                    <textarea id="pr_description" name="pr_description" rows="4" class="form-input"></textarea>
-                </div>
-                <button type="submit" class="btn">Pull Request erstellen</button>
-            </form>
-        </div>
+{% block content %}
+<style>
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 0.95rem; margin-bottom: 6px; }
+    .form-input, select, textarea { width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid #374151; background: #111827; color: #e5e7eb; }
+    .btn { padding: 10px 16px; border-radius: 6px; border: none; font-size: 0.95rem; cursor: pointer; background: #2563eb; color: #f9fafb; }
+    .btn:hover { background: #1d4ed8; }
+    .repo-table { width: 100%; border-collapse: collapse; }
+    .repo-table th, .repo-table td { padding: 12px 10px; border-bottom: 1px solid #1f2937; }
+    .repo-table th { text-align: left; color: #9ca3af; font-weight: 600; }
+    .repo-table td { color: #e5e7eb; }
+    .status-chip { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px; background: #111827; color: #d1d5db; font-size: 0.85rem; }
+    td .btn { white-space: nowrap; }
+</style>
 
-        <div class="card">
-            <h2>Offene Pull Requests</h2>
-            {% if prs %}
-                <ul>
-                    {% for pr in prs %}
-                        <li>
-                            <strong>{{ pr.title }}</strong> für {{ pr.repo_name }}<br>
-                            <span class="status-chip">{{ pr.status }}</span>
-                            <p>{{ pr.description }}</p>
-                            <small>Von {{ pr.author }} am {{ pr.created_at }}</small>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>Keine offenen Pull Requests.</p>
-            {% endif %}
-        </div>
-    </main>
+<div class="card">
+    <h2>Repositories</h2>
+    {% if repos %}
+        <table class="repo-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Pfad</th>
+                    <th>Remote</th>
+                    <th>Branch</th>
+                    <th>Clone-URL</th>
+                    <th>Aktionen</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for repo in repos %}
+                    <tr>
+                        <td>{{ repo.name }}</td>
+                        <td>{{ repo.path }}</td>
+                        <td>{{ repo.remote }}</td>
+                        <td>{{ repo.branch }}</td>
+                        <td>{{ settings.domain }}{{ repo.clone_url }}</td>
+                        <td><a href="/admin/git/files/{{ repo.name }}" class="btn">Dateien verwalten</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Keine Git-Repositories konfiguriert. Lege ein neues Repository an.</p>
+    {% endif %}
 </div>
-</body>
-</html>
+
+<div class="card">
+    <h2>Neues Repository hinzufügen</h2>
+    <form id="addRepoForm" action="/admin/git/add" method="POST">
+        <div class="form-group">
+            <label for="repo_name">Repo-Name</label>
+            <input type="text" id="repo_name" name="repo_name" class="form-input" required>
+        </div>
+        <div class="form-group">
+            <label for="repo_url">Clone-URL (optional)</label>
+            <input type="text" id="repo_url" name="repo_url" class="form-input">
+        </div>
+        <div class="form-group">
+            <label for="branch">Standardbranch</label>
+            <input type="text" id="branch" name="branch" class="form-input" value="main">
+        </div>
+        <button type="submit" class="btn">Repository hinzufügen</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2>Pull Request erstellen</h2>
+    <form id="createPrForm" action="/admin/git/pr" method="POST">
+        <div class="form-group">
+            <label for="pr_repo_name">Repo-Name</label>
+            <input type="text" id="pr_repo_name" name="repo_name" class="form-input" required>
+        </div>
+        <div class="form-group">
+            <label for="pr_title">Titel</label>
+            <input type="text" id="pr_title" name="pr_title" class="form-input" required>
+        </div>
+        <div class="form-group">
+            <label for="source_branch">Quellbranch</label>
+            <input type="text" id="source_branch" name="source_branch" class="form-input" required>
+        </div>
+        <div class="form-group">
+            <label for="target_branch">Zielbranch</label>
+            <input type="text" id="target_branch" name="target_branch" class="form-input" value="main">
+        </div>
+        <div class="form-group">
+            <label for="pr_description">Beschreibung</label>
+            <textarea id="pr_description" name="pr_description" rows="4" class="form-input"></textarea>
+        </div>
+        <button type="submit" class="btn">Pull Request erstellen</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2>Offene Pull Requests</h2>
+    {% if prs %}
+        <ul>
+            {% for pr in prs %}
+                <li>
+                    <strong>{{ pr.title }}</strong> für {{ pr.repo_name }}<br>
+                    <span class="status-chip">{{ pr.status }}</span>
+                    <p>{{ pr.description }}</p>
+                    <small>Von {{ pr.author }} am {{ pr.created_at }}</small>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Keine offenen Pull Requests.</p>
+    {% endif %}
+</div>
+{% endblock %}

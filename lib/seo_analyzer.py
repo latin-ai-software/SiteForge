@@ -196,12 +196,14 @@ class SEOAnalyzer:
         sitemap_file = os.path.join(self.base_path, "static", "sitemap.xml")
         
         if os.path.exists(sitemap_file):
+            modified_at = datetime.fromtimestamp(os.path.getmtime(sitemap_file)).isoformat()
             self.success.append("✓ Sitemap.xml found")
             return {
                 "exists": True,
                 "score": 1,
                 "total": 1,
-                "percentage": 100
+                "percentage": 100,
+                "modified_at": modified_at
             }
         else:
             self.issues.append("✗ sitemap.xml not found - create one for better SEO")
@@ -209,7 +211,8 @@ class SEOAnalyzer:
                 "exists": False,
                 "score": 0,
                 "total": 1,
-                "percentage": 0
+                "percentage": 0,
+                "modified_at": None
             }
     
     def _check_robots_txt(self):
@@ -237,6 +240,7 @@ class SEOAnalyzer:
         """Check security headers."""
         security_score = 0
         total_checks = 4
+        hints = []
         
         try:
             security_file = os.path.join(self.base_path, "lib", "security", "headers.py")
@@ -253,20 +257,28 @@ class SEOAnalyzer:
                 ]
                 
                 for header, description in headers_to_check:
-                    if header.replace("-", "_") in content.upper():
+                    if header in content:
                         security_score += 1
                         self.success.append(f"✓ Security header: {header} - {description}")
                     else:
                         self.warnings.append(f"⚠ Missing security header: {header}")
+                        if header == "Strict-Transport-Security":
+                            hints.append("Strict-Transport-Security should be enabled in HTTPS environments. Use HTTPS locally or behind a reverse proxy and consider the --prod runtime switch for secure cookies.")
+                        else:
+                            hints.append(f"Add the {header} header to lib/security/headers.py or your web server configuration.")
+            else:
+                self.issues.append("✗ Security headers configuration file missing")
+                hints.append("Create lib/security/headers.py or configure the recommended security headers in your web server.")
             
             return {
                 "score": security_score,
                 "total": total_checks,
-                "percentage": (security_score / total_checks * 100) if total_checks > 0 else 0
+                "percentage": (security_score / total_checks * 100) if total_checks > 0 else 0,
+                "hints": hints
             }
         except Exception as e:
             self.issues.append(f"Error checking security: {str(e)}")
-            return {"score": 0, "total": total_checks, "percentage": 0}
+            return {"score": 0, "total": total_checks, "percentage": 0, "hints": hints}
     
     def _check_content_quality(self):
         """Check content quality indicators."""

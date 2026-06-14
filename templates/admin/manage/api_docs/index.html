@@ -1,7 +1,7 @@
 {% extends "admin/base.html" %}
 
-{% block title %}API Documentation{% endblock %}
-{% block page_title %}API Documentation{% endblock %}
+{% block title %}{{ t("api_reference") }}{% endblock %}
+{% block page_title %} {% endblock %}
 
 {% block content %}
 <style>
@@ -273,20 +273,20 @@
 
 <div class="api-header">
     <div>
-        <h2 style="margin: 0 0 4px; color: #f9fafb;">API Documentation</h2>
-        <p style="margin: 0; color: #9ca3af; font-size: 0.9rem;">Complete reference for all API endpoints</p>
+        <h2 style="margin: 0 0 4px; color: #f9fafb;">{{ t("api_reference") }}</h2>
+        <p style="margin: 0; color: #9ca3af; font-size: 0.9rem;">{{ t("api_reference_description") }}</p>
     </div>
     <div class="button-group">
-        <button class="btn-primary" onclick="generateDocs()">Regenerate Docs</button>
-        <button class="btn-primary" onclick="exportDocs()">Export as JSON</button>
+        <button class="btn-primary" onclick="generateDocs()">{{ t("regenerate_docs") }}</button>
+        <button class="btn-primary" onclick="exportDocs()">{{ t("export_docs") }}</button>
     </div>
 </div>
 
 <div class="api-tabs">
-    <button class="api-tab active" onclick="switchTab('overview')">Overview</button>
-    <button class="api-tab" onclick="switchTab('endpoints')">Endpoints</button>
-    <button class="api-tab" onclick="switchTab('authentication')">Authentication</button>
-    <button class="api-tab" onclick="switchTab('quick-reference')">Quick Reference</button>
+    <button class="api-tab active" onclick="switchTab('overview')">{{ t("overview") }}</button>
+    <button class="api-tab" onclick="switchTab('endpoints')">{{ t("endpoints") }}</button>
+    <button class="api-tab" onclick="switchTab('authentication')">{{ t("authentication") }}</button>
+    <button class="api-tab" onclick="switchTab('quick-reference')">{{ t("quick_reference") }}</button>
 </div>
 
 <!-- Overview Tab -->
@@ -294,27 +294,27 @@
     <div class="summary-grid">
         <div class="summary-stat">
             <div class="summary-stat-value">{{ docs.summary.total_endpoints }}</div>
-            <div class="summary-stat-label">Total Endpoints</div>
+            <div class="summary-stat-label">{{ t("total_endpoints") }}</div>
         </div>
         <div class="summary-stat">
             <div class="summary-stat-value">{{ docs.summary.total_blueprints }}</div>
-            <div class="summary-stat-label">Blueprints</div>
+            <div class="summary-stat-label">{{ t("blueprints") }}</div>
         </div>
         {% for method, count in docs.summary.methods_used.items() %}
         <div class="summary-stat">
             <div class="summary-stat-value">{{ count }}</div>
-            <div class="summary-stat-label">{{ method }} Endpoints</div>
+            <div class="summary-stat-label">{{ method }} {{ t("endpoints") }}</div>
         </div>
         {% endfor %}
     </div>
 
     <div class="card">
-        <h3>API Version</h3>
+        <h3>{{ t("api_version") }}</h3>
         <p>{{ docs.version }}</p>
     </div>
 
     <div class="card">
-        <h3>Available Blueprints</h3>
+        <h3>{{ t("available_blueprints") }}</h3>
         <ul style="margin: 0; padding-left: 20px;">
             {% for blueprint in docs.summary.blueprints %}
             <li style="margin-bottom: 8px; color: #9ca3af;">{{ blueprint }}</li>
@@ -334,7 +334,7 @@
         {% for prefix_group in blueprint_data.routes %}
         <div class="endpoint-group">
             <div style="color: #9ca3af; font-size: 0.9rem; margin-bottom: 8px; padding-left: 16px;">
-                <strong>{{ prefix_group.prefix }}</strong> ({{ prefix_group.routes|length }} routes)
+                <strong>{{ prefix_group.prefix }}</strong> ({{ prefix_group.routes|length }} {{ t("routes")}})
             </div>
             
             {% for route in prefix_group.routes %}
@@ -356,8 +356,8 @@
 <!-- Authentication Tab -->
 <div id="authentication" class="tab-content">
     <div class="auth-section">
-        <h3>Authentication Methods</h3>
-        <p>The SiteForge API supports multiple authentication methods for different use cases.</p>
+        <h3>{{ t("authentication_methods") }}</h3>
+        <p>{{ t("authentication_methods_description") }}</p>
         
         {% for auth_method in docs.authentication.methods %}
         <div class="auth-method">
@@ -372,7 +372,7 @@
     </div>
 
     <div class="auth-section">
-        <h3>Required Headers</h3>
+        <h3>{{ t("required_headers") }}</h3>
         {% for header_name, header_desc in docs.authentication.headers.items() %}
         <div class="auth-method">
             <div class="auth-method-title">{{ header_name }}</div>
@@ -382,7 +382,7 @@
     </div>
 
     <div class="auth-section">
-        <h3>Common Response Status Codes</h3>
+        <h3>{{ t("common_response_status_codes") }}</h3>
         <ul style="margin: 0; padding-left: 20px;">
             <li style="margin-bottom: 8px;"><strong>200 OK</strong> - Request successful</li>
             <li style="margin-bottom: 8px;"><strong>201 Created</strong> - Resource created successfully</li>
@@ -398,9 +398,9 @@
 
 <!-- Quick Reference Tab -->
 <div id="quick-reference" class="tab-content">
-    <h3>Getting Started</h3>
+    <h3>{{ t("getting_started") }}</h3>
     <div id="quickRefContent">
-        <p style="color: #9ca3af;">Loading quick reference...</p>
+        <p style="color: #9ca3af;">{{ t("quick_reference_loading") }}</p>
     </div>
 </div>
 

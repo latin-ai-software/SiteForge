@@ -107,7 +107,7 @@
 <body>
     <div class="container">
         <div class="admin-header">
-            <h1>Beitrag bearbeiten</h1>
+            <h1>{{ t("edit_post") }}</h1>
             <p class="subtitle">{{ post.title }}</p>
         </div>
 
@@ -115,12 +115,12 @@
             <form action="/admin/posts/edit/{{ post.id }}" method="POST" enctype="multipart/form-data" class="post-form" onsubmit="saveContent()">
 
                 <div class="form-group">
-                    <label for="title">Titel *</label>
+                    <label for="title">{{ t("title") }} *</label>
                     <input type="text" id="title" name="title" class="form-input" value="{{ post.title }}" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="content">Inhalt *</label>
+                    <label for="content">{{ t("content") }} *</label>
 
                     <!-- Quill Editor -->
                     <div id="editor"></div>
@@ -131,34 +131,34 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="categories">Kategorien</label>
+                        <label for="categories">{{ t("categories") }}</label>
                         <input type="text" id="categories" name="categories" class="form-input" value="{{ post.categories|join(', ') }}">
-                        <small class="form-hint">Kommagetrennt</small>
+                        <small class="form-hint">{{ t("comma_separated") }}</small>
                     </div>
 
                     <div class="form-group">
-                        <label for="tags">Tags</label>
+                        <label for="tags">{{ t("tags") }}</label>
                         <input type="text" id="tags" name="tags" class="form-input" value="{{ post.tags|join(', ') }}">
-                        <small class="form-hint">Kommagetrennt</small>
+                        <small class="form-hint">{{ t("comma_separated") }}</small>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="git_repository">Git-Repository (optional)</label>
+                    <label for="git_repository">{{ t("git_repository") }}</label>
                     <input type="text" id="git_repository" name="git_repository" class="form-input" value="{{ post.get('git_repository', '') }}" placeholder="z.B. origin/main oder repo-name">
-                    <small class="form-hint">Gib eine Repository-ID oder Remote-Referenz ein, um diesen Beitrag mit einem Repo zu verknüpfen.</small>
+                    <small class="form-hint">{{ t("git_repository_hint") }}</small>
                 </div>
 
                 <div class="form-group">
-                    <label for="release_tag">Release / Tag (optional)</label>
+                    <label for="release_tag">{{ t("release_tag") }}</label>
                     <input type="text" id="release_tag" name="release_tag" class="form-input" value="{{ post.get('release_tag', '') }}" placeholder="z.B. v1.0.0">
-                    <small class="form-hint">Optionaler Release- oder Tag-Name, der mit dem Beitrag verknüpft ist.</small>
+                    <small class="form-hint">{{ t("release_tag_hint") }}</small>
                 </div>
 
                 <div class="form-group">
                     <label>
                         <input type="checkbox" id="survey_enabled" name="survey_enabled" {% if post.survey %}checked{% endif %}>
-                        Umfrage zum Beitrag hinzufügen
+                        {{ t("enable_survey") }}
                     </label>
                 </div>
 
@@ -168,10 +168,10 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="survey_options">Umfrageoptionen</label>
+                    <label for="survey_options">{{ t("survey_options") }}</label>
                     <textarea id="survey_options" name="survey_options" class="form-input" rows="4" placeholder="Eine Option pro Zeile">{% if post.survey %}{% for option in post.survey.options %}{{ option.text }}
 {% endfor %}{% endif %}</textarea>
-                    <small class="form-hint">Gib mindestens zwei Optionen ein, jeweils eine pro Zeile. Bestehende Stimmen bleiben erhalten, wenn Optionen unverändert bleiben.</small>
+                    <small class="form-hint">{{ t("survey_options_hint") }}</small>
                 </div>
 
                 <div class="form-group">
@@ -179,7 +179,7 @@
                     <select id="existing_files" name="existing_files" class="form-input" multiple>
                         <!-- Wird via JavaScript geladen -->
                     </select>
-                    <small class="form-hint">Wähle eine oder mehrere bereits hochgeladene Dateien aus, um sie mit diesem Beitrag zu verknüpfen.</small>
+                    <small class="form-hint">{{ t("existing_files_hint") }}</small>
                 </div>
 
                 <div class="form-group">
@@ -200,8 +200,8 @@
                 </div>
 
                 <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Änderungen speichern</button>
-                    <a href="/admin/posts" class="btn btn-secondary">Abbrechen</a>
+                    <button type="submit" class="btn btn-primary">{{ t("save") }}</button>
+                    <a href="/admin/posts" class="btn btn-secondary">{{ t("cancel") }}</a>
                 </div>
             </form>
         </div>

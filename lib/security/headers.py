@@ -9,6 +9,11 @@ def add_security_headers(app):
     
     @app.after_request
     def set_security_headers(response):
+        # Ensure UTF-8 charset for HTML responses
+        if response.content_type and 'text/html' in response.content_type:
+            if 'charset' not in response.content_type:
+                response.content_type = f"{response.content_type}; charset=utf-8"
+        
         # Prevent clickjacking attacks
         response.headers['X-Frame-Options'] = 'SAMEORIGIN'
         

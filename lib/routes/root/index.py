@@ -70,6 +70,8 @@ def index():
     settings.setdefault('slideshow_subtitle', '')
     settings.setdefault('slideshow_images', [])
     settings.setdefault('slideshow_background_image', '')
+    settings.setdefault('site_rating', 'G')
+    settings.setdefault('age_restriction_enabled', False)
 
     # Aktives Stylesheet laden
     active_theme_path = os.path.join(current_app.root_path, "data", "active_theme.txt")

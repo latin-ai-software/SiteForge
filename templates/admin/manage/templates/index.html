@@ -1,423 +1,331 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <title>Template Verwaltung</title>
-    
-    <!-- Quill -->
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
-    
-    <style>
-        body {
-            margin: 0;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: #0f172a;
-            color: #e5e7eb;
-        }
+{% extends "admin/base.html" %}
 
-        .layout {
-            display: flex;
-            min-height: 100vh;
-        }
+{% block title %}{{ t("stylesheet_management") }}{% endblock %}
 
-        .sidebar {
-            width: 260px;
-            background: #020617;
-            border-right: 1px solid #1f2937;
-            padding: 24px 20px;
-        }
+{% block page_title %}{{ t("stylesheet_management") }}{% endblock %}
 
-        .sidebar h1 {
-            font-size: 1.3rem;
-            margin: 0 0 1.5rem;
-            color: #f9fafb;
-        }
+{% block content %}
+<!-- Quill -->
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 
-        .sidebar nav a {
-            display: block;
-            padding: 8px 10px;
-            margin-bottom: 6px;
-            border-radius: 6px;
-            color: #9ca3af;
-            text-decoration: none;
-            font-size: 0.9rem;
-        }
+<style>
+    .grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+        gap: 24px;
+    }
 
-        .sidebar nav a.active,
-        .sidebar nav a:hover {
-            background: #111827;
-            color: #e5e7eb;
-        }
+    .card p {
+        margin: 0.25rem 0 0.75rem;
+        font-size: 0.9rem;
+        color: #9ca3af;
+    }
 
-        .main {
-            flex: 1;
-            padding: 24px 32px 40px;
-        }
+    .tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        background: #111827;
+        color: #e5e7eb;
+        border: 1px solid #1f2937;
+    }
 
-        .page-title {
-            font-size: 1.6rem;
-            margin: 0 0 1.5rem;
-            color: #f9fafb;
-        }
+    .tag span {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: #22c55e;
+        margin-right: 6px;
+    }
 
-        .grid {
-            display: grid;
-            grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-            gap: 24px;
-        }
+    form {
+        margin-top: 0.5rem;
+    }
 
-        .card {
-            background: #020617;
-            border-radius: 10px;
-            border: 1px solid #1f2937;
-            padding: 18px 20px;
-            box-shadow: 0 18px 40px rgba(0,0,0,0.45);
-        }
+    input[type="file"] {
+        display: block;
+        width: 100%;
+        padding: 7px 10px;
+        border-radius: 6px;
+        border: 1px solid #374151;
+        background: #020617;
+        color: #e5e7eb;
+        font-size: 0.9rem;
+    }
 
-        .card h2 {
-            margin: 0 0 0.75rem;
-            font-size: 1.05rem;
-            color: #e5e7eb;
-        }
+    button {
+        margin-top: 10px;
+        padding: 7px 14px;
+        border-radius: 6px;
+        border: none;
+        font-size: 0.9rem;
+        cursor: pointer;
+        background: #2563eb;
+        color: #f9fafb;
+    }
 
-        .card p {
-            margin: 0.25rem 0 0.75rem;
-            font-size: 0.9rem;
-            color: #9ca3af;
-        }
+    button:hover {
+        background: #1d4ed8;
+    }
 
-        .tag {
-            display: inline-flex;
-            align-items: center;
-            padding: 4px 10px;
-            border-radius: 999px;
-            font-size: 0.8rem;
-            background: #111827;
-            color: #e5e7eb;
-            border: 1px solid #1f2937;
-        }
+    .list {
+        margin: 0.5rem 0 0;
+        padding: 0;
+        list-style: none;
+        font-size: 0.9rem;
+    }
 
-        .tag span {
-            width: 8px;
-            height: 8px;
-            border-radius: 999px;
-            background: #22c55e;
-            margin-right: 6px;
-        }
+    .list li {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 7px 0;
+        border-bottom: 1px solid #111827;
+    }
 
-        form {
-            margin-top: 0.5rem;
-        }
+    .list li:last-child {
+        border-bottom: none;
+    }
 
-        input[type="file"] {
-            display: block;
-            width: 100%;
-            padding: 7px 10px;
-            border-radius: 6px;
-            border: 1px solid #374151;
-            background: #020617;
-            color: #e5e7eb;
-            font-size: 0.9rem;
-        }
+    .sheet-name {
+        color: #e5e7eb;
+    }
 
-        button {
-            margin-top: 10px;
-            padding: 7px 14px;
-            border-radius: 6px;
-            border: none;
-            font-size: 0.9rem;
-            cursor: pointer;
-            background: #2563eb;
-            color: #f9fafb;
-        }
+    .sheet-meta {
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
 
-        button:hover {
-            background: #1d4ed8;
-        }
+    .sheet-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
 
-        .list {
-            margin: 0.5rem 0 0;
-            padding: 0;
-            list-style: none;
-            font-size: 0.9rem;
-        }
+    .badge-active {
+        padding: 3px 8px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        background: rgba(34,197,94,0.12);
+        color: #4ade80;
+        border: 1px solid rgba(34,197,94,0.4);
+    }
 
-        .list li {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 7px 0;
-            border-bottom: 1px solid #111827;
-        }
+    .btn-ghost {
+        background: transparent;
+        border: 1px solid #374151;
+        color: #e5e7eb;
+    }
 
-        .list li:last-child {
-            border-bottom: none;
-        }
+    .btn-ghost:hover {
+        background: #111827;
+    }
 
-        .sheet-name {
-            color: #e5e7eb;
-        }
+    .empty {
+        font-size: 0.9rem;
+        color: #6b7280;
+        margin-top: 0.5rem;
+    }
 
-        .sheet-meta {
-            font-size: 0.8rem;
-            color: #6b7280;
-        }
+    #editor {
+        height: 300px;
+        background: white;
+    }
 
-        .sheet-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+    .form-input-textarea {
+        width: 100%;
+        padding: 7px 10px;
+        border-radius: 6px;
+        border: 1px solid #374151;
+        background: #020617;
+        color: #e5e7eb;
+        font-size: 0.9rem;
+    }
 
-        .badge-active {
-            padding: 3px 8px;
-            border-radius: 999px;
-            font-size: 0.75rem;
-            background: rgba(34,197,94,0.12);
-            color: #4ade80;
-            border: 1px solid rgba(34,197,94,0.4);
-        }
+    .texts-grid {
+        display: grid;
+        grid-template-columns: 1fr 200px;
+        gap: 24px;
+    }
 
-        .btn-ghost {
-            background: transparent;
-            border: 1px solid #374151;
-            color: #e5e7eb;
-        }
+    .text-item {
+        padding: 12px;
+        background: #111827;
+        border-left: 4px solid #374151;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
 
-        .btn-ghost:hover {
-            background: #111827;
-        }
+    .text-item:hover {
+        background: #1f2937;
+    }
 
-        .empty {
-            font-size: 0.9rem;
-            color: #6b7280;
-            margin-top: 0.5rem;
-        }
+    .text-item.active {
+        border-left-color: #2563eb;
+        background: #1f2937;
+    }
 
-        #editor {
-            height: 300px;
-            background: white;
-        }
+    .text-item-name {
+        flex: 1;
+        color: #e5e7eb;
+    }
 
-        .form-input-textarea {
-            width: 100%;
-            padding: 7px 10px;
-            border-radius: 6px;
-            border: 1px solid #374151;
-            background: #020617;
-            color: #e5e7eb;
-            font-size: 0.9rem;
-        }
+    .text-item-status {
+        font-size: 0.75rem;
+        color: #6b7280;
+        margin-right: 10px;
+    }
 
-        .texts-grid {
-            display: grid;
-            grid-template-columns: 1fr 200px;
-            gap: 24px;
-        }
+    .text-actions {
+        display: flex;
+        gap: 6px;
+    }
 
-        .text-item {
-            padding: 12px;
-            background: #111827;
-            border-left: 4px solid #374151;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
+    .text-actions button {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+        background: #374151;
+    }
 
-        .text-item:hover {
-            background: #1f2937;
-        }
+    .text-actions button:hover {
+        background: #4b5563;
+    }
 
-        .text-item.active {
-            border-left-color: #2563eb;
-            background: #1f2937;
-        }
+    .text-actions .delete-btn {
+        background: #dc2626;
+    }
 
-        .text-item-name {
-            flex: 1;
-            color: #e5e7eb;
-        }
+    .text-actions .delete-btn:hover {
+        background: #b91c1c;
+    }
 
-        .text-item-status {
-            font-size: 0.75rem;
-            color: #6b7280;
-            margin-right: 10px;
-        }
+    .text-actions .activate-btn {
+        background: #10b981;
+    }
 
-        .text-actions {
-            display: flex;
-            gap: 6px;
-        }
+    .text-actions .activate-btn:hover {
+        background: #059669;
+    }
 
-        .text-actions button {
-            padding: 4px 8px;
-            font-size: 0.75rem;
-            background: #374151;
-        }
+    .editor-section {
+        flex: 1;
+    }
 
-        .text-actions button:hover {
-            background: #4b5563;
-        }
+    .quill-container {
+        background: #020617;
+        padding: 12px;
+        border-radius: 6px;
+        border: 1px solid #1f2937;
+    }
 
-        .text-actions .delete-btn {
-            background: #dc2626;
-        }
+    #index-editor {
+        height: 400px;
+        background: white;
+        border-radius: 6px;
+    }
 
-        .text-actions .delete-btn:hover {
-            background: #b91c1c;
-        }
+    .ql-toolbar {
+        background: white;
+        border-radius: 6px 6px 0 0;
+    }
 
-        .text-actions .activate-btn {
-            background: #10b981;
-        }
+    .text-info {
+        margin-bottom: 12px;
+        padding: 10px;
+        background: #111827;
+        border-radius: 6px;
+        color: #9ca3af;
+        font-size: 0.9rem;
+    }
 
-        .text-actions .activate-btn:hover {
-            background: #059669;
-        }
+    .form-input {
+        padding: 7px 10px;
+        border-radius: 6px;
+        border: 1px solid #374151;
+        background: #020617;
+        color: #e5e7eb;
+        font-size: 0.9rem;
+    }
+</style>
 
-        .editor-section {
-            flex: 1;
-        }
+<div class="grid">
+    <section class="card">
+        <h2>{{ t("active_stylesheet") }}</h2>
+        {% if active_theme %}
+            <p>
+                <span class="tag">
+                    <span></span>
+                    {{ active_theme }}
+                </span>
+            </p>
+            <p>Dieses Stylesheet ist aktuell für das Frontend aktiv.</p>
+        {% else %}
+            <p class="empty">{{ t("no_active_stylesheet") }}</p>
+        {% endif %}
 
-        .quill-container {
-            background: #020617;
-            padding: 12px;
-            border-radius: 6px;
-            border: 1px solid #1f2937;
-        }
+        <h2 style="margin-top:1.5rem;">{{ t("upload_stylesheet") }}</h2>
+        <p>Nur <code>.css</code>-Dateien werden akzeptiert.</p>
+        <form action="/admin/manage/templates/upload" method="POST" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".css" required>
+            <button type="submit">Hochladen</button>
+        </form>
+    </section>
 
-        #index-editor {
-            height: 400px;
-            background: white;
-            border-radius: 6px;
-        }
+    <section class="card">
+        <h2>Verfügbare Stylesheets</h2>
+        {% if stylesheets %}
+            <ul class="list">
+                {% for sheet in stylesheets %}
+                    <li>
+                        <div>
+                            <div class="sheet-name">{{ sheet }}</div>
+                            <div class="sheet-meta">
+                                {% if sheet == active_theme %}
+                                    Aktuell aktiv
+                                {% else %}
+                                    Inaktiv
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="sheet-actions">
+                            {% if sheet != active_theme %}
+                                <form action="/admin/manage/templates/activate/{{ sheet }}" method="POST">
+                                    <button type="submit" class="btn-ghost">Aktivieren</button>
+                                </form>
+                            {% else %}
+                                <span class="badge-active">aktiv</span>
+                            {% endif %}
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="empty">Keine Stylesheets gefunden.</p>
+        {% endif %}
+    </section>
+</div>
 
-        .ql-toolbar {
-            background: white;
-            border-radius: 6px 6px 0 0;
-        }
+<section class="card" style="margin-top: 24px;">
+    <h2>Theme Creator</h2>
+    <p>Erstelle und bearbeite Themes direkt im Admin‑Panel.</p>
+    <a href="{{ url_for('theme_creator.index') }}">
+        <button type="button">Öffnen</button>
+    </a>
+</section>
 
-        .text-info {
-            margin-bottom: 12px;
-            padding: 10px;
-            background: #111827;
-            border-radius: 6px;
-            color: #9ca3af;
-            font-size: 0.9rem;
-        }
+<section class="card" style="margin-top: 24px;">
+    <h2>Index Seite Texte</h2>
+    <p>Verwalte mehrere Texte für die Startseite. Aktiviere einen Text, um ihn anzuzeigen.</p>
 
-        .form-input {
-            padding: 7px 10px;
-            border-radius: 6px;
-            border: 1px solid #374151;
-            background: #020617;
-            color: #e5e7eb;
-            font-size: 0.9rem;
-        }
-    </style>
-</head>
-<body>
-<div class="layout">
-    <aside class="sidebar">
-        <h1>SiteForge Admin</h1>
-        <nav>
-            <a href="/">Zur Seite</a>
-            <a href="/admin" class="active">Stylesheets</a>
-            <a href="/admin/posts">Beiträge</a>
-            <a href="/admin/users">Benutzer</a>
-            <a href="/admin/users/roles">Rollen</a>
-            <a href="/admin/media">Medien</a>
-            <a href="/admin/analytics">Analytics</a>
-            {% if is_plugin_loaded('git_repos') %}
-            <a href="/admin/git">Git-Repos</a>
-            {% endif %}
-            <a href="/admin/settings">Einstellungen</a>
-            <a href="{{ url_for('modmail.admin_modmail') }}">Modmail</a>
-            <a href="{{ url_for('backup.backup_index') }}">Backups</a>
-            <a href="{{ url_for('admin_help') }}">Hilfe</a>
-            <a href="{{ url_for('theme_creator.index') }}">Theme Creator</a>
-
-        </nav>
-    </aside>
-
-    <main class="main">
-        <h1 class="page-title">Stylesheet Verwaltung</h1>
-
-        <div class="grid">
-            <section class="card">
-                <h2>Aktuelles Stylesheet</h2>
-                {% if active_theme %}
-                    <p>
-                        <span class="tag">
-                            <span></span>
-                            {{ active_theme }}
-                        </span>
-                    </p>
-                    <p>Dieses Stylesheet ist aktuell für das Frontend aktiv.</p>
-                {% else %}
-                    <p class="empty">Kein aktives Stylesheet gesetzt.</p>
-                {% endif %}
-
-                <h2 style="margin-top:1.5rem;">Neues Stylesheet hochladen</h2>
-                <p>Nur <code>.css</code>-Dateien werden akzeptiert.</p>
-                <form action="/admin/manage/templates/upload" method="POST" enctype="multipart/form-data">
-                    <input type="file" name="file" accept=".css" required>
-                    <button type="submit">Hochladen</button>
-                </form>
-            </section>
-
-            <section class="card">
-                <h2>Verfügbare Stylesheets</h2>
-                {% if stylesheets %}
-                    <ul class="list">
-                        {% for sheet in stylesheets %}
-                            <li>
-                                <div>
-                                    <div class="sheet-name">{{ sheet }}</div>
-                                    <div class="sheet-meta">
-                                        {% if sheet == active_theme %}
-                                            Aktuell aktiv
-                                        {% else %}
-                                            Inaktiv
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div class="sheet-actions">
-                                    {% if sheet != active_theme %}
-                                        <form action="/admin/manage/templates/activate/{{ sheet }}" method="POST">
-                                            <button type="submit" class="btn-ghost">Aktivieren</button>
-                                        </form>
-                                    {% else %}
-                                        <span class="badge-active">aktiv</span>
-                                    {% endif %}
-                                </div>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <p class="empty">Keine Stylesheets gefunden.</p>
-                {% endif %}
-            </section>
-        </div>
-
-        <section class="card" style="margin-top: 24px;">
-            <h2>Theme Creator</h2>
-            <p>Erstelle und bearbeite Themes direkt im Admin‑Panel.</p>
-            <a href="{{ url_for('theme_creator.index') }}">
-                <button type="button">Öffnen</button>
-            </a>
-        </section>
-
-        <section class="card" style="margin-top: 24px;">
-            <h2>Index Seite Texte</h2>
-            <p>Verwalte mehrere Texte für die Startseite. Aktiviere einen Text, um ihn anzuzeigen.</p>
-
-            <div class="texts-grid">
-                <div class="editor-section">
+    <div class="texts-grid">
+        <div class="editor-section">
                     <div class="text-info" id="text-info">
                         Wähle einen Text aus der Liste auf der rechten Seite, um ihn zu bearbeiten.
                     </div>
@@ -613,5 +521,4 @@ function deleteText(textId) {
         .catch(error => console.error('Error deleting text:', error));
 }
 </script>
-</body>
-</html>
+{% endblock %}
