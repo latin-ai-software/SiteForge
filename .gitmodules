@@ -4,3 +4,6 @@
 [submodule "Intermediarium"]
 	path = Intermediarium
 	url = https://git.latinai.de/latin-ai-software/intermediarium.git
+[submodule "translations"]
+	path = translations
+	url = https://git.latinai.de/latin-ai-software/latinmagazine-translations.git
