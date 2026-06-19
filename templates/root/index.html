@@ -205,10 +205,10 @@
             {% if settings.cookie_consent_message %}
                 {{ settings.cookie_consent_message|safe }}
             {% else %}
-                <p>Diese Webseite verwendet Cookies für ein besseres Nutzererlebnis. Bitte akzeptieren Sie Cookies.</p>
+                <p>{{ t("cookie_message_shown") }}</p>
             {% endif %}
         </div>
-        <button onclick="acceptCookies()">Cookies akzeptieren</button>
+        <button onclick="acceptCookies()">{{ t("allow_cookies") }}</button>
     </div>
 <body>
 
@@ -217,20 +217,20 @@
             {% if show_logo %}<img src="/static/favicon.ico" alt="site logo" width="140" height="128">{% endif %}
             <a href="/" class="navbar-brand">{{ settings.site_title if settings.site_title else 'SiteForge' }}</a>
             <div class="navbar-nav">
-                <a href="/">Home</a>
-                <a href="/feed">RSS Feed</a>
+                <a href="/">{{ t("home") }}</a>
+                <a href="/feed">{{ t("rss_feed") }}</a>
                 {% if session.user %}
                     {% if auth.get_user_role(session.user) == 'administrator' %}
-                        <a href="/admin/posts">Admin</a>
+                        <a href="/admin/posts">{{ t("admin") }}</a>
                     {% endif %}
-                    <a href="/profile/me">Profile</a>
+                    <a href="/profile/me">{{ t("profile") }}</a>
                     {% if settings.modmail_enabled %}
-                    <a href="{{ url_for('modmail.modmail_index') }}">Modmail</a>
+                    <a href="{{ url_for('modmail.modmail_index') }}">{{ t("modmail") }}</a>
                     {% endif %}
-                    <a href="/logout">Logout</a>
+                    <a href="/logout">{{ t("logout") }}</a>
                 {% else %}
-                    <a href="/login">Login</a>
-                    <a href="/register">Register</a>
+                    <a href="/login">{{ t("login") }}</a>
+                    <a href="/register">{{ t("register") }}</a>
                 {% endif %}
             </div>
         </div>
@@ -257,7 +257,7 @@
                 {% endif %}
                 {% if session.user %}
                     <p style="margin-top: 1rem; color: rgba(255,255,255,0.85);">
-                        Welcome back, <strong>{{ session.user }}</strong>! {% if auth.get_user_role(session.user) == 'administrator' %}<a href="/admin/posts" style="color: #fde68a;">Go to Admin</a>{% endif %}
+                        Welcome back, <strong>{{ session.user }}</strong>! {% if auth.get_user_role(session.user) == 'administrator' %}<a href="/admin/posts" style="color: #fde68a;">{{ t("go_to_admin") }}</a>{% endif %}
                     </p>
                 {% endif %}
             </div>
@@ -270,7 +270,7 @@
             {% endif %}
             {% if session.user %}
                 <p style="color: white; margin-top: 1rem;">
-                    Welcome back, <strong>{{ session.user }}</strong>! {% if auth.get_user_role(session.user) == 'administrator' %}<a href="/admin/posts" style="color: red;">Go to Admin</a>{% endif %}
+                    Welcome back, <strong>{{ session.user }}</strong>! {% if auth.get_user_role(session.user) == 'administrator' %}<a href="/admin/posts" style="color: red;">{{ t("go_to_admin") }}</a>{% endif %}
                 </p>
             {% endif %}
         </header>
@@ -278,8 +278,8 @@
 
         <div style="background: white; border-radius: 0.5rem; padding: 1.5rem; margin-bottom: 2rem; box-shadow: var(--shadow);">
             <form action="/search" method="GET" style="display: flex; gap: 0.5rem;">
-                <input type="text" name="q" class="form-input" placeholder="Search posts..." required>
-                <button type="submit" class="btn btn-primary">Search</button>
+                <input type="text" name="q" class="form-input" placeholder="{{ t("search_posts") }}" required>
+                <button type="submit" class="btn btn-primary">{{ t("search") }}</button>
             </form>
         </div>
 
@@ -292,7 +292,7 @@
                         {{ index_text|striptags|truncate(300, True, '...') }}
                     </p>
                     {% if active_text_id %}
-                    <a href="/index-text/{{ active_text_id }}" class="btn btn-primary btn-sm">Mehr lesen →</a>
+                    <a href="/index-text/{{ active_text_id }}" class="btn btn-primary btn-sm">{{ t("read_more") }}</a>
                     {% endif %}
                 </div>
                 {% if index_texts and index_texts|length > 0 %}
@@ -316,9 +316,9 @@
         
         {% if settings.youtube_channel_id %}
         <div id="youtube-videos-section" style="margin-bottom: 2rem;">
-            <h2 style="margin-bottom: 1rem;">Neueste Videos</h2>
+            <h2 style="margin-bottom: 1rem;">{{ t("latest_videos") }}</h2>
             <div id="youtube-videos-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
-                <p>Lade Videos...</p>
+                <p>{{ t("loading_videos") }}</p>
             </div>
         </div>
         <script>
@@ -348,21 +348,21 @@
                             </div>
                         `).join('');
                     } else {
-                        container.innerHTML = '<p>Keine Videos gefunden.</p>';
+                        container.innerHTML = '<p>{{ t("no_videos_found") }}</p>';
                     }
                 })
                 .catch(err => {
                     console.error('YouTube fetch error:', err);
-                    container.innerHTML = '<p>Videos konnten nicht geladen werden.</p>';
+                    container.innerHTML = '<p>{{ t("unable_to_load_videos") }}</p>';
                 });
         })();
         </script>
         {% endif %}
 
 <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
-            <a href="/" class="btn btn-primary btn-sm">Alle Posts</a>
+            <a href="/" class="btn btn-primary btn-sm">{{ t("all_posts") }}</a>
             {% if settings.newsletter_enabled %}
-                <a href="/newsletter" class="btn btn-secondary btn-sm">Newsletter abonnieren</a>
+                <a href="/newsletter" class="btn btn-secondary btn-sm">{{ t("subscribe_to_newsletter") }}</a>
             {% endif %}
             {% for category in categories %}
                 <a href="/category/{{ category }}" class="btn btn-secondary btn-sm">{{ category }}</a>
@@ -398,18 +398,18 @@
                                 <p style="color: var(--gray-700); line-height: 1.6;">
                                     {{ post.content[:250] }}{% if post.content|length > 250 %}...{% endif %}
                                 </p>
-                                <a href="/post/{{ post.slug }}" class="btn btn-primary btn-sm">Read Full Article →</a>
+                                <a href="/post/{{ post.slug }}" class="btn btn-primary btn-sm">{{ t("read_full_article") }}</a>
                             </div>
                         </article>
                     {% endfor %}
                 </div>
             {% else %}
                 <div class="alert alert-info">
-                    <strong>No posts yet.</strong>
+                    <strong>{{ t("no_posts") }}</strong>
                     {% if session.user %}
-                        <a href="/admin/posts/create">Create your first post</a>
+                        <a href="/admin/posts/create">{{ t("create_your_first_post") }}</a>
                     {% else %}
-                        <a href="/login">Login</a> to create your first post!
+                        <a href="/login">{{ t("login") }}</a> to create your first post!
                     {% endif %}
                 </div>
             {% endif %}
@@ -419,11 +419,11 @@
     <footer style="background: var(--gray-900); color: var(--gray-100); padding: 3rem var(--spacing-lg); margin-top: 4rem; text-align: center;">
     <div class="container">
         <p style="margin: 0;">&copy; 2024 {{ settings.site_title if settings.site_title else 'SiteForge' }}. Powered by Flask.</p>
-        <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem; color: var(--gray-400);">A modern, professional CMS built with Python and Flask</p>
+        <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem; color: var(--gray-400);">{{ t("siteforge_branding") }}</p>
 
         {% if settings.imprint_enabled %}
             <p style="margin: 0.5rem 0 0 0;">
-                <a href="/static/imprint.html" target="_blank" style="color: var(--gray-100);">Impressum</a>
+                <a href="/static/imprint.html" target="_blank" style="color: var(--gray-100);">{{ t("imprint") }}</a>
             </p>
         {% endif %}
 
@@ -528,11 +528,11 @@
     {% if settings.age_restriction_enabled and settings.site_rating == '18+' %}
     <div id="ageGateOverlay" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); color: white; display: none; z-index: 99999; align-items: center; justify-content: center; text-align: center; padding: 2rem;">
         <div style="max-width: 520px; margin: auto; background: rgba(17, 24, 39, 0.98); border: 1px solid #374151; border-radius: 16px; padding: 2rem; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);">
-            <h2 style="margin-top: 0;">Altersüberprüfung erforderlich</h2>
-            <p style="margin-bottom: 1rem; color: #d1d5db;">Diese Website enthält Inhalte, die nur für volljährige Besucher geeignet sind. Bitte bestätigen Sie, dass Sie mindestens 18 Jahre alt sind, um fortzufahren.</p>
-            <p style="margin-bottom: 1.5rem; color: #cbd5e1; font-size: 0.95rem; line-height: 1.4; text-align: left;">Informieren Sie sich bitte über die geltenden lokalen Gesetze und Beschränkungen in Ihrem Land oder Ihrer Region. Veröffentlichen Sie keine Inhalte, die gegen Bestimmungen oder ethische Richtlinien verstoßen.</p>
-            <button onclick="acceptAgeGate()" style="background: #10b981; color: white; border: none; padding: 10px 18px; border-radius: 10px; cursor: pointer; margin-right: 0.75rem;">Ich bin 18+</button>
-            <button onclick="rejectAgeGate()" style="background: #ef4444; color: white; border: none; padding: 10px 18px; border-radius: 10px; cursor: pointer;">Website verlassen</button>
+            <h2 style="margin-top: 0;">{{ t("age_verification_required") }}</h2>
+            <p style="margin-bottom: 1rem; color: #d1d5db;">{{ t("age_over_eighteen_required") }}</p>
+            <p style="margin-bottom: 1.5rem; color: #cbd5e1; font-size: 0.95rem; line-height: 1.4; text-align: left;">{{ t("ethical_quidelines_age_verification_required_content_disclaimer") }}</p>
+            <button onclick="acceptAgeGate()" style="background: #10b981; color: white; border: none; padding: 10px 18px; border-radius: 10px; cursor: pointer; margin-right: 0.75rem;">{{ t("consent_to_being_eighteen_or_older") }}</button>
+            <button onclick="rejectAgeGate()" style="background: #ef4444; color: white; border: none; padding: 10px 18px; border-radius: 10px; cursor: pointer;">{{ t("leabe_site") }}</button>
         </div>
     </div>
     <script>

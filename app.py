@@ -45,7 +45,20 @@ def create_app(config_name=None):
 #    app.config['LANG_INITIALIZER'] = 'headers'
     app.config['DEFAULT_MESSAGE'] = 'Translation Error'
     app.config['TRANSLATIONS_PATH'] = 'translations'
-    t = Translator()
+    class UTF8Translator(Translator):
+        def _get_file_data(self):
+            translation_file = os.path.join(
+                app.root_path,
+                app.config['TRANSLATIONS_PATH'],
+                f'messages.{self._language}.yaml'
+            )
+
+            with open(translation_file, 'r', encoding='utf-8') as file:
+                data = yaml.safe_load(file)
+
+            return data
+
+    t = UTF8Translator()
     t.init_app(app)
     @app.context_processor
     def inject_translator():
@@ -226,6 +239,7 @@ from lib.routes.modmail import modmail_bp
 from lib.netdefense.auth.identitas_auth import IdentitasAuthManager
 import os
 from datetime import datetime
+import yaml
 
 # Load environment variables
 try:
@@ -250,7 +264,20 @@ app.config['DEFAULT_LANG'] = 'en'
 app.config['DEFAULT_MESSAGE'] = 'Translation Error'
 app.config['TRANSLATIONS_PATH'] = 'translations'
 from flask_translator import Translator
-t = Translator()
+class UTF8Translator(Translator):
+    def _get_file_data(self):
+        translation_file = os.path.join(
+            app.root_path,
+            app.config['TRANSLATIONS_PATH'],
+            f'messages.{self._language}.yaml'
+        )
+
+        with open(translation_file, 'r', encoding='utf-8') as file:
+            data = yaml.safe_load(file)
+
+        return data
+
+t = UTF8Translator()
 t.init_app(app)
 
 @app.context_processor

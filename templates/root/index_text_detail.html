@@ -189,16 +189,16 @@
     <nav class="navbar">
         <a href="/" class="navbar-brand">{{ settings.site_title if settings.site_title else 'SiteForge' }}</a>
         <div class="navbar-nav">
-            <a href="/">Home</a>
-            <a href="/feed">RSS Feed</a>
+            <a href="/">{{ t("home") }}</a>
+            <a href="/feed">{{ t("rss_feed") }}</a>
             {% if session.user %}
                 {% if auth.get_user_role(session.user) == 'administrator' %}
-                    <a href="/admin/posts">Admin</a>
+                    <a href="/admin/posts">{{ t("admin") }}</a>
                 {% endif %}
-                <a href="/logout">Logout</a>
+                <a href="/logout">{{ t("logout") }}</a>
             {% else %}
-                <a href="/login">Login</a>
-                <a href="/register">Register</a>
+                <a href="/login">{{ t("login") }}</a>
+                <a href="/register">{{ t("register") }}</a>
             {% endif %}
         </div>
     </nav>
@@ -208,15 +208,15 @@
             {% if settings.cookie_consent_message %}
                 {{ settings.cookie_consent_message|safe }}
             {% else %}
-                <p>Diese Webseite verwendet Cookies für ein besseres Nutzererlebnis. Bitte akzeptieren Sie Cookies.</p>
+                <p>{{ t("cookie_message_shown") }}</p>
             {% endif %}
         </div>
-        <button onclick="acceptCookies()">Cookies akzeptieren</button>
+        <button onclick="acceptCookies()">{{ t("allow_cookies") }}</button>
     </div>
 
     <div class="container">
         <div class="breadcrumb">
-            <a href="/">Startseite</a> &raquo; {{ text.name }}
+            <a href="/">{{ t("homepage") }}</a> &raquo; {{ text.name }}
         </div>
 
         <div class="page-header">
@@ -230,14 +230,14 @@
 
         <div class="comment-section">
             <div class="comment-box">
-                <h3>Kommentare</h3>
+                <h3>{{ t("comments") }}</h3>
                 {% if top_level_comments %}
                     {% for comment in top_level_comments %}
                         <div class="comment-item">
                             <h4>{{ comment.author }}</h4>
                             <small>{{ comment.created_at }}</small>
                             <p>{{ comment.content }}</p>
-                            <button onclick="replyToComment('{{ comment.id }}')">Antworten</button>
+                            <button onclick="replyToComment('{{ comment.id }}')">{{ t("replies") }}</button>
                             {% if comment.id in replies %}
                                 {% for reply in replies[comment.id] %}
                                     <div class="reply">
@@ -250,31 +250,31 @@
                         </div>
                     {% endfor %}
                 {% else %}
-                    <p>Es gibt noch keine Kommentare für diesen Text.</p>
+                    <p>{{ t("no_comments_yet") }}</p>
                 {% endif %}
 
                 <hr>
-                <h3 id="commentFormTitle">Neuen Kommentar schreiben</h3>
+                <h3 id="commentFormTitle">{{ t("new_comment_write") }}</h3>
                 {% if session.user %}
                 <form id="commentForm" onsubmit="submitComment(event)">
                     <input type="hidden" id="parentId" name="parent_id" value="">
                     <div style="margin-bottom: 1rem;">
-                        <p>Angemeldet als <strong>{{ session.user }}</strong>.</p>
+                        <p>{{ t("logged_in_as") }} <strong>{{ session{{ t("dot") }}user }}</strong>.</p>
                     </div>
                     <div>
-                        <label for="comment">Dein Kommentar</label><br>
+                        <label for="comment">{{ t("your_comment") }}</label><br>
                         <textarea id="comment" name="comment" required></textarea>
                     </div>
-                    <button type="submit">Absenden</button>
-                    <button type="button" onclick="cancelReply()" id="cancelBtn" style="display:none; margin-left: 0.5rem;">Abbrechen</button>
+                    <button type="submit">{{ t("send") }}</button>
+                    <button type="button" onclick="cancelReply()" id="cancelBtn" style="display:none; margin-left: 0.5rem;">{{ t("abort") }}</button>
                 </form>
                 {% else %}
-                    <p>Du musst <a href="/login">eingeloggt</a> sein, um einen Kommentar zu schreiben.</p>
+                    <p>{{ t("you_are_required_i") }} <a href="/login">eingeloggt</a> {{ t("login_requirement_iii_comment") }}</p>
                 {% endif %}
             </div>
 
             <aside class="comment-sidebar">
-                <h3>Weitere Infos</h3>
+                <h3>{{ t("more_information") }}</h3>
                 <p>Dieser Text kann von Besuchern gelesen und kommentiert werden.</p>
                 <p><strong>Seiten:</strong></p>
                 <ul>

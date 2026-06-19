@@ -6,25 +6,25 @@
 
 {% block content %}
 <div class="card">
-    <h2>Wie verwende ich das Admin-Dashboard?</h2>
-    <p>Der Admin-Bereich bietet Zugriff auf alle Verwaltungsfunktionen der SiteForge-Installation. Verwenden Sie das Menü links, um zu Beiträgen, Benutzern, Medien, Analytics, Einstellungen und Backups zu navigieren.</p>
+    <h2>{{ t("admin_dashboard_usage_hint") }}</h2>
+    <p>{{ t("admin_dashboard_usage_hint") }}</p>
 </div>
 
 <div class="card">
-    <h2>Backups</h2>
-    <p>Im Bereich "Backups" können Sie sofort ein neues Sicherungsarchiv erstellen, vorhandene Backups herunterladen oder löschen und Remote-Backups konfigurieren.</p>
+    <h2>{{ t("backups") }}</h2>
+    <p>{{ t("backups_usage_hint") }}</p>
 </div>
 
 <div class="card">
-    <h2>Remote-Backup</h2>
-    <p>Unter "Remote-Einstellungen" richten Sie SCP-, FTP- oder HTTPS-Ziele ein, um automatische oder manuelle Backup-Uploads zu ermöglichen.</p>
+    <h2>{{ t("remote_backup") }}</h2>
+    <p>{{ t("backups_usage_hint") }}</p>
 </div>
 
 <div class="card">
-    <h2>Weitere Hilfe</h2>
-    <p>Wenn Sie weitere Fragen haben, lesen Sie die Dokumentation oder wenden Sie sich an den Systemadministrator.</p>
+    <h2>{{ t("extended_help") }}</h2>
+    <p>{{ t("additional_questions_hint") }}</p>
     <a href="/" class="link-block">
-        <span>Zurück zur Hauptseite</span>
+        <span>{{ t("back_to_homepage") }}</span>
     </a>
 </div>
 
