@@ -278,20 +278,20 @@
         <div class="navbar-content">
             <a href="/" class="navbar-brand">{{ settings.site_title if settings.site_title else 'SiteForge' }}</a>
             <div class="navbar-nav">
-                <a href="/">Home</a>
-                <a href="/feed">RSS Feed</a>
+                <a href="/">{{ t("home") }}</a>
+                <a href="/feed">{{ t("rss_feed") }}</a>
                 {% if session.user %}
                     {% if auth.get_user_role(session.user) == 'administrator' %}
-                        <a href="/admin/posts">Admin</a>
+                        <a href="/admin/posts">{{ t("admin") }}</a>
                     {% endif %}
-                    <a href="/profile/me">Profile</a>
+                    <a href="/profile/me">{{ t("profile") }}</a>
                     {% if settings.modmail_enabled %}
-                    <a href="{{ url_for('modmail.modmail_index') }}">Modmail</a>
+                    <a href="{{ url_for('modmail.modmail_index') }}">{{ t("modmail") }}</a>
                     {% endif %}
-                    <a href="/logout">Logout</a>
+                    <a href="/logout">{{ t("logout") }}</a>
                 {% else %}
-                    <a href="/login">Login</a>
-                    <a href="/register">Register</a>
+                    <a href="/login">{{ t("login") }}</a>
+                    <a href="/register">{{ t("register") }}</a>
                 {% endif %}
             </div>
         </div>
@@ -302,17 +302,17 @@
             {% if settings.cookie_consent_message %}
                 {{ settings.cookie_consent_message|safe }}
             {% else %}
-                <p>Diese Webseite verwendet Cookies, um Ihnen die beste Erfahrung zu bieten. Bitte akzeptieren Sie Cookies, um den Dienst vollständig nutzen zu können.</p>
+                <p>{{ t("cookie_message_shown") }}</p>
             {% endif %}
         </div>
-        <button onclick="acceptCookies()">Cookies akzeptieren</button>
+        <button onclick="acceptCookies()">{{ t("allow_cookies") }}</button>
     </div>
 
     <div class="container">
         <div class="page-shell">
             <article class="card">
                 <h1>{{ post.title }}</h1>
-                <p class="post-meta">By <strong>{{ post.author }}</strong> on {{ post.created_at }}</p>
+                <p class="post-meta">{{ t("by") }} <strong>{{ post.author }}</strong> on {{ post.created_at }}</p>
 
                 <div class="tags">
                     {% for category in post.categories %}
@@ -329,7 +329,7 @@
 
                 {% if post.attachments %}
                 <div class="card" style="margin-top: 1.5rem;">
-                    <h2>Dateianhänge</h2>
+                    <h2>{{ t("attachments") }}</h2>
                     <ul style="list-style: none; padding: 0; margin: 0; display: grid; gap: 0.9rem;">
                         {% for attachment in post.attachments %}
                             <li>
@@ -347,7 +347,7 @@
 
                 {% if post.survey %}
                 <div class="card" style="margin-top: 1.5rem;">
-                    <h2>Umfrage</h2>
+                    <h2>{{ t("survey") }}</h2>
                     <p style="margin-bottom: 1rem; font-weight: 600;">{{ post.survey.question }}</p>
 
                     {% set user_choice = post.survey.votes[session.user] if session.user and post.survey.votes and session.user in post.survey.votes else None %}
@@ -356,7 +356,7 @@
                     {% if session.user %}
                         {% if user_choice %}
                             {% set selected_option = post.survey.options|selectattr('id','equalto',user_choice)|first %}
-                            <p>Du hast abgestimmt: <strong>{{ selected_option.text if selected_option else 'Unbekannte Option' }}</strong></p>
+                            <p>{{ t("you_have_voted") }} <strong>{{ selected_option.text if selected_option else 'Unbekannte Option' }}</strong></p>
                         {% else %}
                             <form id="surveyForm" onsubmit="submitSurvey(event)">
                                 {% for option in post.survey.options %}
@@ -364,11 +364,11 @@
                                         <input type="radio" name="survey_choice" value="{{ option.id }}"> {{ option.text }}
                                     </label>
                                 {% endfor %}
-                                <button class="button-primary" type="submit">Abstimmen</button>
+                                <button class="button-primary" type="submit">{{ t("vote") }}</button>
                             </form>
                         {% endif %}
                     {% else %}
-                        <p>Du musst <a href="/login">eingeloggt</a> sein, um an dieser Umfrage teilzunehmen.</p>
+                        <p>{{ t("logged_in_requirements_i") }} <a href="/login">eingeloggt</a> {{ t("logged_in_requirements_i") }}</p>
                     {% endif %}
 
                     <div style="margin-top: 1.25rem;">
@@ -386,14 +386,14 @@
                 {% endif %}
 
                 <section class="comment-section" style="margin-top: 1.75rem;">
-                    <h2 style="margin-bottom: 1rem;">Kommentare</h2>
+                    <h2 style="margin-bottom: 1rem;">{{ t("comments") }}</h2>
                     {% if top_level_comments %}
                         {% for comment in top_level_comments %}
                             <div class="comment-item">
                                 <h4>{{ comment.author }}</h4>
                                 <small>{{ comment.created_at }}</small>
                                 <p>{{ comment.content }}</p>
-                                <button class="button-primary" type="button" style="background: transparent; color: #2563eb; border: none; box-shadow: none; padding: 0; font-size: 0.95rem;" onclick="replyToComment('{{ comment.id }}')">Antworten</button>
+                                <button class="button-primary" type="button" style="background: transparent; color: #2563eb; border: none; box-shadow: none; padding: 0; font-size: 0.95rem;" onclick="replyToComment('{{ comment.id }}')">{{ t("replies") }}</button>
                                 {% if comment.id in replies %}
                                     {% for reply in replies[comment.id] %}
                                         <div class="reply-item">
@@ -407,32 +407,32 @@
                         {% endfor %}
                     {% else %}
                         <div class="comment-box">
-                            <p>Noch keine Kommentare.</p>
+                            <p>{{ t("no_comments_yet") }}</p>
                         </div>
                     {% endif %}
 
                     <div class="comment-box">
-                        <h3 id="commentFormTitle">Neuen Kommentar schreiben</h3>
+                        <h3 id="commentFormTitle">{{ t("new_comment_write") }}</h3>
                         {% if session.user %}
                             <form id="commentForm" onsubmit="submitComment(event)">
                                 <input type="hidden" id="parentId" name="parent_id" value="">
-                                <p>Angemeldet als <strong>{{ session.user }}</strong>.</p>
-                                <textarea id="content" name="content" placeholder="Deinen Kommentar hier eingeben..." required></textarea>
+                                <p>{{ t("logged_in_as") }} <strong>{{ session{{ t("dot") }}user }}</strong>.</p>
+                                <textarea id="content" name="content" placeholder="{{ t("type_in_your_comment_here") }}" required></textarea>
                                 <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem;">
-                                    <button class="button-primary" type="submit">Absenden</button>
-                                    <button class="button-primary" type="button" onclick="cancelReply()" id="cancelBtn" style="display:none; background: #6b7280;">Abbrechen</button>
+                                    <button class="button-primary" type="submit">{{ t("send") }}</button>
+                                    <button class="button-primary" type="button" onclick="cancelReply()" id="cancelBtn" style="display:none; background: #6b7280;">{{ t("abort") }}</button>
                                 </div>
                             </form>
                         {% else %}
-                            <p>Du musst <a href="/login">eingeloggt</a> sein, um einen Kommentar zu schreiben.</p>
+                            <p>{{ t("logged_in_requirements_i") }} <a href="/login">eingeloggt</a> {{ t("login_requirement_iii_comment") }}</p>
                         {% endif %}
                     </div>
                 </section>
             </article>
 
             <aside class="sidebar-card" id="commentSidebar">
-                <h3>Post Info</h3>
-                <p><strong>Kategorien</strong></p>
+                <h3>{{ t("post_info") }}</h3>
+                <p><strong>{{ t("categories") }}</strong></p>
                 {% if post.categories %}
                     <ul>
                         {% for category in post.categories %}
@@ -440,22 +440,22 @@
                         {% endfor %}
                     </ul>
                 {% else %}
-                    <p>Keine Kategorien</p>
+                    <p>{{ t("no_categories") }}</p>
                 {% endif %}
 
                 {% if post.release_tag %}
-                    <p><strong>Release / Tag:</strong> {{ post.release_tag }}</p>
+                    <p><strong>{{ t("release_tag_slash") }}</strong> {{ post.release_tag }}</p>
                 {% endif %}
 
                 {% if post.git_repository %}
-                    <p><strong>Git-Repository:</strong> <a href="/git/repos" target="_blank">{{ post.git_repository }}</a></p>
+                    <p><strong>{{ t("git_repo_dp") }}</strong> <a href="/git/repos" target="_blank">{{ post.git_repository }}</a></p>
                 {% endif %}
 
                 <hr style="border-color: #e5e7eb; margin: 1.25rem 0;">
-                <p><strong>Weitere Links</strong></p>
+                <p><strong>{{ t("more_links") }}</strong></p>
                 <ul>
-                    <li><a href="/">Zurück zur Startseite</a></li>
-                    <li><a href="/feed">RSS Feed</a></li>
+                    <li><a href="/">{{ t("back_to_homepage") }}</a></li>
+                    <li><a href="/feed">{{ t("rss_feed") }}</a></li>
                 </ul>
             </aside>
         </div>

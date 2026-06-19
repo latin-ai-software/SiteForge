@@ -275,19 +275,19 @@
 <body>
     <div class="layout">
         <aside class="sidebar">
-            <h1>SiteForge Admin</h1>
+            <h1>{{ t("siteforge_admin") }}</h1>
             <nav>
-                <a href="/" {% if request.endpoint == 'root.index' %}class="active"{% endif %}>Zur Seite</a>
-                <a href="/admin/manage/templates" {% if request.path.startswith('/admin/manage/templates') %}class="active"{% endif %}>Stylesheets</a>
-                <a href="/admin/posts" {% if request.path.startswith('/admin/posts') %}class="active"{% endif %}>Beiträge</a>
-                <a href="/admin/users" {% if request.path.startswith('/admin/users') and not request.path.startswith('/admin/users/roles') %}class="active"{% endif %}>Benutzer</a>
-                <a href="/admin/users/roles" {% if request.path.startswith('/admin/users/roles') %}class="active"{% endif %}>Rollen</a>
-                <a href="/admin/media" {% if request.path.startswith('/admin/media') %}class="active"{% endif %}>Medien</a>
-                <a href="/admin/analytics" {% if request.path.startswith('/admin/analytics') %}class="active"{% endif %}>Analytics</a>
-                <a href="/admin/seo" {% if request.path.startswith('/admin/seo') %}class="active"{% endif %}>SEO</a>
-                <a href="/admin/api-docs" {% if request.path.startswith('/admin/api-docs') %}class="active"{% endif %}>API Docs</a>
+                <a href="/" {% if request.endpoint == 'root.index' %}class="active"{% endif %}>{{ t("back_to_your_site") }}</a>
+                <a href="/admin/manage/templates" {% if request.path.startswith('/admin/manage/templates') %}class="active"{% endif %}>{{ t("stylesheets") }}</a>
+                <a href="/admin/posts" {% if request.path.startswith('/admin/posts') %}class="active"{% endif %}>{{ t("posts") }}</a>
+                <a href="/admin/users" {% if request.path.startswith('/admin/users') and not request.path.startswith('/admin/users/roles') %}class="active"{% endif %}>{{ t("users") }}</a>
+                <a href="/admin/users/roles" {% if request.path.startswith('/admin/users/roles') %}class="active"{% endif %}>{{ t("roles") }}</a>
+                <a href="/admin/media" {% if request.path.startswith('/admin/media') %}class="active"{% endif %}>{{ t("files") }}</a>
+                <a href="/admin/analytics" {% if request.path.startswith('/admin/analytics') %}class="active"{% endif %}>{{ t("analytics") }}</a>
+                <a href="/admin/seo" {% if request.path.startswith('/admin/seo') %}class="active"{% endif %}>{{ t("seo") }}</a>
+                <a href="/admin/api-docs" {% if request.path.startswith('/admin/api-docs') %}class="active"{% endif %}>{{ t("api_docs") }}</a>
                 {% if is_plugin_loaded('git_repos') %}
-                <a href="/admin/git" {% if request.path.startswith('/admin/git') %}class="active"{% endif %}>Git-Repos</a>
+                <a href="/admin/git" {% if request.path.startswith('/admin/git') %}class="active"{% endif %}>{{ t("git_repos") }}</a>
                 {% endif %}
                 <a href="/admin/notifications" {% if request.path.startswith('/admin/notifications') %}class="active"{% endif %}>
                     Benachrichtigungen
@@ -295,11 +295,11 @@
                         <span class="notification-badge">{{ notification_unread_count }}</span>
                     {% endif %}
                 </a>
-                <a href="/admin/settings" {% if request.path.startswith('/admin/settings') %}class="active"{% endif %}>Einstellungen</a>
-                <a href="{{ url_for('modmail.admin_modmail') }}" {% if request.path.startswith('/admin/modmail') %}class="active"{% endif %}>Modmail</a>
-                <a href="{{ url_for('backup.backup_index') }}" {% if request.path.startswith('/admin/backups') %}class="active"{% endif %}>Backups</a>
-                <a href="{{ url_for('admin_help') }}" {% if request.path.startswith('/admin/help') %}class="active"{% endif %}>Hilfe</a>
-                <a href="{{ url_for('theme_creator.index') }}" {% if request.path.startswith('/admin/theme-creator') %}class="active"{% endif %}>Theme Creator</a>
+                <a href="/admin/settings" {% if request.path.startswith('/admin/settings') %}class="active"{% endif %}>{{ t("settings") }}</a>
+                <a href="{{ url_for('modmail.admin_modmail') }}" {% if request.path.startswith('/admin/modmail') %}class="active"{% endif %}>{{ t("modmail") }}</a>
+                <a href="{{ url_for('backup.backup_index') }}" {% if request.path.startswith('/admin/backups') %}class="active"{% endif %}>{{ t("backups") }}</a>
+                <a href="{{ url_for('admin_help') }}" {% if request.path.startswith('/admin/help') %}class="active"{% endif %}>{{ t("help") }}</a>
+                <a href="{{ url_for('theme_creator.index') }}" {% if request.path.startswith('/admin/theme-creator') %}class="active"{% endif %}>{{ t("theme_creator") }}</a>
             </nav>
         </aside>
 

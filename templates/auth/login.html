@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
+    <title>{{ t("login") }}</title>
 
     <style>
         body {
@@ -97,24 +97,24 @@
 <body>
 
     <div class="login-container">
-        <h1>Login</h1>
+        <h1>{{ t("login") }}</h1>
 
         {% if error %}
             <div class="error">{{ error }}</div>
         {% endif %}
 
         <form action="/login" method="POST">
-            <label>Benutzername:</label>
+            <label>{{ t("username") }}</label>
             <input type="text" name="username" required>
 
-            <label>Passwort:</label>
+            <label>{{ t("password") }}</label>
             <input type="password" name="password" required>
 
-            <button type="submit">Einloggen</button>
+            <button type="submit">{{ t("login") }}</button>
         </form>
 
         <div class="register-link">
-            <p><a href="/register">Noch kein Konto? Hier registrieren</a></p>
+            <p><a href="/register">{{ t("register") }}</a></p>
         </div>
     </div>
 

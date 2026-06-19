@@ -17,14 +17,14 @@
                 <li>
                     <strong>{{ post.title }}</strong> by {{ post.author }}<br>
                     <small>{{ post.created_at }}</small><br>
-                    <a href="/post/{{ post.slug }}">Read more</a>
+                    <a href="/post/{{ post.slug }}">{{ t("read_more") }}</a>
                 </li>
             {% endfor %}
         </ul>
     {% else %}
-        <p>Keine Posts in dieser Kategorie.</p>
+        <p>{{ t("no_posts_in_this_category") }}</p>
     {% endif %}
 
-    <p><a href="/">Zurück zur Startseite</a></p>
+    <p><a href="/">{{ t("back_to_homepage") }}</a></p>
 </body>
 </html>

@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Registrieren</title>
+    <title>{{ t("register") }}</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -46,7 +46,7 @@
     </style>
 </head>
 <body>
-    <h1>Registrieren</h1>
+    <h1>{{ t("register") }}</h1>
 
     {% if error %}
         <div class="error">{{ error }}</div>
@@ -54,25 +54,25 @@
 
     <form method="POST">
         <div class="form-group">
-            <label for="username">Benutzername:</label>
+            <label for="username">{{ t("username_dp") }}</label>
             <input type="text" id="username" name="username" required>
         </div>
 
         <div class="form-group">
-            <label for="email">E-Mail:</label>
+            <label for="email">{{ t("email_dp") }}</label>
             <input type="email" id="email" name="email" required>
         </div>
 
         <div class="form-group">
-            <label for="password">Passwort:</label>
+            <label for="password">{{ t("password_dp") }}</label>
             <input type="password" id="password" name="password" required>
         </div>
 
-        <button type="submit">Registrieren</button>
+        <button type="submit">{{ t("register") }}</button>
     </form>
 
     <div class="login-link">
-        <a href="/login">Bereits registriert? Hier anmelden</a>
+        <a href="/login">{{ t("already_registered") }}</a>
     </div>
 </body>
 </html>

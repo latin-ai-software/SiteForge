@@ -93,17 +93,17 @@
             {% if show_logo %}<img src="/static/favicon.ico" alt="site logo" width="140" height="128">{% endif %}
             <a href="/" class="navbar-brand">{{ settings.site_title if settings.site_title else 'SiteForge' }}</a>
             <div class="navbar-nav">
-                <a href="/">Home</a>
-                <a href="/feed">RSS Feed</a>
+                <a href="/">{{ t("home") }}</a>
+                <a href="/feed">{{ t("rss_feed") }}</a>
                 {% if session.user %}
                     {% if auth.get_user_role(session.user) == 'administrator' %}
-                        <a href="/admin/posts">Admin</a>
+                        <a href="/admin/posts">{{ t("admin") }}</a>
                     {% endif %}
-                    <a href="/profile/me">Profile</a>
-                    <a href="/logout">Logout</a>
+                    <a href="/profile/me">{{ t("profile") }}</a>
+                    <a href="/logout">{{ t("logout") }}</a>
                 {% else %}
-                    <a href="/login">Login</a>
-                    <a href="/register">Register</a>
+                    <a href="/login">{{ t("login") }}</a>
+                    <a href="/register">{{ t("register") }}</a>
                 {% endif %}
             </div>
         </div>
@@ -114,40 +114,40 @@
             {% if settings.cookie_consent_message %}
                 {{ settings.cookie_consent_message|safe }}
             {% else %}
-                <p>Diese Webseite verwendet Cookies für ein besseres Nutzererlebnis. Bitte akzeptieren Sie Cookies.</p>
+                <p>{{ t("cookie_consent_message") }}</p>
             {% endif %}
         </div>
-        <button onclick="acceptCookies()">Cookies akzeptieren</button>
+        <button onclick="acceptCookies()">{{ t("allow_cookies") }}</button>
     </div>
 
     <div class="container">
         <h1>Willkommen zu deinem Profil, {{ session.user }}!</h1>
-        <p>Hier kannst du deine Kontoeinstellungen anpassen und deine Aktivitäten einsehen.</p>
+        <p>{{ t("profile_hint") }}</p>
 
         <section class="card">
-            <h2>Kontoinformationen</h2>
-            <p><strong>Benutzername:</strong> {{ session.user }}</p>
-            <p><strong>E-Mail:</strong> {{ user_data.email if user_data else '' }}</p>
-            <p><strong>Rolle:</strong> {{ auth.get_user_role(session.user) }}</p>
+            <h2>{{ t("account_information") }}</h2>
+            <p><strong>{{ t("username_dp") }}</strong> {{ session.user }}</p>
+            <p><strong>{{ t("email_dp") }}</strong> {{ user_data.email if user_data else '' }}</p>
+            <p><strong>{{ t("role_dp") }}</strong> {{ auth.get_user_role(session.user) }}</p>
         </section>
 
         <section class="card">
-            <h2>E-Mail-Adresse ändern</h2>
+            <h2>{{ t("change_email_address") }}</h2>
             <form method="POST">
-                <label for="email">Neue E-Mail-Adresse:</label>
+                <label for="email">{{ t("new_email_dp") }}</label>
                 <input type="email" id="email" name="email" value="{{ user_data.email if user_data else '' }}" required style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; margin-bottom: 10px;">
-                <button type="submit" style="background: #2563eb; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">E-Mail speichern</button>
+                <button type="submit" style="background: #2563eb; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">{{ t("email_save") }}</button>
             </form>
         </section>
         {% if settings.allow_password_change %}
         <section class="card">
-            <h2>Sicherheit</h2>
-            <p><a href="/change-password" style="color: #2563eb; text-decoration: none; font-weight: bold;">Passwort ändern</a></p>
+            <h2>{{ t("security") }}</h2>
+            <p><a href="/change-password" style="color: #2563eb; text-decoration: none; font-weight: bold;">{{ t("change_passwd") }}</a></p>
         </section>
         {% endif %}
 
         <section class="card">
-            <h2>Aktivitäten</h2>
+            <h2>{{ t("activities") }}</h2>
             {% if activities %}
                 <ul class="list">
                     {% for activity in activities %}
@@ -162,7 +162,7 @@
                     {% endfor %}
                 </ul>
             {% else %}
-                <p>Noch keine Aktivitäten.</p>
+                <p>{{ t("no_activities_yet") }}</p>
             {% endif %}
         </section>
     </div>
@@ -170,10 +170,10 @@
     <footer style="background: var(--gray-900); color: var(--gray-100); padding: 3rem var(--spacing-lg); margin-top: 4rem; text-align: center;">
         <div class="container">
             <p style="margin: 0;">&copy; 2024 {{ settings.site_title if settings.site_title else 'SiteForge' }}. Powered by Flask.</p>
-            <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem; color: var(--gray-400);">A modern, professional CMS built with Python and Flask</p>
+            <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem; color: var(--gray-400);">{{ t("siteforge_branding") }}</p>
             {% if settings.imprint_enabled %}
                 <p style="margin: 0.5rem 0 0 0;">
-                    <a href="/static/imprint.html" target="_blank">Impressum</a>
+                    <a href="/static/imprint.html" target="_blank">{{ t("imprint") }}</a>
                 </p>
             {% endif %}
         </div>

@@ -1,320 +1,402 @@
-# Post Management
-all_posts: "All posts"
-create_post: "Create post"
-create_post_title: "Create a new post"
-create_post_subtitle: "Share your thoughts, updates, or news with the world."
-edit_post: "Edit post"
-by: "by"
-status: "Status"
-survey: "Survey"
-votes: "Votes"
-edit: "Edit"
-delete: "Delete"
-confirm_delete: "Are you sure you want to delete this post?"
-no_posts: "No posts yet"
-view_post: "View post"
-post_management: "Post management"
-post_created: "Post created successfully"
-post_updated: "Post updated successfully"
-post_deleted: "Post deleted successfully"
-release_tag_placeholder: "e.g. v1.0.0"
-
-# Post Fields
-title: "Title"
-content: "Content"
-categories: "Categories"
-comma_separated: "Comma separated"
-tags: "Tags"
-git_repository: "Git repository"
-release_tag: "Release tag"
-git_repository_hint: "Type in a repository ID or remote reference to link this post to a repo."
-release_tag_hint: "Type in a release tag to link this post to a release."
-git_repository_no: "No repository linked"
-
-# Survey/Poll
-enable_survey: "Enable survey"
-survey_options: "Survey options"
-survey_options_hint: "Enter at least two options, one per line. Existing votes will be preserved if options remain unchanged."
-survey_question: "Survey question"
-survey_question_placeholder: "What do you want to ask your audience?"
-survey_options_placeholder: "One Option per line. Enter at least two options."
-
-# File Management
-existing_files_hint: "Attach existing files here."
-file_uploaded: "File uploaded successfully"
-file_deleted: "File deleted successfully"
-upload_file: "Upload file"
-select_file: "Select file"
-files: "Files"
-attachments: "Attachments"
-upload_file_hint: "Upload new file"
-
-# Navigation
-home: "Home"
-admin: "Admin"
-dashboard: "Dashboard"
-settings: "Settings"
-profile: "Profile"
-logout: "Logout"
-login: "Login"
-register: "Register"
-
-# General
-save: "Save"
-cancel: "Cancel"
-search: "Search"
-filter: "Filter"
-sort: "Sort"
-loading: "Loading..."
-error: "Error"
-success: "Success"
-warning: "Warning"
-info: "Info"
-close: "Close"
-back: "Back"
-next: "Next"
-previous: "Previous"
-
-# Settings
-site_settings: "Site settings"
-site_title: "Site title"
-site_description: "Site description"
-site_keywords: "Meta keywords"
-site_language: "Site language"
-language_auto: "Auto (Browser settings)"
-language_en: "English"
-language_de: "German"
-general_settings: "General settings"
-site_title: "Site title"
-site_description: "Site description"
-meta_keywords: "Meta keywords"
-ppp: "Posts per page"
-browser_setting: "Browser setting"
-domain: "Address"
-embed_favicon_in_html: "Embed favicon in HTML"
-current_favicon: "Current favicon"
-upload_favicon: "Upload new favicon"
-current_header_background: "Current header background"
-header_background: "Header background"
-jpg_file: "JPG file"
-show_header_background: "Show header background"
-homepage_slideshow: "Homepage slideshow"
-activate_slideshow_on_homepage: "Activate slideshow on homepage"
-slideshow_interval: "Slideshow interval"
-seconds: "Seconds"
-slideshow_header: "Slideshow header"
-slideshow_subtitle: "Slideshow subtitle"
-slideshow_background_image: "Slideshow background image"
-upload_powerpoint_slides_as_png: "Upload PowerPoint slides as PNG images"
-current_slideshow_pictures: "Current slideshow pictures"
-website_rating: "Website rating"
-website_rating_hint: "Sets you page's age rating. Ratings are displayed on the homepage."
-age_restriction_enabled: "Enable age restriction"
-age_restriction_hint: "If enabled, visitors will be prompted to confirm their age before accessing the site. This is recommended if your content is not suitable for all ages."
-disclaimer_i: "LATIN AI Software is not responsible"
-disclaimer_ii: "for legal violations or inappropriate content created or published by website operators or third parties."
-disclaimer_iii: "You are fully responsible"
-disclaimer_iv: "for all content published on your website. Please inform yourself about the applicable local laws and restrictions in your country or region. Do not publish any content that violates regulations or ethical guidelines."
-allow_registration: "Allow registration"
-require_comment_approval: "Require comment approval"
-imprint_enabled: "Enable imprint page"
-imprint: "Imprint"
-upload_imprint: "Upload imprint (.html)"
-no_imprint: "No imprint uploaded. Please upload an imprint to comply with legal requirements in many jurisdictions."
-show: "Show"
-current_imprint: "Current imprint"
-allow_password_change: "Allow password change"
-cookie_notice: "Cookie notice"
-require_cookie_consent: "Require cookie consent"
-users_comments: "Users and comments"
-cookie_consent_message: "Cookie consent message"
-cookie_consent_message_hint: "This message will be shown in the cookie consent banner. You can use it to inform visitors about your use of cookies and data collection practices."
-
-# Authentication
-username: "Username"
-password: "Password"
-email: "Email"
-confirm_password: "Confirm password"
-remember_me: "Remember me"
-forgot_password: "Forgot password?"
-login_required: "Login required"
-unauthorized: "Unauthorized"
-access_denied: "Access denied"
-
-# Admin Panel
-admin_panel: "Admin panel"
-manage_posts: "Manage posts"
-manage_users: "Manage users"
-manage_settings: "Manage settings"
-manage_templates: "Manage templates"
-manage_media: "Manage media"
-manage_plugins: "Manage plugins"
-analytics: "Analytics"
-
-# Users
-users: "Users"
-user_management: "User management"
-user_created: "User created successfully"
-user_updated: "User updated successfully"
-user_deleted: "User deleted successfully"
-role: "Role"
-active: "Active"
-inactive: "Inactive"
-administrator: "Administrator"
-author: "Author"
-editor: "Editor"
-subscriber: "Subscriber"
-
-# Media
-media_management: "Media management"
-upload_media: "Upload media"
-media_library: "Media library"
-image: "Image"
-video: "Video"
-document: "Document"
-other: "Other"
-
-# Comments
-comments: "Comments"
-comment: "Comment"
-leave_comment: "Leave a comment"
-comment_moderation: "Comment moderation"
-approve: "Approve"
-reject: "Reject"
-pending: "Pending"
-
-# Analytics
-views: "Views"
-visitors: "Visitors"
-traffic: "Traffic"
-popular_posts: "Popular posts"
-recent_activity: "Recent activity"
-
-# Notifications
-notifications: "Notifications"
-no_notifications: "No notifications"
-notification_email: "Email notification"
-
-# Utilities
-copy: "Copy"
-copy_to_clipboard: "Copy to clipboard"
-copied: "Copied!"
-download: "Download"
-upload: "Upload"
-export: "Export"
-import: "Import"
-refresh: "Refresh"
-update: "Update"
-delete_all: "Delete all"
-select_all: "Select all"
-
-# Dates and Times
-today: "Today"
-yesterday: "Yesterday"
-this_week: "This week"
-this_month: "This month"
-this_year: "This year"
-custom_range: "Custom range"
-
-# SEO
-seo: "SEO"
-seo_analysis: "SEO analysis"
-seo_analysis_dashboard: "SEO analysis dashboard"
-seo_analysis_pending: "SEO analysis pending"
-excellent_seo_score: "Excellent SEO score"
-good_seo_score: "Good SEO score"
-fair_seo_score: "Fair SEO score. Review your SEO settings and warnings to improve your score."
-below_average_seo_score: "Below average SEO score. Review your SEO settings and warnings to improve your score."
-poor_seo_score: "Poor SEO score. Review your SEO settings and warnings to improve your score."
-seo_score: "SEO score"
-meta_title: "Meta title"
-meta_description: "Meta description"
-seo_title: "SEO title"
-seo_description: "SEO description"
-slug: "Slug"
-meta_tags: "Meta tags"
-mobile_friendly: "Mobile friendly"
-performance: "Performance"
-security: "Security"
-robots: "Robots"
-#Sitemap gefunden. Letzte Aktualisierung:
-site_map_success: "Sitemap found. Last updated:"
-site_map_not_found: "Sitemap not found. Please check your SEO settings and ensure your sitemap is properly configured."
-sitemap_management: "Sitemap management"
-generate_sitemap: "Generate/refresh sitemap"
-view_sitemap: "View sitemap"
-security_headers: "Security headers"
-security_header_guidance: "Security Header Guidance"
-security_header_guidance_description_i: "If any security header is missing, update"
-security_header_guidance_description_ii: "or your reverse proxy configuration. For local testing, use HTTPS or run behind a secure proxy and enable production mode."
-markup: "Markup"
-mobile_optimization: "Mobile optimization"
-site_performance: "Site performance"
-content_quality: "Content quality"
-site_structure: "Site structure"
-sitemap: "Sitemap"
-robots_txt: "robots.txt"
-analysis_details: "Analysis Details"
-passed_checks: "Passed checks"
-warnings: "Warnings"
-issues: "Issues"
-seo_improvement_recommendations: "SEO improvement recommendations"
-view_recommendations: "View recommendations"
-run_analysis: "Run analysis"
-allow_robot_indexing: "Allow robot indexing"
-allowed_robots: "Allowed robots (User-Agents)" 
-robot_user_agents_help: "Enter one User-Agent per line. Use * to allow all robots. If left empty, all robots will be allowed by default."
-user_account_administration: "User account administration"
-
-# Themes
-theme: "Theme"
-theme_settings: "Theme settings"
-dark_mode: "Dark mode"
-light_mode: "Light mode"
-
-# Footer
-about: "About"
-privacy: "Privacy"
-terms: "Terms"
-contact: "Contact"
-copyright: "Copyright"
-
-# 404 and Error Pages
-page_not_found: "Page not found"
-something_went_wrong: "Something went wrong"
-error_404: "404 - Page not found"
-error_500: "500 - Server error"
-
-# Forms
-form_validation_error: "Please check your input"
-required_field: "This field is required"
-invalid_email: "Invalid email address"
-password_too_short: "Password is too short"
-passwords_do_not_match: "Passwords do not match"
-
-# API reference and developer documentation
-api_reference: "API reference"
-api_reference_description: "Complete reference for all API endpoints"
-regenerate_docs: "Regenerate Docs"
-export_docs: "Export as JSON"
-overview: "Overview"
-endpoints: "Endpoints"
-authentication: "Authentication"
-quick_reference: "Quick Reference"
-total_endpoints: "Total endpoints"
-blueprints: "Blueprints"
-api_version: "API version"
-available_blueprints: "Available Blueprints"
-routes: "routes"
-authentication_methods: "Authentication methods"
-authentication_methods_description: "The SiteForge API supports multiple authentication methods for different use cases."
-required_headers: "Required Headers"
-common_response_status_codes: "Common Response Status Codes"
-getting_started: "Getting Started"
-quick_reference_loading: "Loading quick reference..."
-
-# Stylesheets
-stylesheet_management: "Stylesheet management"
-active_stylesheet: "Active stylesheet"
-upload_stylesheet: "Upload stylesheet"
-no_active_stylesheet: "No active stylesheet."
+all_posts: All posts
+create_post: Create post
+create_post_title: Create a new post
+create_post_subtitle: Share your thoughts, updates, or news with the world.
+edit_post: Edit post
+by: by
+status: Status
+survey: Survey
+votes: Votes
+edit: Edit
+delete: Delete
+confirm_delete: Are you sure you want to delete this post?
+no_posts: No posts yet
+view_post: View post
+post_management: Post management
+post_created: Post created successfully
+post_updated: Post updated successfully
+post_deleted: Post deleted successfully
+release_tag_placeholder: e.g. v1.0.0
+title: Title
+content: Content
+categories: Categories
+comma_separated: Comma separated
+tags: Tags
+git_repository: Git repository
+release_tag: Release tag
+git_repository_hint: Type in a repository ID or remote reference to link this post
+  to a repo.
+release_tag_hint: Type in a release tag to link this post to a release.
+git_repository_no: No repository linked
+enable_survey: Enable survey
+survey_options: Survey options
+survey_options_hint: Enter at least two options, one per line. Existing votes will
+  be preserved if options remain unchanged.
+survey_question: Survey question
+survey_question_placeholder: What do you want to ask your audience?
+survey_options_placeholder: One Option per line. Enter at least two options.
+existing_files_hint: Attach existing files here.
+file_uploaded: File uploaded successfully
+file_deleted: File deleted successfully
+upload_file: Upload file
+select_file: Select file
+files: Files
+attachments: Attachments
+upload_file_hint: Upload new file
+home: Home
+admin: Admin
+dashboard: Dashboard
+settings: Settings
+profile: Profile
+logout: Logout
+login: Login
+register: Register
+save: Save
+cancel: Cancel
+search: Search
+filter: Filter
+sort: Sort
+loading: Loading...
+error: Error
+success: Success
+warning: Warning
+info: Info
+close: Close
+back: Back
+next: Next
+previous: Previous
+site_settings: Site settings
+site_title: Site title
+site_description: Site description
+site_keywords: Meta keywords
+site_language: Site language
+language_auto: Auto (Browser settings)
+language_en: English
+language_de: German
+general_settings: General settings
+meta_keywords: Meta keywords
+ppp: Posts per page
+browser_setting: Browser setting
+domain: Address
+embed_favicon_in_html: Embed favicon in HTML
+current_favicon: Current favicon
+upload_favicon: Upload new favicon
+current_header_background: Current header background
+header_background: Header background
+jpg_file: JPG file
+show_header_background: Show header background
+homepage_slideshow: Homepage slideshow
+activate_slideshow_on_homepage: Activate slideshow on homepage
+slideshow_interval: Slideshow interval
+seconds: Seconds
+slideshow_header: Slideshow header
+slideshow_subtitle: Slideshow subtitle
+slideshow_background_image: Slideshow background image
+upload_powerpoint_slides_as_png: Upload PowerPoint slides as PNG images
+current_slideshow_pictures: Current slideshow pictures
+website_rating: Website rating
+website_rating_hint: Sets you page's age rating. Ratings are displayed on the homepage.
+age_restriction_enabled: Enable age restriction
+age_restriction_hint: If enabled, visitors will be prompted to confirm their age before
+  accessing the site. This is recommended if your content is not suitable for all
+  ages.
+disclaimer_i: LATIN AI Software is not responsible
+disclaimer_ii: for legal violations or inappropriate content created or published
+  by website operators or third parties.
+disclaimer_iii: You are fully responsible
+disclaimer_iv: for all content published on your website. Please inform yourself about
+  the applicable local laws and restrictions in your country or region. Do not publish
+  any content that violates regulations or ethical guidelines.
+allow_registration: Allow registration
+require_comment_approval: Require comment approval
+imprint_enabled: Enable imprint page
+imprint: Imprint
+upload_imprint: Upload imprint (.html)
+no_imprint: No imprint uploaded. Please upload an imprint to comply with legal requirements
+  in many jurisdictions.
+show: Show
+current_imprint: Current imprint
+allow_password_change: Allow password change
+cookie_notice: Cookie notice
+require_cookie_consent: Require cookie consent
+users_comments: Users and comments
+cookie_consent_message: Cookie consent message
+cookie_consent_message_hint: This message will be shown in the cookie consent banner.
+  You can use it to inform visitors about your use of cookies and data collection
+  practices.
+username: Username
+password: Password
+email: Email
+confirm_password: Confirm password
+remember_me: Remember me
+forgot_password: Forgot password?
+login_required: Login required
+unauthorized: Unauthorized
+access_denied: Access denied
+admin_panel: Admin panel
+manage_posts: Manage posts
+manage_users: Manage users
+manage_settings: Manage settings
+manage_templates: Manage templates
+manage_media: Manage media
+manage_plugins: Manage plugins
+analytics: Analytics
+users: Users
+user_management: User management
+user_created: User created successfully
+user_updated: User updated successfully
+user_deleted: User deleted successfully
+role: Role
+active: Active
+inactive: Inactive
+administrator: Administrator
+author: Author
+editor: Editor
+subscriber: Subscriber
+media_management: Media management
+upload_media: Upload media
+media_library: Media library
+image: Image
+video: Video
+document: Document
+other: Other
+comments: Comments
+comment: Comment
+leave_comment: Leave a comment
+comment_moderation: Comment moderation
+approve: Approve
+reject: Reject
+pending: Pending
+views: Views
+visitors: Visitors
+traffic: Traffic
+popular_posts: Popular posts
+recent_activity: Recent activity
+notifications: Notifications
+no_notifications: No notifications
+notification_email: Email notification
+copy: Copy
+copy_to_clipboard: Copy to clipboard
+copied: Copied!
+download: Download
+upload: Upload
+export: Export
+import: Import
+refresh: Refresh
+update: Update
+delete_all: Delete all
+select_all: Select all
+today: Today
+yesterday: Yesterday
+this_week: This week
+this_month: This month
+this_year: This year
+custom_range: Custom range
+seo: SEO
+seo_analysis: SEO analysis
+seo_analysis_dashboard: SEO analysis dashboard
+seo_analysis_pending: SEO analysis pending
+excellent_seo_score: Excellent SEO score
+good_seo_score: Good SEO score
+fair_seo_score: Fair SEO score. Review your SEO settings and warnings to improve your
+  score.
+below_average_seo_score: Below average SEO score. Review your SEO settings and warnings
+  to improve your score.
+poor_seo_score: Poor SEO score. Review your SEO settings and warnings to improve your
+  score.
+seo_score: SEO score
+meta_title: Meta title
+meta_description: Meta description
+seo_title: SEO title
+seo_description: SEO description
+slug: Slug
+meta_tags: Meta tags
+mobile_friendly: Mobile friendly
+performance: Performance
+security: Security
+robots: Robots
+site_map_success: 'Sitemap found. Last updated:'
+site_map_not_found: Sitemap not found. Please check your SEO settings and ensure your
+  sitemap is properly configured.
+sitemap_management: Sitemap management
+generate_sitemap: Generate/refresh sitemap
+view_sitemap: View sitemap
+security_headers: Security headers
+security_header_guidance: Security Header Guidance
+security_header_guidance_description_i: If any security header is missing, update
+security_header_guidance_description_ii: or your reverse proxy configuration. For
+  local testing, use HTTPS or run behind a secure proxy and enable production mode.
+markup: Markup
+mobile_optimization: Mobile optimization
+site_performance: Site performance
+content_quality: Content quality
+site_structure: Site structure
+sitemap: Sitemap
+robots_txt: robots.txt
+analysis_details: Analysis Details
+passed_checks: Passed checks
+warnings: Warnings
+issues: Issues
+seo_improvement_recommendations: SEO improvement recommendations
+view_recommendations: View recommendations
+run_analysis: Run analysis
+allow_robot_indexing: Allow robot indexing
+allowed_robots: Allowed robots (User-Agents)
+robot_user_agents_help: Enter one User-Agent per line. Use * to allow all robots.
+  If left empty, all robots will be allowed by default.
+user_account_administration: User account administration
+theme: Theme
+theme_settings: Theme settings
+dark_mode: Dark mode
+light_mode: Light mode
+about: About
+privacy: Privacy
+terms: Terms
+contact: Contact
+copyright: Copyright
+page_not_found: Page not found
+something_went_wrong: Something went wrong
+error_404: 404 - Page not found
+error_500: 500 - Server error
+form_validation_error: Please check your input
+required_field: This field is required
+invalid_email: Invalid email address
+password_too_short: Password is too short
+passwords_do_not_match: Passwords do not match
+api_reference: API reference
+api_reference_description: Complete reference for all API endpoints
+regenerate_docs: Regenerate Docs
+export_docs: Export as JSON
+overview: Overview
+endpoints: Endpoints
+authentication: Authentication
+quick_reference: Quick Reference
+total_endpoints: Total endpoints
+blueprints: Blueprints
+api_version: API version
+available_blueprints: Available Blueprints
+routes: routes
+authentication_methods: Authentication methods
+authentication_methods_description: The SiteForge API supports multiple authentication
+  methods for different use cases.
+required_headers: Required Headers
+common_response_status_codes: Common Response Status Codes
+getting_started: Getting Started
+quick_reference_loading: Loading quick reference...
+stylesheet_management: Stylesheet management
+active_stylesheet: Active stylesheet
+upload_stylesheet: Upload stylesheet
+no_active_stylesheet: No active stylesheet.
+too_many_requests: You've made too many requests. Please try again later.
+insufficient_rights: You don't have permission to access this resource.
+non_existent: The page you're looking for doesn't exist.
+unexpected_error: An unexpected error occurred. Please try again later.
+error_unknown: An error occurred. Please try again later.
+go_home: Go Home
+go_back: Go Back
+siteforge_admin: SiteForge Admin
+back_to_your_site: Your site
+stylesheets: Stylesheets
+posts: Posts
+roles: Roles
+api_docs: API Docs
+git_repos: Git-Repos
+modmail: Modmail
+backups: Backups
+help: Help
+theme_creator: Theme Creator
+admin_dashboard_usage_hint: The Admin-Dashboard provides plenty of administrative
+  functions for your SiteForge installation. Use the menu on the left, to navigate
+  to the available tabs.
+select_language: '[STUB: -- Elige linguam --]'
+stub_translation_needed: ⚠️ STUB TRANSLATION NEEDED
+key_dp: '🔑 Key:'
+skip_this_item: ⊘ Skip This Item
+enter_translation_for: Enter translation for
+text_to_replace: ✏️ Text to Replace (you can edit this if it includes code)
+translation_replace_hint_i: '💡 Tip: If this includes code like'
+translation_replace_hint_ii: ', edit it to just the human-readable text'
+no_matches_found: No matches found
+backups_usage_hint: In the “Backups” section, you can immediately create a new backup
+  archive, download or delete existing backups, and configure remote backups.
+remote_backup: Remote-Backup
+extended_help: More Help
+back_to_homepage: Back to Homepage
+change_passwd: Change Password
+current_password: Current Password
+new_passwd: New Password
+repeat_passwd_dp: 'Repeat Password:'
+back_to_profile: Back to profile
+rss_feed: RSS Feed
+allow_cookies: Allow all Cookies 🍪
+additional_questions_hint: If you have additional questions, read the documentation
+  (https://docs.latinai.net) or contact your system administrator.
+profile_hint: Here you can personalize your account settings and see your account
+  activities.
+account_information: Account information
+username_dp: 'Username:'
+email_dp: 'Email:'
+role_dp: 'Role:'
+change_email_address: Change Email Address
+new_email_dp: 'New Email Address:'
+email_save: Save Email Address
+activities: Activites
+no_activities_yet: No Activities to display yet.
+siteforge_branding: Built with SiteForge
+password_dp: 'Password:'
+already_registered: Already have an account? Log in here
+create_new_conversation: Create New Conversation
+subject: Subject
+subject_hint: Select a subject...
+message: Message
+your_password_for_encryption: Your Password (for encryption)
+your_conversations: Your Conversations
+no_conversations_yet: No conversations yet. Create your first one above!
+back_to_modmail: '&larr; Back to Modmail'
+enter_password_to_decrypt_messages: Enter your password to decrypt messages
+reply: Reply
+conversation_closed: This conversation is closed.
+cookie_message_shown: This page uses Cookies to provide the best user experience.
+  Please accept cookies, to be able to fully use this service.
+you_have_voted: 'You have voted:'
+vote: Vote
+logged_in_requirements_i: to participate in this survey.
+replies: Replies
+no_comments_yet: No comments yet.
+new_comment_write: Write a new comment
+logged_in_as: Logged in as
+dot: .
+type_in_your_comment_here: Write your yomment here...
+send: Send
+abort: Abort
+login_requirement_iii_comment: to write a comment.
+post_info: Post Info
+no_categories: No categories yet
+release_tag_slash: Release / Tag
+git_repo_dp: 'Git-Repo:'
+more_links: More Links
+read_more: Read more →
+no_posts_in_this_category: No posts in this category.
+go_to_admin: Go to Admin
+search_posts: Search posts...
+latest_videos: Latest Videos
+loading_videos: Loading Videos...
+no_videos_found: No videos found.
+unable_to_load_videos: Unable to load videos.
+subscribe_to_newsletter: Subscribe to newsletter
+read_full_article: Read full Article →
+create_your_first_post: Create your first post
+age_verification_required: Age-Verification required
+age_over_eighteen_required: '[STUB: Diese Website enthält Inhalte, die nur für volljährige
+  Besucher geeignet sind. Bitte bestätigen Sie, dass Sie mindestens 18 Jahre alt sind,
+  um fortzufahren.]'
+ethical_quidelines_age_verification_required_content_disclaimer: '[STUB: Informieren
+  Sie sich bitte über die geltenden lokalen Gesetze und Beschränkungen in Ihrem Land
+  oder Ihrer Region. Veröffentlichen Sie keine Inhalte, die gegen Bestimmungen oder
+  ethische Richtlinien verstoßen.]'
+consent_to_being_eighteen_or_older: '[STUB: Ich bin 18+]'
+leabe_site: '[STUB: Website verlassen]'
+homepage: '[STUB: Startseite]'
+your_comment: '[STUB: Dein Kommentar]'
+you_are_required_i: '[STUB: Du musst]'
+more_information: '[STUB: Weitere Infos]'
