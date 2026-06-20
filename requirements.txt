@@ -1,3 +1,4 @@
+--find-links ./dependencies
 # SiteForge Requirements
 
 # Core
