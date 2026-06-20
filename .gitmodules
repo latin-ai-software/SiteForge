@@ -7,3 +7,6 @@
 [submodule "translations"]
 	path = translations
 	url = https://git.latinai.de/latin-ai-software/latinmagazine-translations.git
+[submodule "templates"]
+	path = templates
+	url = https://git.latinai.de/latin-ai-software/latinmagazine-templates.git
