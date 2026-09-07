@@ -12,6 +12,25 @@ auth = IdentitasAuthManager(BASE_PATH)
 rate_limiter = RateLimiter(BASE_PATH)
 
 
+def get_client_ip():
+    """Ignore spoofed X-Forwarded-For unless the peer is a configured trusted proxy."""
+    remote_ip = request.remote_addr or "unknown"
+    forwarded_for = request.headers.get("X-Forwarded-For", "").strip()
+    if not forwarded_for:
+        return remote_ip
+
+    trusted_proxies = {
+        entry.strip()
+        for entry in os.environ.get("TRUSTED_PROXY_IPS", "").split(",")
+        if entry.strip()
+    }
+    if remote_ip not in trusted_proxies:
+        return remote_ip
+
+    candidates = [entry.strip() for entry in forwarded_for.split(",") if entry.strip()]
+    return candidates[0] if candidates else remote_ip
+
+
 @auth_bp.route("/login", methods=["GET"])
 def login_page():
     return render_template("auth/login.html")
@@ -35,7 +54,7 @@ def login_action():
         return render_template("auth/login.html", error=lockout_msg), 429
     
     # Rate limit login attempts by IP
-    client_ip = request.remote_addr
+    client_ip = get_client_ip()
     if rate_limiter.is_rate_limited(f"login_{client_ip}"):
         return render_template("auth/login.html", error="Too many login attempts. Please try again later."), 429
     
@@ -78,7 +97,7 @@ def register_action():
         return render_template("auth/register.html", error=strength_msg), 400
     
     # Rate limit registration by IP
-    client_ip = request.remote_addr
+    client_ip = get_client_ip()
     if rate_limiter.is_rate_limited(f"register_{client_ip}"):
         return render_template("auth/register.html", error="Too many registration attempts. Please try again later."), 429
     

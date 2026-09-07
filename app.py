@@ -87,6 +87,29 @@ def create_app(config_name=None):
     secure_config = SecureConfig.get_config(base_path)
     app.config.update(secure_config)
 
+    # Only trust forward headers from explicitly configured proxy IPs.
+    trusted_proxy_ips = {
+        entry.strip()
+        for entry in os.environ.get('TRUSTED_PROXY_IPS', '').split(',')
+        if entry.strip()
+    }
+    if trusted_proxy_ips:
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1, x_port=1)
+    else:
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=0, x_proto=0, x_host=0, x_prefix=0, x_port=0)
+
+    def get_client_ip():
+        """Return the real remote IP unless a configured trusted proxy forwarded the request."""
+        from flask import request
+
+        remote_ip = request.remote_addr or 'unknown'
+        forwarded_for = request.headers.get('X-Forwarded-For', '').strip()
+        if not forwarded_for or remote_ip not in trusted_proxy_ips:
+            return remote_ip
+
+        candidates = [entry.strip() for entry in forwarded_for.split(',') if entry.strip()]
+        return candidates[0] if candidates else remote_ip
+
     # Apply modern configuration
     from config import get_config
     config_class = get_config(config_name)
@@ -103,9 +126,6 @@ def create_app(config_name=None):
             raise RuntimeError(
                 'Load balancing mode requires a reachable Redis instance at REDIS_URL. Start Redis or disable LOAD_BALANCING_ENABLED.'
             ) from exc
-
-    # Trust X-Forwarded headers from proxies (e.g., Cloudflare tunnel)
-    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1, x_port=1)
 
     # Initialize encryption system
     init_encryption(base_path)
@@ -354,8 +374,32 @@ base_path = os.path.abspath(os.path.dirname(__file__))
 secure_config = SecureConfig.get_config(base_path)
 app.config.update(secure_config)
 
-# Trust X-Forwarded headers from proxies (e.g., Cloudflare tunnel)
-app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
+# Trust X-Forwarded headers only for explicitly configured proxy IPs.
+trusted_proxy_ips = {
+    entry.strip()
+    for entry in os.environ.get('TRUSTED_PROXY_IPS', '').split(',')
+    if entry.strip()
+}
+if trusted_proxy_ips:
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
+else:
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=0, x_proto=0, x_host=0, x_port=0, x_prefix=0)
+
+
+def get_client_ip():
+    """Return the real client IP unless a trusted proxy explicitly forwarded the request."""
+    from flask import request
+
+    remote_ip = request.remote_addr or 'unknown'
+    forwarded_for = request.headers.get('X-Forwarded-For', '').strip()
+    if not forwarded_for:
+        return remote_ip
+
+    if remote_ip not in trusted_proxy_ips:
+        return remote_ip
+
+    candidates = [entry.strip() for entry in forwarded_for.split(',') if entry.strip()]
+    return candidates[0] if candidates else remote_ip
 
 # Initialize encryption system
 init_encryption(base_path)
@@ -549,11 +593,11 @@ def check_setup_required():
 # Analytics middleware
 @app.before_request
 def check_rate_limits():
-    """DDOS protection - rate limit by IP address"""
+    """DDOS protection - rate limit by the real client IP only."""
     from flask import request, abort
-    
-    ip = request.remote_addr
-    
+
+    ip = get_client_ip()
+
     # Allow higher limits for static files and health checks
     if request.path.startswith('/static') or request.path.startswith('/uploads'):
         max_requests = 1000
@@ -561,7 +605,7 @@ def check_rate_limits():
         max_requests = 100
     else:
         max_requests = 300
-    
+
     if rate_limiter.is_rate_limited(f"ip_{ip}"):
         # Log potential DDOS attempt
         print(f"Rate limit exceeded for IP: {ip}, path: {request.path}")
@@ -605,7 +649,7 @@ def track_visitor():
 
     visitor = {
         "timestamp": datetime.now().isoformat(),
-        "ip": request.remote_addr,
+        "ip": get_client_ip(),
         "user_agent": request.headers.get('User-Agent', ''),
         "path": request.path,
         "method": request.method
