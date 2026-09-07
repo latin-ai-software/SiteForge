@@ -41,16 +41,17 @@ def create_app(config_name=None):
 
     # Initialize Flask app
     app = Flask(__name__)
-    app.config['DEFAULT_LANG'] = 'en'
+    app.config['DEFAULT_LANG'] = 'de'
 #    app.config['LANG_INITIALIZER'] = 'headers'
     app.config['DEFAULT_MESSAGE'] = 'Translation Error'
     app.config['TRANSLATIONS_PATH'] = 'translations'
     class UTF8Translator(Translator):
         def _get_file_data(self):
+            language = self._language or app.config.get('DEFAULT_LANG', 'en')
             translation_file = os.path.join(
                 app.root_path,
                 app.config['TRANSLATIONS_PATH'],
-                f'messages.{self._language}.yaml'
+                f'messages.{language}.yaml'
             )
 
             with open(translation_file, 'r', encoding='utf-8') as file:
@@ -58,10 +59,17 @@ def create_app(config_name=None):
 
             return data
 
+        def translate(self, key: str, **kwargs):
+            if self._language is None:
+                self._language = app.config.get('DEFAULT_LANG', 'en')
+            return super().translate(key, **kwargs)
+
     t = UTF8Translator()
     t.init_app(app)
+    t._language = app.config.get('DEFAULT_LANG', 'en')
     @app.context_processor
     def inject_translator():
+        t._language = t._language or app.config.get('DEFAULT_LANG', 'en')
         return dict(t=t.translate)
     # And how do I make t available in all blueprint's and their templates? 
     # Because otherwise I get jinja2.exceptions.UndefinedError: 't' is undefined when I try to use {{ t("all_posts") }} in templates rendered by Blueprints.
@@ -83,6 +91,18 @@ def create_app(config_name=None):
     from config import get_config
     config_class = get_config(config_name)
     app.config.from_object(config_class)
+
+    if app.config.get('LOAD_BALANCING_ENABLED'):
+        try:
+            import redis
+            from lib.security.cluster_session import RedisSessionInterface
+            redis_client = redis.Redis.from_url(app.config.get('REDIS_URL', 'redis://localhost:6379/0'), decode_responses=True)
+            redis_client.ping()
+            app.session_interface = RedisSessionInterface(redis_client=redis_client, prefix='siteforge:session:')
+        except Exception as exc:
+            raise RuntimeError(
+                'Load balancing mode requires a reachable Redis instance at REDIS_URL. Start Redis or disable LOAD_BALANCING_ENABLED.'
+            ) from exc
 
     # Trust X-Forwarded headers from proxies (e.g., Cloudflare tunnel)
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1, x_port=1)
@@ -253,6 +273,7 @@ app = Flask(__name__)
 
 # Configure UTF-8 encoding for all responses
 app.config['JSON_AS_ASCII'] = False
+app.config['DEFAULT_LANG'] = 'de'
 app.jinja_env.enable_async = False
 import sys
 if sys.stdout.encoding != 'utf-8':
@@ -260,16 +281,17 @@ if sys.stdout.encoding != 'utf-8':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 # Configure and initialize translator
-app.config['DEFAULT_LANG'] = 'en'
+app.config['DEFAULT_LANG'] = 'de'
 app.config['DEFAULT_MESSAGE'] = 'Translation Error'
 app.config['TRANSLATIONS_PATH'] = 'translations'
 from flask_translator import Translator
 class UTF8Translator(Translator):
     def _get_file_data(self):
+        language = self._language or app.config.get('DEFAULT_LANG', 'en')
         translation_file = os.path.join(
             app.root_path,
             app.config['TRANSLATIONS_PATH'],
-            f'messages.{self._language}.yaml'
+            f'messages.{language}.yaml'
         )
 
         with open(translation_file, 'r', encoding='utf-8') as file:
@@ -277,8 +299,14 @@ class UTF8Translator(Translator):
 
         return data
 
+    def translate(self, key: str, **kwargs):
+        if self._language is None:
+            self._language = app.config.get('DEFAULT_LANG', 'en')
+        return super().translate(key, **kwargs)
+
 t = UTF8Translator()
 t.init_app(app)
+t._language = app.config.get('DEFAULT_LANG', 'en')
 
 @app.context_processor
 def inject_translator():
@@ -297,20 +325,23 @@ def inject_translator():
                     lang = settings.get('site_language', 'en')
                 else:
                     # Extract language from Accept-Language header
-                    if t._language is not None:
-                        lang_raw = t._language
-                        if ',' in lang_raw:
-                            lang = lang_raw.split(',')[0].strip()
-                        elif ';' in lang_raw:
-                            lang = lang_raw.split(';')[0].strip()
-                        else:
-                            lang = lang_raw.strip()
-                        
-                        # Ensure it's a valid language code (just the base language, no country)
-                        if '-' in lang:
-                            lang = lang.split('-')[0]
+                    current_lang = t._language or lang
+                    lang_raw = current_lang
+                    if ',' in lang_raw:
+                        lang = lang_raw.split(',')[0].strip()
+                    elif ';' in lang_raw:
+                        lang = lang_raw.split(';')[0].strip()
+                    else:
+                        lang = lang_raw.strip()
+                    
+                    # Ensure it's a valid language code (just the base language, no country)
+                    if '-' in lang:
+                        lang = lang.split('-')[0]
     except Exception:
         pass
+
+    if not lang or lang in ('None', 'none'):
+        lang = app.config.get('DEFAULT_LANG', 'en')
     
     # Set the translator language to the parsed language code
     t._language = lang

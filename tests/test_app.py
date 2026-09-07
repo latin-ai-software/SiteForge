@@ -125,6 +125,35 @@ def test_admin_roles_page_highlights_roles_tab(app):
         assert not re.search(r'<a href="/admin/users"[^>]*class="active"', html, re.S)
 
 
+def test_license_validation_requires_runtime_fingerprint(tmp_path, monkeypatch):
+    """License signatures must change when the runtime fingerprint changes."""
+    import hashlib
+    import hmac
+    import _license_check
+
+    secret = 'test-secret'
+    monkeypatch.setenv('SITEFORGE_LICENSE_SECRET', secret)
+
+    base_file = tmp_path / 'stub.txt'
+    base_file.write_text('hello', encoding='utf-8')
+    fingerprint = hashlib.sha256(str(base_file).encode('utf-8')).hexdigest()
+
+    payload = f'license-key:{fingerprint}'.encode('utf-8')
+    expected_sig = hmac.new(secret.encode('utf-8'), payload, hashlib.sha256).hexdigest()
+
+    monkeypatch.setattr(_license_check, '_runtime_fingerprint', lambda base_dir: fingerprint)
+    monkeypatch.setattr(_license_check, '_read_license_signature', lambda base_dir: expected_sig)
+
+    assert _license_check._verify_local_signature(tmp_path, 'license-key') is True
+
+    altered = tmp_path / 'altered.txt'
+    altered.write_text('goodbye', encoding='utf-8')
+    altered_fingerprint = hashlib.sha256(str(altered).encode('utf-8')).hexdigest()
+    monkeypatch.setattr(_license_check, '_runtime_fingerprint', lambda base_dir: altered_fingerprint)
+
+    assert _license_check._verify_local_signature(tmp_path, 'license-key') is False
+
+
 def test_license_validation_skipped_in_ci():
     """Test that license validation is properly skipped in CI environments."""
     import os

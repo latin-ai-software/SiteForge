@@ -11,8 +11,8 @@ variables:
   # SSH configuration for private repository access
   GIT_STRATEGY: clone
   GIT_CHECKOUT: "true"
-  # Skip license validation in CI
   CI: "true"
+  SITEFORGE_ALLOW_TESTS: "true"
 
 # Test stage
 test:
