@@ -1,8 +1,13 @@
+import os
 import threading
 import time
 from updater.updater import auto_update
 
+
 def start_update_loop():
+    if os.environ.get("PYTEST_CURRENT_TEST") is not None:
+        return
+
     def loop():
         while True:
             print("[Updater] Checking for updates...")

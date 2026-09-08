@@ -168,9 +168,10 @@ def create_app(config_name=None):
             except Exception as e:
                 logger.error(f"Error during rate limit cleanup: {e}", exc_info=True)
 
-    # Start cleanup thread
-    cleanup_thread = threading.Thread(target=cleanup_rate_limits, daemon=True)
-    cleanup_thread.start()
+    # Start cleanup thread only in real runtime, never during automated tests.
+    if not app.config.get('TESTING') and os.environ.get('PYTEST_CURRENT_TEST') is None:
+        cleanup_thread = threading.Thread(target=cleanup_rate_limits, daemon=True)
+        cleanup_thread.start()
 
     from updater.update_loop import start_update_loop
     start_update_loop()
@@ -483,9 +484,10 @@ def cleanup_rate_limits():
         except Exception as e:
             logger.error(f"Error during rate limit cleanup: {e}", exc_info=True)
 
-# Start cleanup thread
-cleanup_thread = threading.Thread(target=cleanup_rate_limits, daemon=True)
-cleanup_thread.start()
+# Start cleanup thread only for real runtime, not during pytest/CI execution.
+if os.environ.get('PYTEST_CURRENT_TEST') is None:
+    cleanup_thread = threading.Thread(target=cleanup_rate_limits, daemon=True)
+    cleanup_thread.start()
 
 from updater.update_loop import start_update_loop
 start_update_loop()
