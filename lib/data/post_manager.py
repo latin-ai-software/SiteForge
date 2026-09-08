@@ -172,7 +172,7 @@ class PostManager:
             "votes": votes
         }
 
-    def create_post(self, title, content, author, status="publish", post_type="post", categories=None, tags=None, attachments=None, git_repository=None, release_tag=None, survey=None):
+    def create_post(self, title, content, author, status="publish", post_type="post", categories=None, tags=None, attachments=None, git_repository=None, release_tag=None, survey=None, featured_image=None, allow_comments=True):
         metadata = self._load_metadata()
 
         # Generate slug from title
@@ -200,6 +200,8 @@ class PostManager:
             "git_repository": git_repository or "",
             "release_tag": release_tag or "",
             "survey": survey or None,
+            "featured_image": featured_image or "",
+            "allow_comments": bool(allow_comments) if allow_comments is not None else True,
             "created_at": now.isoformat(),
             "modified_at": now.isoformat(),
             "slug": slug
@@ -213,7 +215,7 @@ class PostManager:
 
         return post_id
 
-    def update_post(self, post_id, title=None, content=None, status=None, categories=None, tags=None, attachments=None, git_repository=None, release_tag=None, survey=None):
+    def update_post(self, post_id, title=None, content=None, status=None, categories=None, tags=None, attachments=None, git_repository=None, release_tag=None, survey=None, featured_image=None, allow_comments=None):
         metadata = self._load_metadata()
         if post_id not in metadata:
             return False
@@ -243,6 +245,10 @@ class PostManager:
                 metadata[post_id]["survey"] = survey
             else:
                 metadata[post_id].pop("survey", None)
+        if featured_image is not None:
+            metadata[post_id]["featured_image"] = featured_image or ""
+        if allow_comments is not None:
+            metadata[post_id]["allow_comments"] = bool(allow_comments) if not isinstance(allow_comments, str) else allow_comments.lower() not in {"false", "0", "off", "no", ""}
 
         metadata[post_id]["modified_at"] = datetime.now().isoformat()
         self._save_metadata(metadata)
