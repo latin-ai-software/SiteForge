@@ -1,3 +1,12 @@
+import os
+import sys
+
+
+def _is_pytest_running():
+    """Return True when the app is being imported under pytest or CI test execution."""
+    return os.environ.get('PYTEST_CURRENT_TEST') is not None or 'pytest' in sys.modules or os.environ.get('CI', '').lower() == 'true'
+
+
 def create_app(config_name=None):
     """Application factory pattern for modern Flask apps."""
     import sys
@@ -169,11 +178,11 @@ def create_app(config_name=None):
                 logger.error(f"Error during rate limit cleanup: {e}", exc_info=True)
 
     # Start cleanup thread only in real runtime, never during automated tests.
-    if not app.config.get('TESTING') and os.environ.get('PYTEST_CURRENT_TEST') is None:
+    if not app.config.get('TESTING') and not _is_pytest_running():
         cleanup_thread = threading.Thread(target=cleanup_rate_limits, daemon=True)
         cleanup_thread.start()
 
-    if os.environ.get('PYTEST_CURRENT_TEST') is None:
+    if not _is_pytest_running():
         from updater.update_loop import start_update_loop
         start_update_loop()
 
@@ -486,11 +495,11 @@ def cleanup_rate_limits():
             logger.error(f"Error during rate limit cleanup: {e}", exc_info=True)
 
 # Start cleanup thread only for real runtime, not during pytest/CI execution.
-if os.environ.get('PYTEST_CURRENT_TEST') is None:
+if not _is_pytest_running():
     cleanup_thread = threading.Thread(target=cleanup_rate_limits, daemon=True)
     cleanup_thread.start()
 
-if os.environ.get('PYTEST_CURRENT_TEST') is None:
+if not _is_pytest_running():
     from updater.update_loop import start_update_loop
     start_update_loop()
 
