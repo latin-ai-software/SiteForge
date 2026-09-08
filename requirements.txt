@@ -28,3 +28,5 @@ structlog>=23.0.0  # Structured logging
 sentry-sdk[flask]>=1.40.0  # Error tracking
 
 flask-translator
+
+requests
