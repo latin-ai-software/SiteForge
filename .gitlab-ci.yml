@@ -11,8 +11,8 @@ variables:
   # SSH configuration for private repository access
   GIT_STRATEGY: clone
   GIT_CHECKOUT: "true"
-  # Skip license validation in CI
   CI: "true"
+  SITEFORGE_ALLOW_TESTS: "true"
 
 # Test stage
 test:
@@ -34,7 +34,7 @@ test:
     - git config --global user.email "ci@gitlab.local"
     - git config --global user.name "GitLab CI"
     - pip install -r requirements.txt
-    - pip install pytest pytest-cov
+    - pip install pytest pytest-cov cryptography
   script:
     - python -m pytest --cov=lib --cov-report=html --cov-report=term --cov-report=xml:htmlcov/cobertura.xml
   coverage: '/TOTAL.*\s+(\d+%)$/'

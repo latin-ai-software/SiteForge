@@ -55,6 +55,32 @@ def test_home_page(client):
     response = client.get('/')
     assert response.status_code == 200
 
+
+def test_rate_limit_rejects_spoofed_forwarded_ip(client):
+    """A client must not be able to bypass rate limiting by faking X-Forwarded-For."""
+    saw_429 = False
+    for i in range(350):
+        response = client.get('/', headers={'X-Forwarded-For': f'203.0.113.{i % 250}'})
+        if response.status_code == 429:
+            saw_429 = True
+            break
+    assert saw_429, 'spoofed forwarded IPs should still trigger the rate limit after the per-IP threshold is exceeded'
+
+
+def test_testing_mode_ignores_trusted_proxy_env(monkeypatch):
+    """Testing mode must never trust forwarded headers, even if a proxy is configured in the environment."""
+    monkeypatch.setenv('TRUSTED_PROXY_IPS', '127.0.0.1')
+    app = create_app('testing')
+    with app.test_client() as client:
+        saw_429 = False
+        for i in range(350):
+            response = client.get('/', headers={'X-Forwarded-For': f'203.0.113.{i % 250}'})
+            if response.status_code == 429:
+                saw_429 = True
+                break
+        assert saw_429, 'testing mode should ignore configured proxy trust for rate limiting'
+
+
 def test_post_creation_requires_login(client):
     """Test that creating a post requires login."""
     response = client.post('/create/post', data={
@@ -123,6 +149,35 @@ def test_admin_roles_page_highlights_roles_tab(app):
         html = render_template('admin/base.html')
         assert re.search(r'<a href="/admin/users/roles"[^>]*class="active"', html, re.S)
         assert not re.search(r'<a href="/admin/users"[^>]*class="active"', html, re.S)
+
+
+def test_license_validation_requires_runtime_fingerprint(tmp_path, monkeypatch):
+    """License signatures must change when the runtime fingerprint changes."""
+    import hashlib
+    import hmac
+    import _license_check
+
+    secret = 'test-secret'
+    monkeypatch.setenv('SITEFORGE_LICENSE_SECRET', secret)
+
+    base_file = tmp_path / 'stub.txt'
+    base_file.write_text('hello', encoding='utf-8')
+    fingerprint = hashlib.sha256(str(base_file).encode('utf-8')).hexdigest()
+
+    payload = f'license-key:{fingerprint}'.encode('utf-8')
+    expected_sig = hmac.new(secret.encode('utf-8'), payload, hashlib.sha256).hexdigest()
+
+    monkeypatch.setattr(_license_check, '_runtime_fingerprint', lambda base_dir: fingerprint)
+    monkeypatch.setattr(_license_check, '_read_license_signature', lambda base_dir: expected_sig)
+
+    assert _license_check._verify_local_signature(tmp_path, 'license-key') is True
+
+    altered = tmp_path / 'altered.txt'
+    altered.write_text('goodbye', encoding='utf-8')
+    altered_fingerprint = hashlib.sha256(str(altered).encode('utf-8')).hexdigest()
+    monkeypatch.setattr(_license_check, '_runtime_fingerprint', lambda base_dir: altered_fingerprint)
+
+    assert _license_check._verify_local_signature(tmp_path, 'license-key') is False
 
 
 def test_license_validation_skipped_in_ci():

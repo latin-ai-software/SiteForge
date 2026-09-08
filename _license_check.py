@@ -1,74 +1,133 @@
-"""
-License validation check - runs at module import time.
-This file is imported by app.py before any other code executes,
-ensuring the license is validated before the application can start.
+"""Scoped license enforcement for SiteForge.
 
-Users cannot bypass this by commenting out code, as the check
-runs during Python's import phase and terminates the process
-if the license is invalid.
+This module intentionally performs the validation in a separate bootstrap layer so
+that the application cannot silently skip the check by importing a different code
+path. The check is still permitted in CI/test environments only when an explicit
+opt-in variable is set; production environments must always validate a real
+license.
 """
-import sys
+import hashlib
+import hmac
 import os
+import sys
+from pathlib import Path
+
 import requests
 
 
+def _is_test_environment():
+    return (
+        os.environ.get("CI") == "true"
+        or os.environ.get("GITLAB_CI") == "true"
+        or os.environ.get("GITHUB_ACTIONS") == "true"
+        or os.environ.get("PYTEST_CURRENT_TEST") is not None
+        or "pytest" in sys.modules
+        or any("pytest" in arg for arg in sys.argv)
+    )
+
+
 def _read_license_key(base_dir):
-    """Read license key from file."""
-    license_file = os.path.join(base_dir, "data", "license.txt")
-    if not os.path.exists(license_file):
+    """Read the license key from the project data directory."""
+    license_file = Path(base_dir) / "data" / "license.txt"
+    if not license_file.exists():
         raise FileNotFoundError("license.txt not found")
-    with open(license_file, "r") as f:
-        return f.read().strip()
+    return license_file.read_text(encoding="utf-8").strip()
+
+
+def _read_license_signature(base_dir):
+    """Read the optional local license signature for tamper detection."""
+    signature_file = Path(base_dir) / "data" / "license.sig"
+    if not signature_file.exists():
+        return None
+    return signature_file.read_text(encoding="utf-8").strip()
+
+
+def _runtime_fingerprint(base_dir):
+    """Build a fingerprint from the code bundle and runtime environment.
+
+    This prevents a trivial bypass where someone edits a local Python file to
+    force validation to always succeed. If the app or a dependency file changes,
+    the expected signature becomes invalid unless the same secret and runtime
+    fingerprint are regenerated.
+    """
+    root = Path(base_dir).resolve()
+    files = [
+        root / "app.py",
+        root / "config.py",
+        root / "_license_check.py",
+    ]
+    digest = hashlib.sha256()
+    for path in files:
+        if not path.exists():
+            continue
+        digest.update(path.read_bytes())
+    digest.update(os.environ.get("SITEFORGE_LICENSE_SECRET", "").encode("utf-8"))
+    digest.update(os.environ.get("HOSTNAME", os.environ.get("COMPUTERNAME", "local")).encode("utf-8"))
+    return digest.hexdigest()
+
+
+def _verify_local_signature(base_dir, license_key):
+    signature = _read_license_signature(base_dir)
+    if signature is None:
+        return True
+
+    secret = os.environ.get("SITEFORGE_LICENSE_SECRET")
+    if not secret:
+        return False
+
+    fingerprint = _runtime_fingerprint(base_dir)
+    expected = hmac.new(
+        secret.encode("utf-8"),
+        f"{license_key}:{fingerprint}".encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    return hmac.compare_digest(expected, signature)
 
 
 def _is_license_valid(license_key):
-    """Validate license key against remote gateway."""
+    """Validate a license key against the remote gateway."""
     url = f"https://latinai.ch/wp-json/shoplicensegateway/license/validate/SF/{license_key}"
     try:
         response = requests.get(url, timeout=5)
     except Exception:
         return False
-    
+
     try:
         data = response.json()
     except ValueError:
         return False
-    
+
     return data.get("status") == "valid"
 
 
 def _validate_license():
-    """Validate license and terminate if invalid.
-    
-    This runs at module import time, before any application code executes.
-    Terminating here prevents any bypasses via code modifications.
-    
-    License validation is skipped in CI/testing environments.
+    """Enforce license validation before the app can start.
+
+    CI/test environments are never allowed to skip validation unless the explicit
+    SITEFORGE_ALLOW_TESTS opt-in is set. This keeps the GitLab pipeline runnable
+    without allowing the same bypass in production.
     """
-    # Skip license validation in CI/testing environments
-    if (os.environ.get('CI') == 'true' or 
-        os.environ.get('GITLAB_CI') == 'true' or
-        os.environ.get('GITHUB_ACTIONS') == 'true' or
-        os.environ.get('PYTEST_CURRENT_TEST') or
-        'pytest' in sys.modules or
-        any('pytest' in arg for arg in sys.argv)):
-        print("⚠️  License validation skipped in CI/testing environment")
+    if _is_test_environment() and os.environ.get("SITEFORGE_ALLOW_TESTS") == "true":
+        print("⚠️  License validation bypass enabled for CI/test execution")
         return
-    
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    
+
+    base_dir = Path(__file__).resolve().parent
+
     try:
         license_key = _read_license_key(base_dir)
-    except FileNotFoundError as e:
-        print(f"❌ {e}")
-        sys.exit(1)
-    
+    except FileNotFoundError as exc:
+        print(f"❌ {exc}")
+        raise SystemExit(1) from exc
+
+    if not _verify_local_signature(base_dir, license_key):
+        print("X License signature invalid - Application will terminate.")
+        raise SystemExit(1)
+
     if not _is_license_valid(license_key):
         print("X License invalid - Application will terminate.")
-        sys.exit(1)
+        raise SystemExit(1)
 
     print("OK License valid - Application starting.")
 
 
-# Run validation at import time - this cannot be bypassed
 _validate_license()

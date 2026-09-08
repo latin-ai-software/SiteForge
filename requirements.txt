@@ -37,5 +37,8 @@ psycopg2-binary>=2.9.0  # PostgreSQL driver
 redis>=5.0.0  # Redis client
 structlog>=23.0.0  # Structured logging
 sentry-sdk[flask]>=1.40.0  # Error tracking
+pytest-timeout>=2.3.0
 
 flask-translator
+
+requests
