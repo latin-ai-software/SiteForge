@@ -10,6 +10,3 @@
 [submodule "templates"]
 	path = templates
 	url = https://git.latinai.de/latin-ai-software/latinmagazine-templates.git
-#[submodule "dependencies"]
-#	path = dependencies
-#	url = https://git.latinai.de/latin-ai-software/lib-artifacts.git
