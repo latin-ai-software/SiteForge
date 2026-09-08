@@ -103,7 +103,12 @@ def create_app(config_name=None):
     app.config.from_object(config_class)
 
     # Test mode must never trust spoofed forwarded headers, even if a proxy env value is set.
-    trusted_proxy_ips = set() if app.config.get('TESTING') else {
+    is_testing_mode = bool(
+        app.config.get('TESTING')
+        or os.environ.get('PYTEST_CURRENT_TEST') is not None
+        or os.environ.get('CI', '').lower() == 'true'
+    )
+    trusted_proxy_ips = set() if is_testing_mode else {
         entry.strip()
         for entry in os.environ.get('TRUSTED_PROXY_IPS', '').split(',')
         if entry.strip()
@@ -118,7 +123,7 @@ def create_app(config_name=None):
         from flask import request
 
         remote_ip = request.remote_addr or 'unknown'
-        if app.config.get('TESTING'):
+        if is_testing_mode:
             return remote_ip
 
         forwarded_for = request.headers.get('X-Forwarded-For', '').strip()
@@ -432,7 +437,12 @@ secure_config = SecureConfig.get_config(base_path)
 app.config.update(secure_config)
 
 # Trust X-Forwarded headers only for explicitly configured proxy IPs.
-trusted_proxy_ips = set() if app.config.get('TESTING') else {
+is_testing_mode = bool(
+    app.config.get('TESTING')
+    or os.environ.get('PYTEST_CURRENT_TEST') is not None
+    or os.environ.get('CI', '').lower() == 'true'
+)
+trusted_proxy_ips = set() if is_testing_mode else {
     entry.strip()
     for entry in os.environ.get('TRUSTED_PROXY_IPS', '').split(',')
     if entry.strip()
@@ -448,7 +458,7 @@ def get_client_ip():
     from flask import request
 
     remote_ip = request.remote_addr or 'unknown'
-    if app.config.get('TESTING'):
+    if is_testing_mode:
         return remote_ip
 
     forwarded_for = request.headers.get('X-Forwarded-For', '').strip()
