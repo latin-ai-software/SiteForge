@@ -88,8 +88,13 @@ def create_app(config_name=None):
     secure_config = SecureConfig.get_config(base_path)
     app.config.update(secure_config)
 
-    # Only trust forward headers from explicitly configured proxy IPs.
-    trusted_proxy_ips = {
+    # Apply modern configuration after security defaults so TESTING/configuration wins.
+    from config import get_config
+    config_class = get_config(config_name)
+    app.config.from_object(config_class)
+
+    # Test mode must never trust spoofed forwarded headers, even if a proxy env value is set.
+    trusted_proxy_ips = set() if app.config.get('TESTING') else {
         entry.strip()
         for entry in os.environ.get('TRUSTED_PROXY_IPS', '').split(',')
         if entry.strip()
@@ -104,17 +109,15 @@ def create_app(config_name=None):
         from flask import request
 
         remote_ip = request.remote_addr or 'unknown'
+        if app.config.get('TESTING'):
+            return remote_ip
+
         forwarded_for = request.headers.get('X-Forwarded-For', '').strip()
         if not forwarded_for or remote_ip not in trusted_proxy_ips:
             return remote_ip
 
         candidates = [entry.strip() for entry in forwarded_for.split(',') if entry.strip()]
         return candidates[0] if candidates else remote_ip
-
-    # Apply modern configuration
-    from config import get_config
-    config_class = get_config(config_name)
-    app.config.from_object(config_class)
 
     if app.config.get('LOAD_BALANCING_ENABLED'):
         try:
@@ -418,7 +421,7 @@ secure_config = SecureConfig.get_config(base_path)
 app.config.update(secure_config)
 
 # Trust X-Forwarded headers only for explicitly configured proxy IPs.
-trusted_proxy_ips = {
+trusted_proxy_ips = set() if app.config.get('TESTING') else {
     entry.strip()
     for entry in os.environ.get('TRUSTED_PROXY_IPS', '').split(',')
     if entry.strip()
@@ -434,6 +437,9 @@ def get_client_ip():
     from flask import request
 
     remote_ip = request.remote_addr or 'unknown'
+    if app.config.get('TESTING'):
+        return remote_ip
+
     forwarded_for = request.headers.get('X-Forwarded-For', '').strip()
     if not forwarded_for:
         return remote_ip
