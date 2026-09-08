@@ -2,9 +2,10 @@ import pytest
 from unittest.mock import patch, MagicMock
 from werkzeug.exceptions import HTTPException
 from flask import Flask, session
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 
 from lib.netdefense.auth.identitas_auth import IdentitasAuthManager
+from Identitas.provider.backend.db_operations import create_sqlite_database
 
 
 @pytest.fixture
@@ -101,3 +102,23 @@ def test_logout_clears_session_and_invalidates_token(auth_manager):
         assert 'user' not in session
         assert 'identitas_token' not in session
         assert mock_logout.call_count in (0, 1)
+
+
+def test_create_sqlite_database_migrates_legacy_users_table(tmp_path):
+    db_path = tmp_path / 'legacy_identitas.db'
+    with create_engine(f'sqlite:///{db_path}').begin() as conn:
+        conn.execute(text('''
+            CREATE TABLE users (
+                id INTEGER PRIMARY KEY,
+                email TEXT,
+                username TEXT NOT NULL UNIQUE,
+                password TEXT NOT NULL,
+                salt TEXT NOT NULL
+            )
+        '''))
+
+    engine = create_sqlite_database(str(db_path))
+    with engine.begin() as conn:
+        columns = {row['name'] for row in inspect(conn).get_columns('users')}
+
+    assert {'public_key', 'public_key_fingerprint', 'key_auth_enabled'}.issubset(columns)
