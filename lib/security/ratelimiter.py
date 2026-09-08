@@ -23,6 +23,8 @@ class RateLimiter:
         load_balancing_enabled=False,
         namespace="siteforge",
         redis_client=None,
+        limits_file=None,
+        lockouts_file=None,
     ):
         self.base_path = base_path
         self.max_requests = max_requests
@@ -30,8 +32,8 @@ class RateLimiter:
         self.redis_url = redis_url or os.environ.get("REDIS_URL") or os.environ.get("SITEFORGE_REDIS_URL") or "redis://localhost:6379/0"
         self.load_balancing_enabled = bool(load_balancing_enabled or str(os.environ.get("LOAD_BALANCING_ENABLED", "false")).lower() in {"1", "true", "yes", "on"})
         self.namespace = namespace
-        self.limits_file = os.path.join(base_path, "data", "rate_limits.json")
-        self.lockouts_file = os.path.join(base_path, "data", "lockouts.json")
+        self.limits_file = limits_file or os.path.join(base_path, "data", "rate_limits.json")
+        self.lockouts_file = lockouts_file or os.path.join(base_path, "data", "lockouts.json")
         os.makedirs(os.path.dirname(self.limits_file), exist_ok=True)
 
         self._redis = redis_client

@@ -67,6 +67,7 @@ def create_app(config_name=None):
     t = UTF8Translator()
     t.init_app(app)
     t._language = app.config.get('DEFAULT_LANG', 'en')
+    app.jinja_env.globals['t'] = t.translate
     @app.context_processor
     def inject_translator():
         t._language = t._language or app.config.get('DEFAULT_LANG', 'en')
@@ -138,8 +139,16 @@ def create_app(config_name=None):
     from logging_config import setup_logging
     setup_logging(app)
 
-    # Initialize rate limiter
-    rate_limiter = RateLimiter(base_path)
+    # Initialize rate limiter; use a dedicated test-side store so each app instance starts clean.
+    if app.config.get('TESTING'):
+        test_limits = os.path.join(base_path, 'data', 'rate_limits_testing.json')
+        test_lockouts = os.path.join(base_path, 'data', 'lockouts_testing.json')
+        for path in (test_limits, test_lockouts):
+            if os.path.exists(path):
+                os.remove(path)
+        rate_limiter = RateLimiter(base_path, limits_file=test_limits, lockouts_file=test_lockouts)
+    else:
+        rate_limiter = RateLimiter(base_path)
 
     # Periodic cleanup task (in real deployment, use celery or similar)
     import threading
@@ -247,6 +256,40 @@ def create_app(config_name=None):
         # Check if setup has been completed
         if not is_setup_completed(base_path):
             return redirect(url_for('setup.setup_page'))
+
+    @app.before_request
+    def check_rate_limits():
+        """Deny clients that exceed the configured request limit using a single source IP."""
+        from flask import request, abort
+
+        ip = get_client_ip()
+        if request.path.startswith('/static') or request.path.startswith('/uploads'):
+            max_requests = 1000
+        elif request.path.startswith('/admin'):
+            max_requests = 100
+        else:
+            max_requests = 300
+
+        # Use the same default limit threshold as the app-level limiter.
+        if rate_limiter.is_rate_limited(f"ip_{ip}"):
+            print(f"Rate limit exceeded for IP: {ip}, path: {request.path}")
+            abort(429)
+
+    @app.errorhandler(429)
+    def rate_limit_error(error):
+        return render_template('error.html', error_code=429, error_message='Too many requests. Please try again later.'), 429
+
+    @app.errorhandler(403)
+    def forbidden_error(error):
+        return render_template('error.html', error_code=403, error_message='Access denied.'), 403
+
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return render_template('error.html', error_code=404, error_message='Page not found.'), 404
+
+    @app.errorhandler(500)
+    def server_error(error):
+        return render_template('error.html', error_code=500, error_message='Internal server error.'), 500
 
     return app
 
@@ -408,8 +451,16 @@ config_encryption = ConfigEncryption(base_path)
 # Add security headers to all responses
 add_security_headers(app)
 
-# Initialize rate limiter
-rate_limiter = RateLimiter(base_path)
+# Initialize rate limiter; keep the testing state isolated from the production file-backed store.
+if app.config.get('TESTING'):
+    test_limits = os.path.join(base_path, 'data', 'rate_limits_testing.json')
+    test_lockouts = os.path.join(base_path, 'data', 'lockouts_testing.json')
+    for path in (test_limits, test_lockouts):
+        if os.path.exists(path):
+            os.remove(path)
+    rate_limiter = RateLimiter(base_path, limits_file=test_limits, lockouts_file=test_lockouts)
+else:
+    rate_limiter = RateLimiter(base_path)
 
 # Periodic cleanup task (in real deployment, use celery or similar)
 import threading
