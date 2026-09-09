@@ -210,6 +210,20 @@ def create_app(config_name=None):
             notification_unread_count=notification_count
         )
 
+    @app.context_processor
+    def inject_build_info():
+        # Expose generated build info to templates (if available)
+        try:
+            build_info_path = os.path.join(os.path.dirname(__file__), "data", "build_info.json")
+            if os.path.exists(build_info_path):
+                with open(build_info_path, "r", encoding="utf-8") as f:
+                    import json as _json
+                    info = _json.load(f)
+                    return dict(build_info=info)
+        except Exception:
+            pass
+        return dict(build_info=None)
+
     # Setup check middleware
     @app.before_request
     def check_setup_required():

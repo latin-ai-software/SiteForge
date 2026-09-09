@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Git pre-commit hook to generate a deterministic build id and stage it.
+set -euo pipefail
+HERE="$(cd "$(dirname "$0")/.." && pwd)"
+PYTHON="${PYTHON:-python3}"
+echo "Generating build id..."
+"$PYTHON" "$HERE/scripts/generate_build_id.py" "$@"
+git add updater/version.txt data/build_info.json || true
+echo "Build id generated and staged."
+exit 0

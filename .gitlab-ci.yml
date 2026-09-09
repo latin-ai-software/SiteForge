@@ -159,3 +159,15 @@ include:
 #  only:
 #    - main
 #  when: manual
+
+publish_build:
+  stage: deploy
+  image: python:3.12
+  before_script:
+    - pip install requests
+  script:
+    - python3 scripts/generate_build_id.py
+    - python3 scripts/publish_build_to_update_server.py --server-url "$UPDATE_SERVER_URL" --api-key "$UPDATE_API_KEY"
+  only:
+    - main
+  when: on_success
