@@ -42,3 +42,4 @@ pytest-timeout>=2.3.0
 flask-translator
 
 requests
+cryptography
