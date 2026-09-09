@@ -53,8 +53,19 @@ def get_post(slug):
     if not post:
         abort(404)
 
+    if post.get("status", "publish") != "publish":
+        current_user = auth.current_user()
+        if not current_user:
+            abort(404)
+        user_role = auth.get_user_role(current_user)
+        if user_role not in ["administrator", "editor", "author"]:
+            abort(404)
+
     # Load comments
-    top_level_comments, replies = comment_manager.get_comments(post["id"])
+    try:
+        top_level_comments, replies = comment_manager.get_comments(post["id"])
+    except (TypeError, ValueError):
+        top_level_comments, replies = [], {}
 
     # Load settings
     settings = {}
@@ -70,13 +81,16 @@ def get_post(slug):
         with open(active_theme_path, "r", encoding="utf-8") as f:
             active_theme = f.read().strip()
 
+    comments_allowed = post.get("allow_comments", True)
+
     return render_template("post/view.html",
                            post=post,
                            top_level_comments=top_level_comments,
                            replies=replies,
                            active_theme=active_theme,
                            settings=settings,
-                           auth=auth)
+                           auth=auth,
+                           comments_allowed=comments_allowed)
 
 # POST: Kommentar hinzufügen
 @post_create_bp.route("/post/<slug>/comment", methods=["POST"])

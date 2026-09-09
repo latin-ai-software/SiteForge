@@ -36,7 +36,7 @@ def create_post_form():
                 repos_data = json.load(f)
                 user_repos = repos_data.get(user, {})
                 git_repos = list(user_repos.keys())
-    return render_template("admin/posts/create.html", git_plugin_available=git_plugin_available, git_repos=git_repos, user=user)
+    return render_template("admin/posts/create.html", git_plugin_available=git_plugin_available, git_repos=git_repos, user=user, editor_mode="gutenberg")
 
 
 # POST: Neuen Beitrag speichern
@@ -49,6 +49,10 @@ def create_post():
     tags = [tag.strip() for tag in request.form.get("tags", "").split(",") if tag.strip()]
     git_repository = request.form.get("git_repository", "").strip()
     release_tag = request.form.get("release_tag", "").strip()
+    featured_image = request.form.get("featured_image", "").strip()
+    published_value = request.form.get("published") or request.form.get("status") or "publish"
+    status = "publish" if published_value not in ("draft", "false", "off", "0", "no") else "draft"
+    allow_comments = request.form.get("allow_comments") not in (None, "off", "false", "0", "no")
     survey_enabled = request.form.get("survey_enabled") == "on"
     survey_question = request.form.get("survey_question", "").strip()
     survey_options = [opt.strip() for opt in request.form.get("survey_options", "").splitlines() if opt.strip()]
@@ -100,12 +104,15 @@ def create_post():
         title,
         content,
         author,
+        status=status,
         categories=categories,
         tags=tags,
         attachments=attachments,
         git_repository=git_repository,
         release_tag=release_tag,
-        survey=survey
+        survey=survey,
+        featured_image=featured_image,
+        allow_comments=allow_comments
     )
 
     # Send newsletter update for new posts
@@ -152,7 +159,7 @@ def edit_post(post_id):
     if user_role not in ["administrator", "editor"] and post["author"] != current_user:
         abort(403)
 
-    return render_template("admin/posts/edit.html", post=post)
+    return render_template("admin/posts/edit.html", post=post, editor_mode="gutenberg")
 
 
 # POST: Beitrag speichern (Update)
@@ -165,6 +172,10 @@ def save_post(post_id):
     tags = [tag.strip() for tag in request.form.get("tags", "").split(",") if tag.strip()]
     git_repository = request.form.get("git_repository", "").strip()
     release_tag = request.form.get("release_tag", "").strip()
+    featured_image = request.form.get("featured_image", "").strip()
+    published_value = request.form.get("published") or request.form.get("status") or "publish"
+    status = "publish" if published_value not in ("draft", "false", "off", "0", "no") else "draft"
+    allow_comments = request.form.get("allow_comments") not in (None, "off", "false", "0", "no")
 
     if not title or not content:
         return jsonify({"error": "title und content erforderlich"}), 400
@@ -227,12 +238,15 @@ def save_post(post_id):
         post_id,
         title=title,
         content=content,
+        status=status,
         categories=categories,
         tags=tags,
         attachments=attachments,
         git_repository=git_repository,
         release_tag=release_tag,
-        survey=survey
+        survey=survey,
+        featured_image=featured_image,
+        allow_comments=allow_comments
     )
 
     if success:

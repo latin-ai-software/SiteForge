@@ -55,6 +55,32 @@ def test_home_page(client):
     response = client.get('/')
     assert response.status_code == 200
 
+
+def test_rate_limit_rejects_spoofed_forwarded_ip(client):
+    """A client must not be able to bypass rate limiting by faking X-Forwarded-For."""
+    saw_429 = False
+    for i in range(350):
+        response = client.get('/', headers={'X-Forwarded-For': f'203.0.113.{i % 250}'})
+        if response.status_code == 429:
+            saw_429 = True
+            break
+    assert saw_429, 'spoofed forwarded IPs should still trigger the rate limit after the per-IP threshold is exceeded'
+
+
+def test_testing_mode_ignores_trusted_proxy_env(monkeypatch):
+    """Testing mode must never trust forwarded headers, even if a proxy is configured in the environment."""
+    monkeypatch.setenv('TRUSTED_PROXY_IPS', '127.0.0.1')
+    app = create_app('testing')
+    with app.test_client() as client:
+        saw_429 = False
+        for i in range(350):
+            response = client.get('/', headers={'X-Forwarded-For': f'203.0.113.{i % 250}'})
+            if response.status_code == 429:
+                saw_429 = True
+                break
+        assert saw_429, 'testing mode should ignore configured proxy trust for rate limiting'
+
+
 def test_post_creation_requires_login(client):
     """Test that creating a post requires login."""
     response = client.post('/create/post', data={
