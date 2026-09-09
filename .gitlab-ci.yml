@@ -33,8 +33,8 @@ test:
       fi
     - git config --global user.email "ci@gitlab.local"
     - git config --global user.name "GitLab CI"
-    - pip install --index-url https://mirror.latinai.net/latinmagazine/dependencies/simple/ --trusted-host mirror.latinai.net -r requirements.txt
-    - pip install --index-url https://mirror.latinai.net/latinmagazine/dependencies/simple/ --trusted-host mirror.latinai.net pytest pytest-cov
+    - pip install --index-url https://mirror.latinai.net/latinmagazine/dependencies/simple/ --extra-index-url https://pypi.org/simple --trusted-host mirror.latinai.net -r requirements.txt
+    - pip install --index-url https://mirror.latinai.net/latinmagazine/dependencies/simple/ --extra-index-url https://pypi.org/simple --trusted-host mirror.latinai.net pytest pytest-cov
   script:
     - python -m pytest --cov=lib --cov-report=html --cov-report=term --cov-report=xml:htmlcov/cobertura.xml
   coverage: '/TOTAL.*\s+(\d+%)$/'
@@ -69,7 +69,7 @@ bandit_scan:
       fi
     - git config --global user.email "ci@gitlab.local"
     - git config --global user.name "GitLab CI"
-    - pip install --index-url https://mirror.latinai.net/latinmagazine/dependencies/simple/ --trusted-host mirror.latinai.net bandit
+    - pip install --index-url https://mirror.latinai.net/latinmagazine/dependencies/simple/ --extra-index-url https://pypi.org/simple --trusted-host mirror.latinai.net bandit
   script:
     - bandit -r . -x Identitas,Intermediarium -f html -o bandit-report.html --exit-zero
   artifacts:
@@ -81,7 +81,7 @@ pip_audit:
   stage: security
   image: python:3.12
   before_script:
-    - pip install --index-url https://mirror.latinai.net/latinmagazine/dependencies/simple/ --trusted-host mirror.latinai.net pip-audit
+    - pip install --index-url https://mirror.latinai.net/latinmagazine/dependencies/simple/ --extra-index-url https://pypi.org/simple --trusted-host mirror.latinai.net pip-audit
   script:
     - pip-audit -r requirements.txt -f json -o pip-audit-report.json || true
   artifacts:
