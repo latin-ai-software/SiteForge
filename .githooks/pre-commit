@@ -2,9 +2,37 @@
 # Git pre-commit hook to generate a deterministic build id and stage it.
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
-PYTHON="${PYTHON:-python3}"
+
 echo "Generating build id..."
-"$PYTHON" "$HERE/scripts/generate_build_id.py" "$@"
+
+# Locate a working Python interpreter in a cross-platform way.
+PY_CMD=()
+if [ -n "${PYTHON:-}" ]; then
+	if command -v "$PYTHON" >/dev/null 2>&1; then
+		PY_CMD=("$PYTHON")
+	fi
+fi
+if [ ${#PY_CMD[@]} -eq 0 ]; then
+	if command -v python3 >/dev/null 2>&1; then
+		PY_CMD=(python3)
+	elif command -v python >/dev/null 2>&1; then
+		PY_CMD=(python)
+	elif command -v py >/dev/null 2>&1; then
+		# Use Windows launcher to select Python 3
+		PY_CMD=(py -3)
+	fi
+fi
+
+if [ ${#PY_CMD[@]} -eq 0 ]; then
+	echo "No Python interpreter found in PATH. Install Python or set the PYTHON env var to the interpreter path." >&2
+	echo "On Windows you may need to disable the 'App Execution Aliases' for the Microsoft Store stub, or install Python from python.org." >&2
+	exit 1
+fi
+
+# Execute the generator
+"${PY_CMD[@]}" "$HERE/scripts/generate_build_id.py" "$@"
+
+# Stage generated files if present
 git add updater/version.txt data/build_info.json || true
 echo "Build id generated and staged."
 exit 0
