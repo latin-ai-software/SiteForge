@@ -8,22 +8,56 @@ def auto_update():
         with open(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/updater/config.json", "r") as f:
             config = json.load(f)
         
-        version_url = config.get("version_url")
+        # Determine which version URL to use. If this installation is marked
+        # as a dev build (`dev_mode` true) and a `dev_version_url` is supplied,
+        # prefer that so dev instances compare against the dev channel.
+        dev_mode = bool(config.get("dev_mode", False))
+        version_url = None
+        if dev_mode and config.get("dev_version_url"):
+            version_url = config.get("dev_version_url")
+        else:
+            version_url = config.get("version_url")
+
         if not version_url:
             return "No version URL configured"
         
-        # Get current version
+        # Get current version (ignore comment lines and blank lines)
         current_version = None
-        if os.path.exists(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/updater/version.txt"):
-            with open(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/updater/version.txt", "r") as f:
-                current_version = f.read().strip()
+        local_version_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/updater/version.txt"
+        if os.path.exists(local_version_path):
+            with open(local_version_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    s = line.strip()
+                    if not s:
+                        continue
+                    if s.startswith("#"):
+                        continue
+                    current_version = s
+                    break
         
-        # Fetch latest version
-        response = requests.get(version_url, timeout=10)
+        # Fetch latest version from the selected channel
+        try:
+            response = requests.get(version_url, timeout=10)
+        except Exception as exc:
+            return f"Failed to check for updates: {exc}"
+
         if response.status_code != 200:
             return f"Failed to check for updates: {response.status_code}"
-        
-        latest_version = response.text.strip()
+
+        # Parse fetched content and ignore comment lines (server may append a
+        # timestamp/comment after the build id). Use the first non-empty,
+        # non-comment line as the canonical version string.
+        latest_version = None
+        for line in response.text.splitlines():
+            s = line.strip()
+            if not s:
+                continue
+            if s.startswith("#"):
+                continue
+            latest_version = s
+            break
+        if latest_version is None:
+            latest_version = response.text.strip()
         print(f"Current version: {current_version}, Latest version: {latest_version}")
         if current_version == latest_version:
             with open(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/data/version.json", "w") as f:

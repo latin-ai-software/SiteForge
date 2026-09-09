@@ -1,3 +1,5 @@
 {
-    "version_url": "https://mirror.latinai.net/latinmagazine/update/version.txt"
+    "version_url": "https://mirror.latinai.net/latinmagazine/update/version.txt",
+    "dev_mode": true,
+    "dev_version_url": "https://mirror.latinai.net/latinmagazine/update/version-dev.txt"
 }

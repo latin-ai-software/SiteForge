@@ -32,12 +32,18 @@ def update_version():
     if not data or "build" not in data:
         return jsonify({"error": "missing build field"}), 400
     build = str(data["build"]).strip()
+    channel = str(data.get("channel", "stable"))
     os.makedirs(ROOT, exist_ok=True)
-    target = os.path.join(ROOT, "version.txt")
+    if channel == "dev":
+        target_name = "version_dev.txt"
+    else:
+        target_name = "version.txt"
+
+    target = os.path.join(ROOT, target_name)
     with open(target, "w", encoding="utf-8") as f:
         f.write(build + "\n")
         f.write("# updated: " + datetime.utcnow().isoformat() + "Z\n")
-    return jsonify({"status": "ok", "written": target}), 200
+    return jsonify({"status": "ok", "written": target, "channel": channel}), 200
 
 
 if __name__ == "__main__":

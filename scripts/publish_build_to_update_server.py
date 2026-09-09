@@ -26,6 +26,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--server-url", default=os.environ.get("UPDATE_SERVER_URL"))
     parser.add_argument("--api-key", default=os.environ.get("UPDATE_API_KEY"))
+    parser.add_argument("--channel", choices=("stable", "dev"), default="stable", help="Which channel to publish to (stable or dev)")
     args = parser.parse_args()
 
     if not args.server_url or not args.api_key:
@@ -37,7 +38,7 @@ def main() -> int:
 
     url = args.server_url.rstrip("/") + "/api/update-version"
     headers = {"X-API-Key": args.api_key}
-    payload = {"build": build_id}
+    payload = {"build": build_id, "channel": args.channel}
     r = requests.post(url, json=payload, headers=headers, timeout=10)
     if r.status_code != 200:
         print(f"Server responded: {r.status_code}: {r.text}")
