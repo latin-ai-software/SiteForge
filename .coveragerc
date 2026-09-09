@@ -1,0 +1,27 @@
+[run]
+source =
+    lib
+omit =
+    */tests/*
+    */__init__.py
+    lib/api_docs_generator.py
+    lib/encoding_fix.py
+    lib/modmail_crypto.py
+    lib/notification_utils.py
+    lib/seo_analyzer.py
+    lib/theme_creator/*
+    lib/routes/admin/manage/analytics/*
+    lib/routes/admin/manage/api_docs/*
+    lib/routes/admin/manage/media/*
+    lib/routes/admin/manage/notifications/*
+    lib/routes/admin/manage/seo/*
+    lib/routes/admin/manage/templates/*
+    lib/routes/admin/manage/users/*
+    lib/routes/data/*
+    lib/routes/modmail.py
+    lib/routes/admin/manage/backup.py
+    lib/routes/admin/manage/remote_backup.py
+
+[report]
+show_missing = True
+skip_covered = False

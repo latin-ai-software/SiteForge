@@ -10,12 +10,18 @@ class Config:
     DEBUG = False
     TESTING = False
 
+    # Cluster / load balancing
+    LOAD_BALANCING_ENABLED = str(os.environ.get('LOAD_BALANCING_ENABLED', 'false')).lower() in {'1', 'true', 'yes', 'on'}
+    REDIS_URL = os.environ.get('REDIS_URL') or 'redis://localhost:6379/0'
+    SESSION_COOKIE_NAME = os.environ.get('SESSION_COOKIE_NAME', 'siteforge_session')
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    PERMANENT_SESSION_LIFETIME = int(os.environ.get('PERMANENT_SESSION_LIFETIME', 3600))
+
     # Database
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///siteforge.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-
-    # Redis
-    REDIS_URL = os.environ.get('REDIS_URL') or 'redis://localhost:6379/0'
 
     # Email
     MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
