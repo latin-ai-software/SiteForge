@@ -1,5 +1,5 @@
 import os
-from flask import Blueprint, render_template, request, redirect, url_for, jsonify, session, abort
+from flask import Blueprint, render_template, request, redirect, url_for, jsonify, session, abort, current_app
 from ...netdefense.auth.identitas_auth import IdentitasAuthManager
 from ...security import RateLimiter, InputValidator
 import json
@@ -15,8 +15,14 @@ rate_limiter = RateLimiter(BASE_PATH)
 def get_client_ip():
     """Ignore spoofed X-Forwarded-For unless the peer is a configured trusted proxy."""
     remote_ip = request.remote_addr or "unknown"
+    # Prefer application config when available; fall back to env vars used by CI/pytest
+    try:
+        testing_config = bool(current_app.config.get("TESTING"))
+    except Exception:
+        testing_config = False
+
     is_testing_mode = bool(
-        request.app.config.get("TESTING")
+        testing_config
         or os.environ.get("PYTEST_CURRENT_TEST") is not None
         or os.environ.get("CI", "").lower() == "true"
     )
