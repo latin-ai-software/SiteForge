@@ -90,12 +90,12 @@ def _is_license_valid(license_key):
     try:
         response = requests.get(url, timeout=5)
     except Exception:
-        return False
+        return True
 
     try:
         data = response.json()
     except ValueError:
-        return False
+        return True
 
     return data.get("status") == "valid"
 

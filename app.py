@@ -954,6 +954,7 @@ if __name__ == "__main__":
     parser.add_argument("--ssl", action="store_true", help="Enable SSL")
     parser.add_argument("--cert", type=str, help="Path to SSL certificate")
     parser.add_argument("--key", type=str, help="Path to SSL private key")
+    parser.add_argument("--port", type=int, help="Port to listen on")
 
     args = parser.parse_args()
 
@@ -969,7 +970,7 @@ if __name__ == "__main__":
 
     app.run(
         debug=args.debug,
-        port=443,
+        port=args.port,
         ssl_context=ssl_context,
         host="0.0.0.0"
     )
