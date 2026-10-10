@@ -13,3 +13,5 @@ Website: latinai.net
 - [Amboss Icons erstellt von PIXARTIST - Flaticon](https://www.flaticon.com/de/kostenlose-icons/amboss)
 - [Internet Icons erstellt von srip - Flaticon](https://www.flaticon.com/de/kostenlose-icons/internet)
 - [Hammer Icons erstellt von Icon Mela - Flaticon](https://www.flaticon.com/de/kostenlose-icons/hammer)
+
+<!-- GitAds-Verify: JNNXM82VQJ25ETV3WGIAIGXPEVIFKIYX -->
