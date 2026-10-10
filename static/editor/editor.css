@@ -1,0 +1,14 @@
+body { font-family: Arial, sans-serif; margin:0; }
+#editor-app { display:flex; height:100vh; }
+.palette-title { font-weight:600; margin-bottom:8px }
+#block-palette { width:220px; padding:14px; border-right:1px solid #e6e6e6; background:linear-gradient(180deg,#fbfbfb,#f3f4f6) }
+#block-palette button { display:block; width:100%; margin:6px 0; padding:8px 10px; border-radius:8px; border:1px solid #ddd; background:white; cursor:pointer }
+#canvas { flex:1; padding:28px; overflow:auto; background:#f4f6f8 }
+#canvas-inner { min-height:420px; border-radius:12px; border:1px dashed #d1d5db; padding:16px; background:white }
+#inspector { width:320px; padding:14px; border-left:1px solid #e6e6e6; background:#fafafa }
+.block { border:1px solid #e5e7eb; padding:12px; margin:12px 0; background:#ffffff; border-radius:8px; box-shadow: 0 6px 18px rgba(15,23,42,0.04) }
+.block.selected { box-shadow: 0 8px 26px rgba(74,144,226,0.16); border-color: #3b82f6 }
+.block h1, .block h2 { margin:0 0 8px 0 }
+.ins-label { display:block; margin-top:8px; font-size:0.9rem }
+.ins-input { width:100%; padding:8px; margin-top:6px; border-radius:6px; border:1px solid #d1d5db }
+
