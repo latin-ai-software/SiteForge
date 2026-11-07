@@ -4,9 +4,9 @@ from jinja2 import Template
 # Alle Variablen aus deinem :root – Name, Label, Typ, Default
 THEME_VARS = [
     # Primary Colors
-    {"name": "primary-color", "label": "Primary Color", "type": "color", "default": "#2563eb"},
-    {"name": "primary-dark", "label": "Primary Dark", "type": "color", "default": "#1d4ed8"},
-    {"name": "primary-light", "label": "Primary Light", "type": "color", "default": "#3b82f6"},
+    {"name": "primary-color", "label": "Primary Color", "type": "color", "default": "#1769aa"},
+    {"name": "primary-dark", "label": "Primary Dark", "type": "color", "default": "#0f4c81"},
+    {"name": "primary-light", "label": "Primary Light", "type": "color", "default": "#3b82c4"},
 
     # Secondary Colors
     {"name": "secondary-color", "label": "Secondary Color", "type": "color", "default": "#64748b"},
@@ -19,17 +19,17 @@ THEME_VARS = [
     {"name": "info-color", "label": "Info Color", "type": "color", "default": "#0ea5e9"},
 
     # Neutral Colors
-    {"name": "dark", "label": "Dark", "type": "color", "default": "#1f2937"},
-    {"name": "gray-900", "label": "Gray 900", "type": "color", "default": "#111827"},
-    {"name": "gray-800", "label": "Gray 800", "type": "color", "default": "#1f2937"},
-    {"name": "gray-700", "label": "Gray 700", "type": "color", "default": "#374151"},
-    {"name": "gray-600", "label": "Gray 600", "type": "color", "default": "#4b5563"},
-    {"name": "gray-500", "label": "Gray 500", "type": "color", "default": "#6b7280"},
-    {"name": "gray-400", "label": "Gray 400", "type": "color", "default": "#9ca3af"},
-    {"name": "gray-300", "label": "Gray 300", "type": "color", "default": "#d1d5db"},
-    {"name": "gray-200", "label": "Gray 200", "type": "color", "default": "#e5e7eb"},
-    {"name": "gray-100", "label": "Gray 100", "type": "color", "default": "#f3f4f6"},
-    {"name": "gray-50", "label": "Gray 50", "type": "color", "default": "#f9fafb"},
+    {"name": "dark", "label": "Dark", "type": "color", "default": "#123b5d"},
+    {"name": "gray-900", "label": "Gray 900", "type": "color", "default": "#123b5d"},
+    {"name": "gray-800", "label": "Gray 800", "type": "color", "default": "#194d73"},
+    {"name": "gray-700", "label": "Gray 700", "type": "color", "default": "#285d82"},
+    {"name": "gray-600", "label": "Gray 600", "type": "color", "default": "#476d89"},
+    {"name": "gray-500", "label": "Gray 500", "type": "color", "default": "#6b879b"},
+    {"name": "gray-400", "label": "Gray 400", "type": "color", "default": "#91a8b8"},
+    {"name": "gray-300", "label": "Gray 300", "type": "color", "default": "#c4d5e0"},
+    {"name": "gray-200", "label": "Gray 200", "type": "color", "default": "#dce8f0"},
+    {"name": "gray-100", "label": "Gray 100", "type": "color", "default": "#edf5fa"},
+    {"name": "gray-50", "label": "Gray 50", "type": "color", "default": "#f7fbfe"},
     {"name": "white", "label": "White", "type": "color", "default": "#ffffff"},
 
     # Spacing
@@ -431,6 +431,68 @@ label.required::after {
     padding: var(--spacing-lg);
     border-top: 1px solid var(--gray-200);
     background-color: var(--gray-50);
+}
+
+/* ========================================
+   Settings Page
+   ======================================== */
+
+.settings-page,
+.settings-container {
+    color: var(--gray-900);
+}
+
+.settings-page .card,
+.settings-container .card,
+.settings-card {
+    background-color: var(--white);
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow);
+}
+
+.settings-page .card-header,
+.settings-container .card-header,
+.settings-card .card-header {
+    background-color: var(--white);
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.settings-page h1,
+.settings-page h2,
+.settings-page h3,
+.settings-container h1,
+.settings-container h2,
+.settings-container h3,
+.settings-card h2,
+.settings-card h3 {
+    color: var(--primary-dark);
+}
+
+.settings-page .form-group,
+.settings-container .form-group,
+.settings-card .form-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.settings-page .form-input:focus,
+.settings-page .form-textarea:focus,
+.settings-page .form-select:focus,
+.settings-container .form-input:focus,
+.settings-container .form-textarea:focus,
+.settings-container .form-select:focus,
+.settings-card .form-input:focus,
+.settings-card .form-textarea:focus,
+.settings-card .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(23, 105, 170, 0.14);
+}
+
+@media (max-width: 768px) {
+    .settings-page .card-body,
+    .settings-container .card-body,
+    .settings-card .card-body {
+        padding: var(--spacing-lg);
+    }
 }
 
 /* ========================================
