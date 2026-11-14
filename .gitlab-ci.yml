@@ -36,6 +36,7 @@ test:
     - pip install --index-url https://mirror.latinai.net/latinmagazine/dependencies/simple/ --extra-index-url https://pypi.org/simple --trusted-host mirror.latinai.net -r requirements.txt
     - pip install --index-url https://mirror.latinai.net/latinmagazine/dependencies/simple/ --extra-index-url https://pypi.org/simple --trusted-host mirror.latinai.net pytest pytest-cov
   script:
+    - export PYTHONPATH="$CI_PROJECT_DIR/vendor:$PYTHONPATH"
     - python -m pytest --cov=lib --cov-report=html --cov-report=term --cov-report=xml:htmlcov/cobertura.xml
   coverage: '/TOTAL.*\s+(\d+%)$/'
   artifacts:

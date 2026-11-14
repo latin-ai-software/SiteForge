@@ -1,8 +1,8 @@
 [submodule "Identitas"]
-	path = Identitas
+	path = vendor/Identitas
 	url = https://git.latinai.de/latin-ai-software/Identitas.git
 [submodule "Intermediarium"]
-	path = Intermediarium
+	path = vendor/Intermediarium
 	url = https://git.latinai.de/latin-ai-software/intermediarium.git
 [submodule "translations"]
 	path = translations
