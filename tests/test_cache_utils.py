@@ -93,3 +93,41 @@ def test_invalidate_cache_clears_all_caches_when_no_instance(monkeypatch):
     fake_api.clear.assert_called_once()
     fake_db.clear.assert_called_once()
     fake_view.clear.assert_called_once()
+
+
+def test_cache_api_response_returns_cached_value(monkeypatch):
+    import lib.cache_utils as cache_utils
+
+    fake_api_cache = MagicMock()
+    fake_api_cache.get.return_value = {'cached': True}
+    monkeypatch.setattr(cache_utils, 'CACHE_AVAILABLE', True)
+    monkeypatch.setattr(cache_utils, 'api_cache', fake_api_cache)
+
+    calls = {'count': 0}
+
+    @cache_utils.cache_api_response('cached_api_key', ttl=60)
+    def cached_func():
+        calls['count'] += 1
+        return {'fresh': True}
+
+    assert cached_func() == {'cached': True}
+    assert calls['count'] == 0
+
+
+def test_cache_db_query_returns_cached_value(monkeypatch):
+    import lib.cache_utils as cache_utils
+
+    fake_db_cache = MagicMock()
+    fake_db_cache.get.return_value = 99
+    monkeypatch.setattr(cache_utils, 'CACHE_AVAILABLE', True)
+    monkeypatch.setattr(cache_utils, 'db_cache', fake_db_cache)
+
+    calls = {'count': 0}
+
+    @cache_utils.cache_db_query('cached_db_key', ttl=60)
+    def cached_func():
+        calls['count'] += 1
+        return 123
+
+    assert cached_func() == 99
+    assert calls['count'] == 0

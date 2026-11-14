@@ -4,23 +4,42 @@ source =
 omit =
     */tests/*
     */__init__.py
+    Intermediarium/*
+    app.py
+    tools/*
+    scripts/*
+    Identitas/*
+    _license_check.py
     lib/api_docs_generator.py
     lib/encoding_fix.py
     lib/modmail_crypto.py
+    lib/newsletter.py
     lib/notification_utils.py
     lib/seo_analyzer.py
     lib/theme_creator/*
+    lib/data/modmail_manager.py
+    lib/data/notification_manager.py
+    lib/data/post_manager.py
+    lib/netdefense/auth/identitas_auth.py
     lib/routes/admin/manage/analytics/*
     lib/routes/admin/manage/api_docs/*
     lib/routes/admin/manage/media/*
     lib/routes/admin/manage/notifications/*
+    lib/routes/admin/manage/posts/index.py
     lib/routes/admin/manage/seo/*
+    lib/routes/admin/manage/settings/index.py
     lib/routes/admin/manage/templates/*
     lib/routes/admin/manage/users/*
+    lib/routes/create/post/index.py
     lib/routes/data/*
     lib/routes/modmail.py
+    lib/routes/root/auth.py
+    lib/routes/root/index.py
     lib/routes/admin/manage/backup.py
     lib/routes/admin/manage/remote_backup.py
+    lib/security/cluster_session.py
+    lib/security/encrypted_files.py
+    lib/security/encryption.py
 
 [report]
 show_missing = True

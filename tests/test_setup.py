@@ -112,6 +112,26 @@ class TestSetupFunctions:
             assert settings["setup_completed"] is True
             assert settings["test"] == "value"
 
+    def test_load_settings_invalid_json_uses_defaults(self, temp_dir):
+        """Test load_settings with malformed JSON."""
+        settings_file = get_settings_file(temp_dir)
+        os.makedirs(os.path.dirname(settings_file), exist_ok=True)
+        with open(settings_file, 'w') as f:
+            f.write('{not valid json')
+
+        settings = load_settings(temp_dir)
+        assert settings['site_title'] == 'My Awesome Site'
+        assert settings['setup_completed'] is False
+
+    def test_is_setup_completed_invalid_json(self, temp_dir):
+        """Test is_setup_completed with malformed JSON."""
+        settings_file = get_settings_file(temp_dir)
+        os.makedirs(os.path.dirname(settings_file), exist_ok=True)
+        with open(settings_file, 'w') as f:
+            f.write('{bad json')
+
+        assert is_setup_completed(temp_dir) is False
+
 
 class TestSetupRoutes:
     @patch('lib.routes.setup.index.is_setup_completed')
@@ -191,3 +211,45 @@ class TestSetupRoutes:
             result = configure()
             # Should call jsonify with error about site_title
             mock_jsonify.assert_called()
+
+    @patch('lib.routes.setup.index.is_setup_completed')
+    @patch('lib.routes.setup.index.initialize_data_files')
+    @patch('lib.routes.setup.index.IdentitasAuthManager')
+    @patch('lib.routes.setup.index.jsonify')
+    def test_configure_admin_user_creation_failure(self, mock_jsonify, mock_auth_manager_class,
+                                                   mock_init_data, mock_is_completed, app):
+        """Test configure when creating the admin user fails."""
+        mock_is_completed.return_value = False
+        mock_auth = MagicMock()
+        mock_auth.create_user.return_value = (False, 'bad password')
+        mock_auth_manager_class.return_value = mock_auth
+        mock_jsonify.return_value = {'success': False}
+
+        with app.test_request_context('/setup/configure', method='POST', json={
+            'site_title': 'Test Site',
+            'admin_username': 'admin',
+            'admin_password': 'password123',
+            'admin_password_confirm': 'password123'
+        }):
+            from lib.routes.setup.index import configure
+            configure()
+            mock_jsonify.assert_called_with({'success': False, 'message': 'Admin user creation failed: bad password'})
+
+    @patch('lib.routes.setup.index.is_setup_completed')
+    @patch('lib.routes.setup.index.initialize_data_files')
+    @patch('lib.routes.setup.index.jsonify')
+    def test_configure_exception_path(self, mock_jsonify, mock_init_data, mock_is_completed, app):
+        """Test configure handles unexpected exceptions."""
+        mock_is_completed.return_value = False
+        mock_init_data.side_effect = RuntimeError('boom')
+        mock_jsonify.return_value = {'success': False}
+
+        with app.test_request_context('/setup/configure', method='POST', json={
+            'site_title': 'Test Site',
+            'admin_username': 'admin',
+            'admin_password': 'password123',
+            'admin_password_confirm': 'password123'
+        }):
+            from lib.routes.setup.index import configure
+            configure()
+            mock_jsonify.assert_called_with({'success': False, 'message': 'Setup failed: boom'})

@@ -14,6 +14,19 @@ from flask import abort, jsonify, request
 class RateLimiter:
     """Distributed rate limiter with file fallback for single-node deployments."""
 
+    @staticmethod
+    def _decode_redis_value(value):
+        if isinstance(value, bytes):
+            return value.decode("utf-8", errors="replace")
+        return str(value)
+
+    @staticmethod
+    def _decode_redis_mapping(mapping):
+        return {
+            RateLimiter._decode_redis_value(key): RateLimiter._decode_redis_value(value)
+            for key, value in mapping.items()
+        }
+
     def __init__(
         self,
         base_path,
@@ -56,9 +69,10 @@ class RateLimiter:
         if self._redis is not None:
             data = {}
             for key in self._redis.scan_iter(match=f"{self.namespace}:rate:*"):
-                values = [float(v) for v in self._redis.lrange(key, 0, -1) if v]
+                key_name = self._decode_redis_value(key)
+                values = [float(self._decode_redis_value(v)) for v in self._redis.lrange(key, 0, -1) if v]
                 if values:
-                    data[key.replace(f"{self.namespace}:rate:", "")] = values
+                    data[key_name.replace(f"{self.namespace}:rate:", "")] = values
             return data
         if os.path.exists(self.limits_file):
             try:
@@ -81,7 +95,7 @@ class RateLimiter:
                     pipeline.execute()
                 else:
                     self._redis.delete(redis_key)
-            existing_keys = set(self._redis.scan_iter(match=f"{self.namespace}:rate:*"))
+            existing_keys = set(self._decode_redis_value(key) for key in self._redis.scan_iter(match=f"{self.namespace}:rate:*"))
             for key in existing_keys:
                 if key not in {self._rate_key(k) for k in data.keys()}:
                     self._redis.delete(key)
@@ -96,9 +110,10 @@ class RateLimiter:
         if self._redis is not None:
             data = {}
             for key in self._redis.scan_iter(match=f"{self.namespace}:lockout:*"):
-                payload = self._redis.hgetall(key)
+                key_name = self._decode_redis_value(key)
+                payload = self._decode_redis_mapping(self._redis.hgetall(key))
                 if payload:
-                    data[key.replace(f"{self.namespace}:lockout:", "")] = {
+                    data[key_name.replace(f"{self.namespace}:lockout:", "")] = {
                         "attempts": int(payload.get("attempts", 0)),
                         "locked_until": float(payload["locked_until"]) if payload.get("locked_until") else None,
                     }
@@ -122,7 +137,7 @@ class RateLimiter:
                         "locked_until": str(payload.get("locked_until")) if payload.get("locked_until") is not None else "",
                     })
                     self._redis.expire(redis_key, max(300, int(self.window_seconds * 2)))
-            existing_keys = set(self._redis.scan_iter(match=f"{self.namespace}:lockout:*"))
+            existing_keys = set(self._decode_redis_value(key) for key in self._redis.scan_iter(match=f"{self.namespace}:lockout:*"))
             for key in existing_keys:
                 if key not in {self._lockout_key(k) for k in data.keys()}:
                     self._redis.delete(key)
@@ -184,13 +199,13 @@ class RateLimiter:
     def check_login_attempt(self, username, max_attempts=5):
         """Track failed login attempts and lockout after N failures"""
         if self._redis is not None:
-            payload = self._redis.hgetall(self._lockout_key(username))
+            payload = self._decode_redis_mapping(self._redis.hgetall(self._lockout_key(username)))
             if not payload:
                 return False, None
             locked_until = float(payload["locked_until"]) if payload.get("locked_until") else None
             now = time.time()
             if locked_until and now < locked_until:
-                remaining = int(locked_until - now)
+                remaining = max(0, int(locked_until - now))
                 return True, f"Account locked for {remaining} more seconds"
             if locked_until and now >= locked_until:
                 self._redis.delete(self._lockout_key(username))
@@ -210,18 +225,28 @@ class RateLimiter:
 
         if locked_until and now >= locked_until:
             lockouts[username] = {"attempts": 0, "locked_until": None}
+            self._save_lockouts(lockouts)
 
         return False, None
 
     def record_failed_login(self, username, max_attempts=5, lockout_duration=300):
         """Record failed login and apply lockout after N attempts"""
+        now = time.time()
+
         if self._redis is not None:
-            payload = self._redis.hgetall(self._lockout_key(username)) or {"attempts": "0", "locked_until": ""}
+            payload = self._decode_redis_mapping(self._redis.hgetall(self._lockout_key(username))) or {"attempts": "0", "locked_until": ""}
+            locked_until = float(payload["locked_until"]) if payload.get("locked_until") else None
+            if locked_until and now < locked_until:
+                return
+            if locked_until and now >= locked_until:
+                payload = {"attempts": "0", "locked_until": ""}
+
             attempts = int(payload.get("attempts", 0)) + 1
-            now = time.time()
-            locked_until = None
             if attempts >= max_attempts:
                 locked_until = now + lockout_duration
+            else:
+                locked_until = None
+
             self._redis.hset(self._lockout_key(username), mapping={
                 "attempts": str(attempts),
                 "locked_until": str(locked_until) if locked_until is not None else "",
@@ -230,15 +255,25 @@ class RateLimiter:
             return
 
         lockouts = self._load_lockouts()
-        now = time.time()
 
         if username not in lockouts:
+            lockouts[username] = {"attempts": 0, "locked_until": None}
+
+        locked_until = lockouts[username].get("locked_until")
+        if locked_until and now < locked_until:
+            return
+        if locked_until and now >= locked_until:
+            lockouts[username] = {"attempts": 0, "locked_until": None}
+
+        if lockouts[username]["locked_until"] is not None and now >= lockouts[username]["locked_until"]:
             lockouts[username] = {"attempts": 0, "locked_until": None}
 
         lockouts[username]["attempts"] += 1
 
         if lockouts[username]["attempts"] >= max_attempts:
             lockouts[username]["locked_until"] = now + lockout_duration
+        else:
+            lockouts[username]["locked_until"] = None
 
         self._save_lockouts(lockouts)
 
@@ -258,7 +293,7 @@ class RateLimiter:
         if self._redis is not None:
             now = time.time()
             for key in self._redis.scan_iter(match=f"{self.namespace}:rate:*"):
-                values = [float(v) for v in self._redis.lrange(key, 0, -1) if v]
+                values = [float(self._decode_redis_value(v)) for v in self._redis.lrange(key, 0, -1) if v]
                 values = [value for value in values if now - value < 86400]
                 if values:
                     self._redis.delete(key)
@@ -267,7 +302,7 @@ class RateLimiter:
                 else:
                     self._redis.delete(key)
             for key in self._redis.scan_iter(match=f"{self.namespace}:lockout:*"):
-                payload = self._redis.hgetall(key)
+                payload = self._decode_redis_mapping(self._redis.hgetall(key))
                 locked_until = float(payload.get("locked_until")) if payload.get("locked_until") else None
                 if locked_until and now >= locked_until:
                     self._redis.delete(key)

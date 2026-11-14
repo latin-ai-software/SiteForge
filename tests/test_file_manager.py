@@ -172,3 +172,42 @@ class TestFileManager:
         assert len(files) == 3
         filenames = [f['filename'] for f in files]
         assert set(filenames) == set(test_files)
+
+    @patch('lib.data.file_manager.MalwareChecker')
+    def test_save_file_detects_suspicious_plaintext(self, mock_malware_checker, file_manager):
+        """Test save_file rejects text containing suspicious commands."""
+        checker = MagicMock()
+        checker.is_suspicious.side_effect = [False, True]
+        checker.check_text.return_value = {'keywords': ['import os'], 'patterns': [], 'score': 1}
+        mock_malware_checker.return_value = checker
+        file_manager.security = checker
+
+        file = FileStorage(
+            stream=BytesIO(b"import os\nrm -rf /"),
+            filename="script.txt",
+            content_type="text/plain"
+        )
+
+        result = file_manager.save_file(file)
+        assert result[0] is False
+        assert "suspicious content" in result[1]
+        checker.check_text.assert_called_once()
+
+    @patch('lib.data.file_manager.MalwareChecker')
+    def test_save_file_allows_valid_binary_file(self, mock_malware_checker, file_manager):
+        """Test save_file keeps binary media files without text scanning."""
+        checker = MagicMock()
+        checker.is_suspicious.return_value = False
+        mock_malware_checker.return_value = checker
+        file_manager.security = checker
+
+        file = FileStorage(
+            stream=BytesIO(b"\x89PNG\r\n\x1a\n" + b"\x00" * 10),
+            filename="image.png",
+            content_type="image/png"
+        )
+
+        result = file_manager.save_file(file)
+        assert result[0] is True
+        assert result[1].endswith('.png')
+        checker.check_text.assert_not_called()
